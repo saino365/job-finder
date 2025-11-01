@@ -202,39 +202,78 @@ export default function AdminCompaniesPage() {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            size="small"
-            disabled={record.verifiedStatus === 1}
-            loading={approvingCompanies.has(record._id)}
-            onClick={() => approveCompany(record._id)}
-          >
-            Approve
-          </Button>
-          <Button
-            danger
-            icon={<CloseOutlined />}
-            size="small"
-            disabled={record.verifiedStatus === 2}
-            onClick={() => openRejectModal(record)}
-          >
-            Reject
-          </Button>
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => {
-              setSelectedCompany(record);
-              setDetailsVisible(true);
-            }}
-          >
-            View
-          </Button>
-        </Space>
-      )
+      render: (_, record) => {
+        // Show status for processed companies
+        if (record.verifiedStatus === 1) { // APPROVED
+          return (
+            <Space>
+              <Button
+                icon={<EyeOutlined />}
+                size="small"
+                onClick={() => {
+                  setSelectedCompany(record);
+                  setDetailsVisible(true);
+                }}
+              >
+                View
+              </Button>
+              <Tag color="green">Approved</Tag>
+            </Space>
+          );
+        }
+        if (record.verifiedStatus === 2) { // REJECTED
+          return (
+            <Space>
+              <Button
+                icon={<EyeOutlined />}
+                size="small"
+                onClick={() => {
+                  setSelectedCompany(record);
+                  setDetailsVisible(true);
+                }}
+              >
+                View
+              </Button>
+              <Tag color="red">Rejected</Tag>
+              {record.rejectionReason && (
+                <span style={{ fontSize: '12px', color: '#666' }}>({record.rejectionReason})</span>
+              )}
+            </Space>
+          );
+        }
+        // Show buttons for pending companies
+        return (
+          <Space>
+            <Button
+              type="primary"
+              icon={<CheckOutlined />}
+              size="small"
+              loading={approvingCompanies.has(record._id)}
+              onClick={() => approveCompany(record._id)}
+            >
+              Approve
+            </Button>
+            <Button
+              danger
+              icon={<CloseOutlined />}
+              size="small"
+              onClick={() => openRejectModal(record)}
+            >
+              Reject
+            </Button>
+            <Button
+              icon={<EyeOutlined />}
+              size="small"
+              onClick={() => {
+                setSelectedCompany(record);
+                setDetailsVisible(true);
+              }}
+            >
+              View
+            </Button>
+          </Space>
+        );
+      }
     }
   ];
 

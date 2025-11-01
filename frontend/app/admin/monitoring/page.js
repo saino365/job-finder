@@ -183,26 +183,68 @@ function MonitoringClient() {
   const pendingPreApprovalColumns = [
     ...baseCols,
     { title: 'Submitted', dataIndex: 'submittedAt', key: 'submittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
-    { title: 'Actions', key: 'actions', render: (_, record) => (
-      <Space>
-        <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-        <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approvePreApproval(record._id)}>Approve</Button>
-        <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, true)}>Reject</Button>
-      </Space>
-    )}
+    { title: 'Actions', key: 'actions', render: (_, record) => {
+      // Show status for processed items
+      if (record.status === 5) { // PRE_APPROVED
+        return (
+          <Space>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+            <Tag color="green">Pre-Approved</Tag>
+          </Space>
+        );
+      }
+      if (record.status === 0 && record.preApprovalRejectionReason) { // DRAFT with rejection reason
+        return (
+          <Space>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+            <Tag color="red">Rejected</Tag>
+            <span style={{ fontSize: '12px', color: '#666' }}>({record.preApprovalRejectionReason})</span>
+          </Space>
+        );
+      }
+      // Show buttons for pending items
+      return (
+        <Space>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approvePreApproval(record._id)}>Approve</Button>
+          <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, true)}>Reject</Button>
+        </Space>
+      );
+    }}
   ];
 
   const pendingFinalApprovalColumns = [
     ...baseCols,
     { title: 'Submitted', dataIndex: 'finalSubmittedAt', key: 'finalSubmittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Pre-Approved', dataIndex: 'preApprovedAt', key: 'preApprovedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
-    { title: 'Actions', key: 'actions', render: (_, record) => (
-      <Space>
-        <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-        <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approveFinalApproval(record._id)}>Approve</Button>
-        <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, false)}>Reject</Button>
-      </Space>
-    )}
+    { title: 'Actions', key: 'actions', render: (_, record) => {
+      // Show status for processed items
+      if (record.status === 2) { // ACTIVE (approved)
+        return (
+          <Space>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+            <Tag color="green">Approved</Tag>
+          </Space>
+        );
+      }
+      if (record.status === 5 && record.rejectionReason) { // PRE_APPROVED with rejection reason (rejected from final approval)
+        return (
+          <Space>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+            <Tag color="red">Rejected</Tag>
+            <span style={{ fontSize: '12px', color: '#666' }}>({record.rejectionReason})</span>
+          </Space>
+        );
+      }
+      // Show buttons for pending items
+      return (
+        <Space>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approveFinalApproval(record._id)}>Approve</Button>
+          <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, false)}>Reject</Button>
+        </Space>
+      );
+    }}
   ];
 
   const pendingCompanyColumns = [
