@@ -68,10 +68,10 @@ function MonitoringClient() {
       const res = await fetch(`${API_BASE_URL}/job-listings/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ approvePreApproval: true })
+        body: JSON.stringify({ approve: true })
       });
-      if (!res.ok) throw new Error('Failed to approve pre-approval');
-      message.success('Pre-approval granted');
+      if (!res.ok) throw new Error('Failed to approve job listing');
+      message.success('Job listing approved and activated');
       load();
     } catch (e) {
       message.error(e.message || 'Failed to approve');
@@ -90,10 +90,10 @@ function MonitoringClient() {
       const res = await fetch(`${API_BASE_URL}/job-listings/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ rejectPreApproval: true, rejectionReason: reason })
+        body: JSON.stringify({ reject: true, rejectionReason: reason })
       });
-      if (!res.ok) throw new Error('Failed to reject pre-approval');
-      message.success('Pre-approval rejected');
+      if (!res.ok) throw new Error('Failed to reject job listing');
+      message.success('Job listing rejected');
       load();
     } catch (e) {
       message.error(e.message || 'Failed to reject');
@@ -185,24 +185,24 @@ function MonitoringClient() {
     { title: 'Submitted', dataIndex: 'submittedAt', key: 'submittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Actions', key: 'actions', render: (_, record) => {
       // Show status for processed items
-      if (record.status === 5) { // PRE_APPROVED
+      if (record.status === 2) { // ACTIVE (approved)
         return (
           <Space>
             <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-            <Tag color="green">Pre-Approved</Tag>
+            <Tag color="green">Approved</Tag>
           </Space>
         );
       }
-      if (record.status === 0 && record.preApprovalRejectionReason) { // DRAFT with rejection reason
+      if (record.status === 0 && record.rejectionReason) { // DRAFT with rejection reason
         return (
           <Space>
             <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
             <Tag color="red">Rejected</Tag>
-            <span style={{ fontSize: '12px', color: '#666' }}>({record.preApprovalRejectionReason})</span>
+            <span style={{ fontSize: '12px', color: '#666' }}>({record.rejectionReason})</span>
           </Space>
         );
       }
-      // Show buttons for pending items
+      // Show buttons for pending items (status === 1)
       return (
         <Space>
           <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
