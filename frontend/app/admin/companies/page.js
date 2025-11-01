@@ -19,6 +19,7 @@ export default function AdminCompaniesPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingCompany, setRejectingCompany] = useState(null);
   const [rejectForm] = Form.useForm();
+  const [approvingCompanies, setApprovingCompanies] = useState(new Set());
 
   useEffect(() => {
     loadCompanies();
@@ -76,6 +77,7 @@ export default function AdminCompaniesPage() {
 
   async function approveCompany(companyId) {
     try {
+      setApprovingCompanies(prev => new Set([...prev, companyId]));
       const token = localStorage.getItem('jf_token');
 
       // Find the verification record
@@ -105,6 +107,12 @@ export default function AdminCompaniesPage() {
     } catch (error) {
       console.error('Error approving company:', error);
       message.error(error.message || 'Failed to approve company');
+    } finally {
+      setApprovingCompanies(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(companyId);
+        return newSet;
+      });
     }
   }
 
@@ -201,6 +209,7 @@ export default function AdminCompaniesPage() {
             icon={<CheckOutlined />}
             size="small"
             disabled={record.verifiedStatus === 1}
+            loading={approvingCompanies.has(record._id)}
             onClick={() => approveCompany(record._id)}
           >
             Approve
@@ -256,6 +265,7 @@ export default function AdminCompaniesPage() {
           onApprove={approveCompany}
           onReject={openRejectModal}
           onView={(rec) => { setSelectedCompany(rec); setDetailsVisible(true); }}
+          approvingCompanies={approvingCompanies}
         />
       </Card>
 

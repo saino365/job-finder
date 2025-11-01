@@ -11,7 +11,7 @@ function getStatusTag(status) {
   return <Tag>Unknown</Tag>;
 }
 
-export default function AdminCompaniesTable({ companies = [], loading, onApprove, onReject, onView }) {
+export default function AdminCompaniesTable({ companies = [], loading, onApprove, onReject, onView, approvingCompanies = new Set() }) {
   const columns = [
     {
       title: 'Company Name',
@@ -29,7 +29,7 @@ export default function AdminCompaniesTable({ companies = [], loading, onApprove
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button type="primary" icon={<CheckOutlined />} size="small" disabled={record.verifiedStatus === 1} onClick={() => onApprove(record._id)}>Approve</Button>
+          <Button type="primary" icon={<CheckOutlined />} size="small" disabled={record.verifiedStatus === 1} loading={approvingCompanies.has(record._id)} onClick={() => onApprove(record._id)}>Approve</Button>
           <Button danger icon={<CloseOutlined />} size="small" disabled={record.verifiedStatus === 2} onClick={() => onReject(record)}>Reject</Button>
           <Button icon={<EyeOutlined />} size="small" onClick={() => onView(record)}>View</Button>
         </Space>

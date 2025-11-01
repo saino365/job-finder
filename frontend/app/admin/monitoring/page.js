@@ -24,6 +24,7 @@ function MonitoringClient() {
   const [rejectForm] = Form.useForm();
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
   const [viewingJob, setViewingJob] = useState(null);
+  const [approvingJobs, setApprovingJobs] = useState(new Set());
 
   useEffect(() => { setPage(1); load(); }, [type, q, page, pageSize, JSON.stringify(range?.map?.(d=>d?.toISOString?.()||''))]);
 
@@ -62,6 +63,7 @@ function MonitoringClient() {
 
   async function approvePreApproval(jobId) {
     try {
+      setApprovingJobs(prev => new Set([...prev, jobId]));
       const token = localStorage.getItem('jf_token');
       const res = await fetch(`${API_BASE_URL}/job-listings/${jobId}`, {
         method: 'PATCH',
@@ -73,6 +75,12 @@ function MonitoringClient() {
       load();
     } catch (e) {
       message.error(e.message || 'Failed to approve');
+    } finally {
+      setApprovingJobs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
     }
   }
 
@@ -94,6 +102,7 @@ function MonitoringClient() {
 
   async function approveFinalApproval(jobId) {
     try {
+      setApprovingJobs(prev => new Set([...prev, jobId]));
       const token = localStorage.getItem('jf_token');
       const res = await fetch(`${API_BASE_URL}/job-listings/${jobId}`, {
         method: 'PATCH',
@@ -105,6 +114,12 @@ function MonitoringClient() {
       load();
     } catch (e) {
       message.error(e.message || 'Failed to approve');
+    } finally {
+      setApprovingJobs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
     }
   }
 
@@ -171,7 +186,7 @@ function MonitoringClient() {
     { title: 'Actions', key: 'actions', render: (_, record) => (
       <Space>
         <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-        <Button type="primary" size="small" icon={<CheckOutlined />} onClick={() => approvePreApproval(record._id)}>Approve</Button>
+        <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approvePreApproval(record._id)}>Approve</Button>
         <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, true)}>Reject</Button>
       </Space>
     )}
@@ -184,7 +199,7 @@ function MonitoringClient() {
     { title: 'Actions', key: 'actions', render: (_, record) => (
       <Space>
         <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-        <Button type="primary" size="small" icon={<CheckOutlined />} onClick={() => approveFinalApproval(record._id)}>Approve</Button>
+        <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approveFinalApproval(record._id)}>Approve</Button>
         <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, false)}>Reject</Button>
       </Space>
     )}
