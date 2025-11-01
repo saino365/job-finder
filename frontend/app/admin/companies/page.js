@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Layout, Table, Button, Space, Tag, message, Modal, Typography, Card, Descriptions, Segmented } from 'antd';
+import { Layout, Table, Button, Space, Tag, message, Modal, Typography, Card, Descriptions, Segmented, Form, Input } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
 
 import { API_BASE_URL } from '../../../config';
@@ -16,6 +16,9 @@ export default function AdminCompaniesPage() {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // all|pending|approved|rejected
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectingCompany, setRejectingCompany] = useState(null);
+  const [rejectForm] = Form.useForm();
 
   useEffect(() => {
     loadCompanies();
@@ -60,18 +63,36 @@ export default function AdminCompaniesPage() {
     }
   }
 
+  async function findCompanyVerification(companyId) {
+    const token = localStorage.getItem('jf_token');
+    const res = await fetch(`${API_BASE_URL}/company-verifications?companyId=${companyId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to find verification');
+    const data = await res.json();
+    const verifications = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+    return verifications.find(v => v.companyId === companyId);
+  }
+
   async function approveCompany(companyId) {
     try {
       const token = localStorage.getItem('jf_token');
-      const res = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
+
+      // Find the verification record
+      const verification = await findCompanyVerification(companyId);
+      if (!verification) {
+        throw new Error('No verification record found for this company');
+      }
+
+      // Use the proper company-verifications endpoint
+      const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          verifiedStatus: 1,
-          reviewedAt: new Date().toISOString()
+          action: 'approve'
         })
       });
 
@@ -83,23 +104,36 @@ export default function AdminCompaniesPage() {
       loadCompanies();
     } catch (error) {
       console.error('Error approving company:', error);
-      message.error('Failed to approve company');
+      message.error(error.message || 'Failed to approve company');
     }
   }
 
-  async function rejectCompany(companyId) {
+  function openRejectModal(company) {
+    setRejectingCompany(company);
+    setRejectModalOpen(true);
+  }
+
+  async function handleReject() {
     try {
+      const values = await rejectForm.validateFields();
       const token = localStorage.getItem('jf_token');
-      const res = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
+
+      // Find the verification record
+      const verification = await findCompanyVerification(rejectingCompany._id);
+      if (!verification) {
+        throw new Error('No verification record found for this company');
+      }
+
+      // Use the proper company-verifications endpoint
+      const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          verifiedStatus: 2,
-          reviewedAt: new Date().toISOString(),
-          rejectionReason: 'Rejected by admin'
+          action: 'reject',
+          rejectionReason: values.rejectionReason
         })
       });
 
@@ -107,11 +141,14 @@ export default function AdminCompaniesPage() {
         throw new Error('Failed to reject company');
       }
 
-      message.success('Company rejected');
+      message.success('Company rejected successfully');
+      setRejectModalOpen(false);
+      rejectForm.resetFields();
+      setRejectingCompany(null);
       loadCompanies();
     } catch (error) {
       console.error('Error rejecting company:', error);
-      message.error('Failed to reject company');
+      message.error(error.message || 'Failed to reject company');
     }
   }
 
@@ -173,7 +210,7 @@ export default function AdminCompaniesPage() {
             icon={<CloseOutlined />}
             size="small"
             disabled={record.verifiedStatus === 2}
-            onClick={() => rejectCompany(record._id)}
+            onClick={() => openRejectModal(record)}
           >
             Reject
           </Button>
@@ -217,7 +254,7 @@ export default function AdminCompaniesPage() {
           companies={companies}
           loading={loading}
           onApprove={approveCompany}
-          onReject={rejectCompany}
+          onReject={openRejectModal}
           onView={(rec) => { setSelectedCompany(rec); setDetailsVisible(true); }}
         />
       </Card>
@@ -264,6 +301,30 @@ export default function AdminCompaniesPage() {
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Modal>
+
+      {/* Rejection Modal */}
+      <Modal
+        title="Reject Company Verification"
+        open={rejectModalOpen}
+        onCancel={() => {
+          setRejectModalOpen(false);
+          rejectForm.resetFields();
+          setRejectingCompany(null);
+        }}
+        onOk={handleReject}
+        okText="Reject"
+        okButtonProps={{ danger: true }}
+      >
+        <Form form={rejectForm} layout="vertical">
+          <Form.Item
+            label="Rejection Reason"
+            name="rejectionReason"
+            rules={[{ required: true, message: 'Please provide a rejection reason' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Explain why this company verification is rejected" />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
