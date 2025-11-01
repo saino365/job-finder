@@ -219,7 +219,21 @@ export default (app) => ({
 
         // Admin actions
         if (user.role === 'admin') {
-          // Approve - PENDING → ACTIVE
+          // Pre-approval stage: PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5)
+          if ((d.approvePreApproval === true || d.approve === true) && current.status === STATUS.PENDING_PRE_APPROVAL) {
+            d.status = STATUS.PRE_APPROVED;
+            d.preApprovedAt = new Date();
+          }
+
+          // Pre-approval rejected: PENDING_PRE_APPROVAL (4) → DRAFT (0)
+          if ((d.rejectPreApproval === true || d.reject === true) && current.status === STATUS.PENDING_PRE_APPROVAL) {
+            d.status = STATUS.DRAFT;
+            if (d.rejectionReason) {
+              d.preApprovalRejectionReason = d.rejectionReason;
+            }
+          }
+
+          // Final approval: PENDING (1) → ACTIVE (2)
           if (d.approve === true && current.status === STATUS.PENDING) {
             d.status = STATUS.ACTIVE;
             d.approvedAt = new Date();
@@ -228,7 +242,7 @@ export default (app) => ({
             d.expiresAt = computeExpiry(pub);
           }
 
-          // Reject - PENDING → DRAFT
+          // Final rejection: PENDING (1) → DRAFT (0)
           if (d.reject === true && current.status === STATUS.PENDING) {
             d.status = STATUS.DRAFT;
             if (d.rejectionReason) d.rejectionReason = d.rejectionReason;
@@ -243,7 +257,7 @@ export default (app) => ({
             d.renewal = false;
             ctx.params._approvedRenewal = true;
           }
-          delete d.approve; delete d.reject; delete d.approveRenewal;
+          delete d.approve; delete d.reject; delete d.approveRenewal; delete d.approvePreApproval; delete d.rejectPreApproval;
         }
 
         ctx.data = d;

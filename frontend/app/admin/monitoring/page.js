@@ -71,7 +71,7 @@ function MonitoringClient() {
         body: JSON.stringify({ approve: true })
       });
       if (!res.ok) throw new Error('Failed to approve job listing');
-      message.success('Job listing approved and activated');
+      message.success('Pre-approved. Waiting for final submission.');
       load();
     } catch (e) {
       message.error(e.message || 'Failed to approve');
@@ -193,12 +193,13 @@ function MonitoringClient() {
           </Space>
         );
       }
-      if (record.status === 0 && record.rejectionReason) { // DRAFT with rejection reason
+      if (record.status === 0 && (record.rejectionReason || record.preApprovalRejectionReason)) { // DRAFT with rejection reason
+        const reason = record.rejectionReason || record.preApprovalRejectionReason;
         return (
           <Space>
             <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
             <Tag color="red">Rejected</Tag>
-            <span style={{ fontSize: '12px', color: '#666' }}>({record.rejectionReason})</span>
+            <span style={{ fontSize: '12px', color: '#666' }}>({reason})</span>
           </Space>
         );
       }
