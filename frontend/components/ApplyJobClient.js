@@ -223,7 +223,11 @@ export default function ApplyJobClient({ jobId }) {
               <Text>{p.phone || 'Not provided'}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Location">
-              <Text>{p.location || 'Not provided'}</Text>
+              <Text>
+                {p.location?.city || p.location?.state || p.location?.country
+                  ? [p.location?.city, p.location?.state, p.location?.country].filter(Boolean).join(', ')
+                  : 'Not provided'}
+              </Text>
             </Descriptions.Item>
           </Descriptions>
         </Card>

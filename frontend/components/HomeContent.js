@@ -118,6 +118,17 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     salary: []
   });
 
+  // Guest (non-authenticated) filters for company search
+  const {
+    filters: guestFilters,
+    updateFilter: handleGuestFilterChange,
+    clearAllFilters: handleClearGuestFilters,
+    hasActiveFilters: hasActiveGuestFilters
+  } = useFilters({
+    industry: [],
+    location: []
+  });
+
   const candidatesUrl = useMemo(() => {
     const qs = new URLSearchParams();
 
@@ -324,15 +335,16 @@ export default function HomeContent({ jobs = [], companies = [] }) {
   // Build filtered URL function for student company search
   const buildFilteredCompaniesUrl = (searchQuery, filters) => {
     const params = new URLSearchParams();
-    params.set("$limit", "50"); // Get more results
-    params.set("verifiedStatus", "1"); // Only show approved companies
+    params.set("$limit", "50");
+    params.set("verifiedStatus", "1");
 
-    // Add search query - use 'q' parameter which backend processes as keyword
+    // Add search query
     if (searchQuery) {
       params.set("q", searchQuery);
     }
 
-    // Add student filters
+    // Add filters - for now support single value (first selected)
+    // TODO: Backend needs to support multiple values properly
     if (filters.industry?.length > 0) {
       params.set("industry", filters.industry[0]);
     }
@@ -340,8 +352,10 @@ export default function HomeContent({ jobs = [], companies = [] }) {
       params.set("city", filters.location[0]);
     }
 
-    const finalUrl = `${API_BASE_URL}/companies?${params.toString()}`;
-    return finalUrl;
+    const url = `${API_BASE_URL}/companies?${params.toString()}`;
+    console.log('🔍 Frontend: Built filtered companies URL:', url);
+    console.log('🔍 Frontend: Filters:', filters);
+    return url;
   };
 
   const jobsUrl = useMemo(() => buildQuery("/job-listings", { q, location, salaryMin, salaryMax }), [q, location, salaryMin, salaryMax]);
@@ -398,6 +412,21 @@ export default function HomeContent({ jobs = [], companies = [] }) {
       return result;
     },
     enabled: role === 'student',
+  });
+
+  // Filtered queries for guest (non-authenticated) users
+  const guestCompaniesQuery = useQuery({
+    queryKey: ["guest-companies", q, guestFilters.industry, guestFilters.location],
+    queryFn: async () => {
+      const url = buildFilteredCompaniesUrl(q, guestFilters);
+      console.log('🔍 Guest: Fetching filtered companies from:', url);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Guest companies fetch failed");
+      const data = await res.json();
+      const result = Array.isArray(data) ? data : (data?.data || []);
+      return result;
+    },
+    enabled: !role, // Only enabled when no role (not logged in)
   });
 
   // Debug: Log when query should be enabled
@@ -546,7 +575,7 @@ export default function HomeContent({ jobs = [], companies = [] }) {
               ) : internsQuery.data?.length ? (
                 <Row gutter={[16,16]}>
                   {internsQuery.data.map((u) => (
-                    <Col xs={24} sm={internsView==='grid'?12:24} md={internsView==='grid'?8:24} lg={internsView==='grid'?6:24} key={u._id || u.id}>
+                    <Col xs={24} sm={internsView==='grid'?12:24} md={internsView==='grid'?12:24} lg={internsView==='grid'?8:24} key={u._id || u.id}>
                       <InternCard intern={u} />
                     </Col>
                   ))}
@@ -585,7 +614,7 @@ export default function HomeContent({ jobs = [], companies = [] }) {
             />
 
             {/* Companies Section */}
-            <section id="companies" style={{ marginBottom: 32 }}>
+            <section id="companies" style={{ marginBottom: 32, minHeight: '400px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                   {q || (studentFilters.industry?.length > 0) || (studentFilters.location?.length > 0) ? 'Search Results' : 'Featured Companies'}
@@ -602,13 +631,15 @@ export default function HomeContent({ jobs = [], companies = [] }) {
               {filteredCompaniesQuery.isLoading ? (
                 <Skeleton active />
               ) : filteredCompaniesQuery.data?.length ? (
-                <Row gutter={[16,16]}>
-                  {filteredCompaniesQuery.data.slice(0, 6).map((company) => (
-                    <Col xs={24} sm={12} md={8} key={company._id || company.id}>
-                      <CompanyCard company={company} />
-                    </Col>
-                  ))}
-                </Row>
+                <div style={{ minHeight: '350px' }}>
+                  <Row gutter={[16,16]}>
+                    {filteredCompaniesQuery.data.slice(0, 6).map((company) => (
+                      <Col xs={24} sm={12} md={12} lg={8} key={company._id || company.id}>
+                        <CompanyCard company={company} />
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
               ) : (
                 <Empty
                   image={<Image src="/images/not_found.svg" alt="No companies found" width={200} height={150} priority />}
@@ -626,94 +657,21 @@ export default function HomeContent({ jobs = [], companies = [] }) {
           </>
         ) : (
           <>
-            {/* Legacy filters for non-authenticated users */}
-            <Space direction="vertical" style={{ width: '100%', marginBottom: 24 }} size="middle">
-              <Row gutter={[16, 16]} align="middle">
-                <Col xs={24} sm={12} md={6}>
-                  <Typography.Text strong>Nature of business</Typography.Text>
-                  <Select
-                    placeholder="Select industry"
-                    value={nature}
-                    onChange={setNature}
-                    style={{ width: '100%', marginTop: 4 }}
-                    allowClear
-                    options={industriesQuery.data?.map(industry => ({
-                      value: industry,
-                      label: industry
-                    })) || []}
-                  />
-                </Col>
-                <Col xs={12} sm={6} md={3}>
-                  <Typography.Text strong>Salary Min (RM)</Typography.Text>
-                  <InputNumber
-                    placeholder="Min"
-                    value={salaryMin}
-                    onChange={setSalaryMin}
-                    style={{ width: '100%', marginTop: 4 }}
-                    min={0}
-                    max={50000}
-                    step={500}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                  />
-                </Col>
-                <Col xs={12} sm={6} md={3}>
-                  <Typography.Text strong>Salary Max (RM)</Typography.Text>
-                  <InputNumber
-                    placeholder="Max"
-                    value={salaryMax}
-                    onChange={setSalaryMax}
-                    style={{ width: '100%', marginTop: 4 }}
-                    min={0}
-                    max={50000}
-                    step={500}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                  />
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <Typography.Text strong>Location</Typography.Text>
-                  <Select
-                    placeholder="Select location"
-                    value={companyCity}
-                    onChange={setCompanyCity}
-                    style={{ width: '100%', marginTop: 4 }}
-                    allowClear
-                    options={[
-                      { value: 'Kuala Lumpur', label: 'Kuala Lumpur' },
-                      { value: 'Selangor', label: 'Selangor' },
-                      { value: 'Penang', label: 'Penang' },
-                      { value: 'Johor', label: 'Johor' },
-                      { value: 'Perak', label: 'Perak' },
-                      { value: 'Sabah', label: 'Sabah' },
-                      { value: 'Sarawak', label: 'Sarawak' },
-                    ]}
-                  />
-                </Col>
-                <Col xs={24} sm={12} md={4}>
-                  <Typography.Text strong>Sort by</Typography.Text>
-                  <Select
-                    value={sort}
-                    onChange={setSort}
-                    style={{ width: '100%', marginTop: 4 }}
-                    options={[
-                      { value: 'latest', label: 'Latest' },
-                      { value: 'name', label: 'A→Z' },
-                      { value: 'salary', label: 'Salary ↓' },
-                    ]}
-                  />
-                </Col>
-                <Col xs={24} sm={12} md={2}>
-                  <Button
-                    type="primary"
-                    onClick={handleSaveSearchProfile}
-                    style={{ width: '100%', marginTop: 20 }}
-                  >
-                    Save Profile
-                  </Button>
-                </Col>
-              </Row>
-            </Space>
+            {/* Filter Bar for Guest Users - Company Search */}
+            <FilterBar
+              filterConfig={getFilterConfig('company-search')}
+              selectedFilters={guestFilters}
+              onFilterChange={handleGuestFilterChange}
+              onClearAll={handleClearGuestFilters}
+              showSaveProfile={false}
+              showClearAll={true}
+              theme={{
+                activeColor: '#7d69ff',
+                inactiveColor: '#f5f5f5',
+                textColor: '#666',
+                activeTextColor: '#fff'
+              }}
+            />
             <section id="jobs" style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>Latest Jobs</Typography.Title>
@@ -724,7 +682,7 @@ export default function HomeContent({ jobs = [], companies = [] }) {
               ) : jobsQuery.data?.length ? (
                 <Row gutter={[16, 16]}>
                   {jobsQuery.data.map((j) => (
-                    <Col xs={24} sm={jobsView==='grid'?12:24} md={jobsView==='grid'?8:24} lg={jobsView==='grid'?6:24} key={j._id}>
+                    <Col xs={24} sm={jobsView==='grid'?12:24} md={jobsView==='grid'?12:24} lg={jobsView==='grid'?8:24} key={j._id}>
                       <JobCard job={j} />
                     </Col>
                   ))}
@@ -741,27 +699,35 @@ export default function HomeContent({ jobs = [], companies = [] }) {
                 />
               )}
             </section>
-            <section id="companies" style={{ marginBottom: 32 }}>
+            <section id="companies" style={{ marginBottom: 32, minHeight: '400px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <Typography.Title level={3} style={{ margin: 0 }}>Featured Companies</Typography.Title>
-                <Segmented value={companiesView} onChange={setCompaniesView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                <Typography.Title level={3} style={{ margin: 0 }}>
+                  {q || (guestFilters.industry?.length > 0) || (guestFilters.location?.length > 0) ? 'Search Results' : 'Featured Companies'}
+                </Typography.Title>
+                <Link href="/companies">
+                  <Button type="link">View All Companies →</Button>
+                </Link>
               </div>
-              {companiesQuery.isLoading ? (
+              {guestCompaniesQuery.isLoading ? (
                 <Skeleton active />
-              ) : companiesQuery.data?.length ? (
-                <Row gutter={[16, 16]}>
-                  {companiesQuery.data.map((c) => (
-                    <Col xs={24} sm={companiesView==='grid'?12:24} md={companiesView==='grid'?8:24} lg={companiesView==='grid'?6:24} key={c._id}>
-                      <CompanyCard company={c} />
-                    </Col>
-                  ))}
-                </Row>
+              ) : guestCompaniesQuery.data?.length ? (
+                <div style={{ minHeight: '350px' }}>
+                  <Row gutter={[16, 16]}>
+                    {guestCompaniesQuery.data.slice(0, 6).map((c) => (
+                      <Col xs={24} sm={12} md={12} lg={8} key={c._id}>
+                        <CompanyCard company={c} />
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
               ) : (
                 <Empty
                   image={<Image src="/images/not_found.svg" alt="No companies found" width={200} height={150} priority />}
                   description={
                     <div>
-                      <Text style={{ fontSize: 16, display: 'block', marginBottom: 8 }}>No companies found</Text>
+                      <Text style={{ fontSize: 16, display: 'block', marginBottom: 8 }}>
+                        {q || (guestFilters.industry?.length > 0) || (guestFilters.location?.length > 0) ? "No companies match your search" : "No companies found"}
+                      </Text>
                       <Text type="secondary">Try adjusting your filters or search criteria</Text>
                     </div>
                   }
