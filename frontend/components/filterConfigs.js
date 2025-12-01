@@ -240,46 +240,6 @@ export const COMPANY_SEARCH_FILTERS = [
       'Sabah',
       'Sarawak'
     ]
-  },
-  {
-    key: 'size',
-    label: 'Company Size',
-    title: 'Company Size',
-    type: 'checkbox',
-    width: '140px',
-    options: [
-      '1-10 employees',
-      '11-50 employees',
-      '51-200 employees',
-      '201-500 employees',
-      '500+ employees'
-    ]
-  },
-  {
-    key: 'location',
-    label: 'Location',
-    title: 'Company Location',
-    type: 'checkbox',
-    width: '110px',
-    options: [
-      'Kuala Lumpur',
-      'Selangor',
-      'Penang',
-      'Johor',
-      'Perak'
-    ]
-  },
-  {
-    key: 'verified',
-    label: 'Verification',
-    title: 'Verification Status',
-    type: 'checkbox',
-    width: '130px',
-    options: [
-      'Verified',
-      'Pending',
-      'All'
-    ]
   }
 ];
 
