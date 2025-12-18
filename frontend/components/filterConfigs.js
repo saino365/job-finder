@@ -70,7 +70,7 @@ export const INTERN_SEARCH_FILTERS = [
     width: '150px',
     apiField: 'workExperiences.industry',
     options: [
-      'Technology',
+      'Information Technology',
       'Finance',
       'Healthcare',
       'Education',
@@ -146,7 +146,7 @@ export const JOB_SEARCH_FILTERS = [
     type: 'checkbox',
     width: '120px',
     options: [
-      'Technology',
+      'Information Technology',
       'Finance',
       'Healthcare',
       'Education',
@@ -213,7 +213,7 @@ export const COMPANY_SEARCH_FILTERS = [
     type: 'checkbox',
     width: '120px',
     options: [
-      'Technology',
+      'Information Technology',
       'Finance',
       'Healthcare',
       'Manufacturing',
@@ -239,6 +239,20 @@ export const COMPANY_SEARCH_FILTERS = [
       'Perak',
       'Sabah',
       'Sarawak'
+    ]
+  },
+  {
+    key: 'salary',
+    label: 'Salary',
+    title: 'Salary Range (RM)',
+    type: 'checkbox',
+    width: '100px',
+    options: [
+      '1000 - 2000',
+      '2000 - 3000',
+      '3000 - 4000',
+      '4000 - 5000',
+      '5000+'
     ]
   }
 ];

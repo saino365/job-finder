@@ -22,7 +22,7 @@ function buildQuery(base, { q, location, nature, city, salaryMin, salaryMax, sor
   const isJobs = base.includes("job-listings");
   const params = new URLSearchParams({ "$limit": "8" });
   if (isJobs) {
-    if (q) { params.append(`title[$regex]`, q); params.append(`title[$options]`, "i"); }
+    if (q) { params.append(`keyword`, q); }
     if (location) { params.append(`location.city[$regex]`, location); params.append(`location.city[$options]`, "i"); }
   } else {
     if (q) params.append('q', q);
@@ -352,6 +352,18 @@ export default function HomeContent({ jobs = [], companies = [] }) {
       params.set("city", filters.location[0]);
     }
 
+    // Add salary filter
+    if (filters.salary?.length > 0) {
+      const salaryRange = filters.salary[0];
+      if (salaryRange === "5000+") {
+        params.set("salaryMin", "5000");
+      } else if (salaryRange.includes(" - ")) {
+        const [min, max] = salaryRange.split(" - ").map(s => s.trim());
+        if (min) params.set("salaryMin", min);
+        if (max) params.set("salaryMax", max);
+      }
+    }
+
     const url = `${API_BASE_URL}/companies?${params.toString()}`;
     console.log('🔍 Frontend: Built filtered companies URL:', url);
     console.log('🔍 Frontend: Filters:', filters);
@@ -399,7 +411,7 @@ export default function HomeContent({ jobs = [], companies = [] }) {
   // Filtered queries for students
 
   const filteredCompaniesQuery = useQuery({
-    queryKey: ["filtered-companies", q, studentFilters.industry, studentFilters.location],
+    queryKey: ["filtered-companies", q, studentFilters.industry, studentFilters.location, studentFilters.salary],
     queryFn: async () => {
       const url = buildFilteredCompaniesUrl(q, studentFilters);
       console.log('🔍 Fetching filtered companies from:', url);
@@ -617,7 +629,7 @@ export default function HomeContent({ jobs = [], companies = [] }) {
             <section id="companies" style={{ marginBottom: 32, minHeight: '400px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>
-                  {q || (studentFilters.industry?.length > 0) || (studentFilters.location?.length > 0) ? 'Search Results' : 'Featured Companies'}
+                  {q || (studentFilters.industry?.length > 0) || (studentFilters.location?.length > 0) || (studentFilters.salary?.length > 0) ? 'Search Results' : 'Featured Companies'}
                 </Typography.Title>
                 <Link href="/companies">
                   <Button type="link">View All Companies →</Button>

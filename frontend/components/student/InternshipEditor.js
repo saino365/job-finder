@@ -44,10 +44,21 @@ export default function InternshipEditor() {
     try {
       setSaving(true);
       const token = localStorage.getItem('jf_token');
+
+      // Calculate duration from start and end dates
+      let preferredDuration = undefined;
+      if (values.startEnd?.[0] && values.startEnd?.[1]) {
+        const startDate = values.startEnd[0];
+        const endDate = values.startEnd[1];
+        const durationMonths = Math.round(endDate.diff(startDate, 'month', true));
+        preferredDuration = `${durationMonths} months`;
+      }
+
       const payload = {
         preferences: {
           startDate: values.startEnd?.[0]?.toISOString?.(),
           endDate: values.startEnd?.[1]?.toISOString?.(),
+          preferredDuration,
           industries: Array.isArray(values.industries) ? values.industries : [],
           locations: Array.isArray(values.locations) ? values.locations.slice(0,3) : [],
           salary: { min: values.salaryMin != null ? Number(values.salaryMin) : undefined, max: values.salaryMax != null ? Number(values.salaryMax) : undefined }

@@ -29,7 +29,7 @@ export default function RegisterWizard({ onStepChange }) {
 
   async function handleSubmitAll(values) {
     // Compose payload matching backend schema
-    const { username, password, email: emailInput, firstName, middleName, lastName, phone, icPassportNumber } = values;
+    const { username, password, email: emailInput, firstName, middleName, lastName, phone, icPassportNumber, city, state, country } = values;
 
     // Determine email/username relationship
     const usernameStr = String(username || '').trim().toLowerCase();
@@ -93,6 +93,11 @@ export default function RegisterWizard({ onStepChange }) {
         phone: phone || undefined,
         avatar: undefined,
         icPassportNumber: icPassportNumber || undefined,
+        location: {
+          city: city || undefined,
+          state: state || undefined,
+          country: country || undefined,
+        },
       },
       internProfile: {
         educations,
@@ -170,7 +175,6 @@ export default function RegisterWizard({ onStepChange }) {
 
   async function handleNext() {
     try {
-      // validate this step's fields only
       const stepKey = steps[current].key;
       let fields = [];
       switch (stepKey) {
@@ -181,6 +185,34 @@ export default function RegisterWizard({ onStepChange }) {
       console.log('Validating fields:', fields);
       console.log('Form values:', form.getFieldsValue());
       await form.validateFields(fields);
+
+      if (stepKey === 'account') {
+        const values = form.getFieldsValue(['username', 'email']);
+        const usernameStr = String(values.username || '').trim().toLowerCase();
+        const emailStr = String(values.email || '').trim().toLowerCase();
+
+        try {
+          const checkRes = await fetch(`${API_BASE_URL}/users?$limit=1&$or[0][email]=${encodeURIComponent(emailStr)}&$or[1][username]=${encodeURIComponent(usernameStr)}`);
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            const existingUsers = checkData.data || [];
+            if (existingUsers.length > 0) {
+              const existing = existingUsers[0];
+              if (existing.email === emailStr) {
+                message.error('This email address is already registered. Please use a different email address.');
+                return;
+              }
+              if (existing.username === usernameStr) {
+                message.error('This username is already registered. Please use a different username.');
+                return;
+              }
+            }
+          }
+        } catch (checkErr) {
+          console.warn('Failed to check email/username availability:', checkErr);
+        }
+      }
+
       const newStep = current + 1;
       setCurrent(newStep);
       if (onStepChange) onStepChange(newStep);
@@ -203,7 +235,31 @@ export default function RegisterWizard({ onStepChange }) {
       await handleSubmitAll(values);
     } catch (e) {
       if (e?.message) {
-        message.error(e.message);
+        let errorMsg = e.message;
+
+        if (e.message.includes('E11000') || e.message.includes('duplicate key')) {
+          if (e.message.includes('email')) {
+            errorMsg = 'This email address is already registered. Please use a different email address.';
+            setCurrent(0);
+          } else if (e.message.includes('username')) {
+            errorMsg = 'This username is already registered. Please use a different username.';
+            setCurrent(0);
+          } else {
+            errorMsg = 'This account already exists. Please use different credentials.';
+            setCurrent(0);
+          }
+        } else if (e.message.includes('email address is already registered')) {
+          errorMsg = 'This email address is already registered. Please use a different email address.';
+          setCurrent(0);
+        } else if (e.message.includes('username is already registered')) {
+          errorMsg = 'This username is already registered. Please use a different username.';
+          setCurrent(0);
+        } else if (e.message.includes('already exists')) {
+          errorMsg = 'This account already exists. Please use different credentials.';
+          setCurrent(0);
+        }
+
+        message.error(errorMsg);
       }
     } finally { setSubmitting(false); }
   }
@@ -358,6 +414,15 @@ export default function RegisterWizard({ onStepChange }) {
             </Form.Item>
             <Form.Item name="phone" label="Phone number" rules={[{ required: true }]}>
               <Input />
+            </Form.Item>
+            <Form.Item name="city" label="City">
+              <Input placeholder="e.g., Kuala Lumpur" />
+            </Form.Item>
+            <Form.Item name="state" label="State">
+              <Input placeholder="e.g., Selangor" />
+            </Form.Item>
+            <Form.Item name="country" label="Country">
+              <Input placeholder="e.g., Malaysia" />
             </Form.Item>
             <Form.Item label="Photo (optional)">
               <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} />

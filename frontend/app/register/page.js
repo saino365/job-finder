@@ -29,22 +29,22 @@ export default function RegisterPage() {
         <Col xs={0} md={12} lg={12} xl={12}>
           <div style={{
             backgroundColor: '#fff',
-            height: '100vh',
+            minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: '1vh'
+            padding: '20px'
           }}>
             {/* Progress Steps - Positioned above title */}
             <div style={{
               display: 'flex',
-              paddingLeft: '50vh',
-              marginBottom: '60px',
+              paddingLeft: 'clamp(100px, 30vw, 400px)',
+              marginBottom: '40px',
               width: '100%',
               overflow: 'hidden',
               position: 'relative',
-              height: '10vh'
+              minHeight: '60px'
             }}>
               <div
                 style={{
@@ -84,8 +84,8 @@ export default function RegisterPage() {
                           width: '30px',
                           height: '3px',
                           backgroundColor: index < currentStep ? '#7d69ff' : '#f0f0f0',
-                          marginLeft: '1vh',
-                          marginRight: '1vh',
+                          marginLeft: '8px',
+                          marginRight: '8px',
                           transition: 'all 0.3s ease',
                           borderRadius: '2px'
                         }}
@@ -97,7 +97,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Dynamic Step Information - Centered below progress */}
-            <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+            <div style={{ textAlign: 'center', maxWidth: '400px', padding: '0 20px' }}>
               <Title level={3} style={{ marginBottom: '12px', color: '#7d69ff' }}>
                 {currentStep === 0 && "Account Setup"}
                 {currentStep === 1 && "Personal Information"}
@@ -124,7 +124,7 @@ export default function RegisterPage() {
         <Col xs={24} md={12} lg={12} xl={12}>
           <div
             style={{
-              height: '100vh',
+              minHeight: '100vh',
               overflowY: 'auto',
               padding: '24px',
             }}
@@ -134,7 +134,9 @@ export default function RegisterPage() {
                 minHeight: 'calc(100vh - 48px)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                paddingTop: '20px',
+                paddingBottom: '20px'
               }}
             >
               <div style={{ width: '100%', maxWidth: '500px' }}>
