@@ -260,7 +260,24 @@ export default function RegisterWizard({ onStepChange }) {
         {current === 0 && (
           <>
             <Title level={5}>1. Account</Title>
-            <Form.Item name="username" label="Username (can be email)" rules={[{ required: true }]}>
+            <Form.Item
+              name="username"
+              label="Username (can be email)"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('Username must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input placeholder="username or email" onChange={(e)=>{ const v=e.target.value; form.setFieldsValue({ username:v }); if (v && v.includes('@')) { form.setFieldsValue({ email:v }); } }} />
             </Form.Item>
             <Form.Item name="password" label="Password" rules={[{ required: true, min: 6 }]}>
@@ -277,13 +294,63 @@ export default function RegisterWizard({ onStepChange }) {
         {current === 1 && (
           <>
             <Title level={5}>2. Profile information</Title>
-            <Form.Item name="firstName" label="First name" rules={[{ required: true }]}>
+            <Form.Item
+              name="firstName"
+              label="First name"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('First name must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="middleName" label="Middle name (optional)">
+            <Form.Item
+              name="middleName"
+              label="Middle name (optional)"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('Middle name must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="lastName" label="Last name" rules={[{ required: true }]}>
+            <Form.Item
+              name="lastName"
+              label="Last name"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('Last name must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input />
             </Form.Item>
             <Form.Item name="icPassportNumber" label="IC / Passport number">

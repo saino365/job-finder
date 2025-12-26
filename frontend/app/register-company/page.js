@@ -83,10 +83,26 @@ export default function RegisterCompanyPage() {
             Use your work email. After verifying your email, you&apos;ll complete your company information and submit verification.
           </Typography.Paragraph>
           <Form layout="vertical" form={form} onValuesChange={onValuesChange} onFinish={onFinish} style={{ marginTop: '5vh'}}>
-            <Form.Item name="username" label="Username (can be your email)" rules={[{ required: true }]}>
-
-            <Input placeholder="Username or Email" />
-          </Form.Item>
+            <Form.Item
+              name="username"
+              label="Username (can be your email)"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('Username must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input placeholder="Username or Email" />
+            </Form.Item>
           <Form.Item name="password" label="Password" rules={[{ required: true, min: 6 }]}>
             <Input.Password placeholder="Minimum 6 characters" />
           </Form.Item>

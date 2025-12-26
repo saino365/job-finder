@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Layout, Card, Typography, Button, Space, Upload, Avatar, App, Tag, Progress, Row, Col, theme as antdTheme } from 'antd';
-import { UploadOutlined, EditOutlined, PhoneOutlined, MailOutlined, FileTextOutlined, WarningOutlined, CalendarOutlined, EnvironmentOutlined, BookOutlined, DownloadOutlined } from '@ant-design/icons';
+import { UploadOutlined, EditOutlined, PhoneOutlined, MailOutlined, FileTextOutlined, WarningOutlined, CalendarOutlined, EnvironmentOutlined, BookOutlined, DownloadOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { API_BASE_URL } from '../config';
@@ -54,6 +54,83 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
       return 'Document';
     }
   };
+
+  // Calculate profile completion score
+  const calculateProfileScore = () => {
+    let score = 0;
+    const checks = [
+      { condition: user?.profile?.firstName && user?.profile?.lastName, points: 10 },
+      { condition: user?.profile?.phone, points: 5 },
+      { condition: user?.internProfile?.university, points: 8 },
+      { condition: user?.internProfile?.major, points: 8 },
+      { condition: user?.internProfile?.gpa, points: 5 },
+      { condition: user?.internProfile?.graduationYear, points: 5 },
+      { condition: user?.internProfile?.resume, points: 15 },
+      { condition: user?.internProfile?.educations?.length > 0, points: 10 },
+      { condition: user?.internProfile?.workExperiences?.length > 0, points: 8 },
+      { condition: user?.internProfile?.skills?.length > 0, points: 8 },
+      { condition: user?.internProfile?.languages?.length > 0, points: 5 },
+      { condition: user?.internProfile?.certifications?.length > 0, points: 5 },
+      { condition: user?.internProfile?.preferences?.industries?.length > 0, points: 4 },
+      { condition: user?.internProfile?.preferences?.locations?.length > 0, points: 4 },
+    ];
+
+    checks.forEach(check => {
+      if (check.condition) score += check.points;
+    });
+
+    return score;
+  };
+
+  // Get pending actions (missing profile sections)
+  const getPendingActions = () => {
+    const actions = [];
+
+    if (!user?.internProfile?.resume) {
+      actions.push({ label: 'Upload Resume', section: 'personal', points: 15 });
+    }
+    if (!user?.internProfile?.educations || user.internProfile.educations.length === 0) {
+      actions.push({ label: 'Add Education', section: 'education', points: 10 });
+    }
+    if (!user?.internProfile?.skills || user.internProfile.skills.length === 0) {
+      actions.push({ label: 'Add Skills', section: 'skills', points: 8 });
+    }
+    if (!user?.internProfile?.workExperiences || user.internProfile.workExperiences.length === 0) {
+      actions.push({ label: 'Add Work Experience', section: 'experience', points: 8 });
+    }
+    if (!user?.internProfile?.university) {
+      actions.push({ label: 'Add University', section: 'personal', points: 8 });
+    }
+    if (!user?.internProfile?.major) {
+      actions.push({ label: 'Add Major', section: 'personal', points: 8 });
+    }
+    if (!user?.internProfile?.languages || user.internProfile.languages.length === 0) {
+      actions.push({ label: 'Add Languages', section: 'skills', points: 5 });
+    }
+    if (!user?.internProfile?.certifications || user.internProfile.certifications.length === 0) {
+      actions.push({ label: 'Add Certifications', section: 'certifications', points: 5 });
+    }
+    if (!user?.internProfile?.gpa) {
+      actions.push({ label: 'Add GPA', section: 'personal', points: 5 });
+    }
+    if (!user?.profile?.phone) {
+      actions.push({ label: 'Add Phone Number', section: 'personal', points: 5 });
+    }
+    if (!user?.internProfile?.graduationYear) {
+      actions.push({ label: 'Add Graduation Year', section: 'personal', points: 5 });
+    }
+    if (!user?.internProfile?.preferences?.industries || user.internProfile.preferences.industries.length === 0) {
+      actions.push({ label: 'Set Industry Preferences', section: 'internship', points: 4 });
+    }
+    if (!user?.internProfile?.preferences?.locations || user.internProfile.preferences.locations.length === 0) {
+      actions.push({ label: 'Set Location Preferences', section: 'internship', points: 4 });
+    }
+
+    return actions;
+  };
+
+  const profileScore = calculateProfileScore();
+  const pendingActions = getPendingActions();
 
   return (
     <Row gutter={[24, 24]}>
@@ -181,21 +258,23 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
               <div style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}>
                 <Progress
                   type="circle"
-                  percent={76}
+                  percent={profileScore}
                   size={80}
-                  strokeColor="#ff7a00"
-                  format={() => <span style={{ fontSize: 18, fontWeight: 'bold' }}>76%</span>}
+                  strokeColor={profileScore === 100 ? "#52c41a" : "#ff7a00"}
+                  format={() => <span style={{ fontSize: 18, fontWeight: 'bold' }}>{profileScore}%</span>}
                 />
               </div>
               <Title level={5} style={{ margin: 0, marginBottom: 8 }}>Profile score</Title>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Recruiters seek 100% profiles - complete yours to stand out!
+                {profileScore === 100
+                  ? "Perfect! Your profile is complete!"
+                  : "Recruiters seek 100% profiles - complete yours to stand out!"}
               </Text>
             </div>
           </Card>
 
           {/* Pending Actions */}
-          {isOwner && (
+          {isOwner && pendingActions.length > 0 && (
             <Card
               title={<Text strong style={{ fontSize: 16 }}>Pending Actions</Text>}
               style={{
@@ -206,8 +285,9 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
               }}
             >
               <Space direction="vertical" style={{ width: '100%' }} size={8}>
-                {!user?.internProfile?.resume && (
+                {pendingActions.map((action, index) => (
                   <div
+                    key={index}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -218,79 +298,36 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                       border: '1px solid #ffd591',
                       cursor: 'pointer'
                     }}
-                    onClick={() => onEditSection('resume')}
+                    onClick={() => onEditSection(action.section)}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <WarningOutlined style={{ color: '#fa8c16', fontSize: 16 }} />
-                      <Text style={{ fontSize: 14, color: token.colorText }}>Upload Resume</Text>
+                      <Text style={{ fontSize: 14, color: token.colorText }}>{action.label}</Text>
                     </div>
-                    <Tag color="orange" style={{ margin: 0 }}>+14%</Tag>
+                    <Tag color="orange" style={{ margin: 0 }}>+{action.points}%</Tag>
                   </div>
-                )}
-                {(!user?.internProfile?.preferences?.industries || user.internProfile.preferences.industries.length === 0) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '12px',
-                      backgroundColor: token.colorWarningBg || '#fff7e6',
-                      borderRadius: 6,
-                      border: '1px solid #ffd591',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => onEditSection('internship')}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <WarningOutlined style={{ color: '#fa8c16', fontSize: 16 }} />
-                      <Text style={{ fontSize: 14, color: token.colorText }}>Add Industry Preferences</Text>
-                    </div>
-                    <Tag color="orange" style={{ margin: 0 }}>+10%</Tag>
-                  </div>
-                )}
-                {(!user?.internProfile?.workExperiences || user.internProfile.workExperiences.length === 0) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '12px',
-                      backgroundColor: token.colorWarningBg || '#fff7e6',
-                      borderRadius: 6,
-                      border: '1px solid #ffd591',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => onEditSection('experience')}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <WarningOutlined style={{ color: '#fa8c16', fontSize: 16 }} />
-                      <Text style={{ fontSize: 14, color: token.colorText }}>Add Work Experience</Text>
-                    </div>
-                    <Tag color="orange" style={{ margin: 0 }}>+8%</Tag>
-                  </div>
-                )}
-                {(!user?.internProfile?.skills || user.internProfile.skills.length === 0) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '12px',
-                      backgroundColor: token.colorWarningBg || '#fff7e6',
-                      borderRadius: 6,
-                      border: '1px solid #ffd591',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => onEditSection('skills')}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <WarningOutlined style={{ color: '#fa8c16', fontSize: 16 }} />
-                      <Text style={{ fontSize: 14, color: token.colorText }}>Add Skills</Text>
-                    </div>
-                    <Tag color="orange" style={{ margin: 0 }}>+6%</Tag>
-                  </div>
-                )}
+                ))}
               </Space>
+            </Card>
+          )}
+
+          {/* Profile Complete Message */}
+          {isOwner && pendingActions.length === 0 && (
+            <Card
+              style={{
+                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.08)",
+                border: `1px solid #52c41a`,
+                borderRadius: 8,
+                backgroundColor: '#f6ffed'
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a', marginBottom: 8 }} />
+                <Title level={5} style={{ margin: 0, marginBottom: 4, color: '#52c41a' }}>Profile Complete!</Title>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Your profile is 100% complete. Great job!
+                </Text>
+              </div>
             </Card>
           )}
         </Space>
@@ -319,11 +356,29 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                 <div>
                   <Text strong style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Duration</Text>
                   <Text style={{ fontSize: 14 }}>
-                    {user.internProfile.preferences.preferredStartDate &&
-                      new Date(user.internProfile.preferences.preferredStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    {user.internProfile.preferences.preferredStartDate && user.internProfile.preferences.preferredEndDate && ' - '}
-                    {user.internProfile.preferences.preferredEndDate &&
-                      new Date(user.internProfile.preferences.preferredEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {(() => {
+                      const startDate = user.internProfile.preferences.preferredStartDate;
+                      const endDate = user.internProfile.preferences.preferredEndDate;
+
+                      if (!startDate && !endDate) return 'Not specified';
+
+                      const formatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+                      const startStr = startDate ? new Date(startDate).toLocaleDateString('en-GB', formatOptions) : '';
+                      const endStr = endDate ? new Date(endDate).toLocaleDateString('en-GB', formatOptions) : '';
+
+                      // If both dates are the same, show only one date
+                      if (startDate && endDate && startDate === endDate) {
+                        return startStr;
+                      }
+
+                      // If both dates exist and are different, show range
+                      if (startStr && endStr) {
+                        return `${startStr} - ${endStr}`;
+                      }
+
+                      // If only one date exists
+                      return startStr || endStr;
+                    })()}
                   </Text>
                 </div>
               ) : (
@@ -749,6 +804,137 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
             </Space>
             ) : (
               <Text type="secondary">No certifications added</Text>
+            )}
+          </Card>
+
+          {/* Event Experiences Card */}
+          <Card
+            title={<Text strong style={{ fontSize: 18 }}>Event Experiences</Text>}
+            extra={isOwner && <Button type="text" icon={<EditOutlined />} size="small" onClick={() => onEditSection('events')} />}
+            style={{
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.08)",
+              border: `1px solid ${token.colorBorder}`,
+              borderRadius: 8,
+              backgroundColor: token.colorBgContainer
+            }}
+          >
+          {user?.internProfile?.eventExperiences && user.internProfile.eventExperiences.length > 0 ? (
+            <Space direction="vertical" style={{ width: '100%' }} size={0} split={<div style={{ borderBottom: `1px solid ${token.colorBorder}`, margin: '16px 0' }} />}>
+              {user.internProfile.eventExperiences.map((event, idx) => (
+                <div key={idx} style={{ padding: '8px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <Text strong style={{ fontSize: 16, display: 'block', color: token.colorText }}>
+                        {event.eventName}
+                      </Text>
+                      {event.position && (
+                        <Text style={{ display: 'block', marginTop: 2, fontSize: 14, color: token.colorText }}>
+                          {event.position}
+                        </Text>
+                      )}
+                      {(event.startDate || event.endDate) && (
+                        <Text type="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14 }}>
+                          <CalendarOutlined /> {event.startDate ? new Date(event.startDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : ''}
+                          {event.endDate ? ` - ${new Date(event.endDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}` : ' - Present'}
+                        </Text>
+                      )}
+                      {event.location && (
+                        <Text type="secondary" style={{ display: 'block', marginTop: 2, fontSize: 14 }}>
+                          <EnvironmentOutlined /> {event.location}
+                        </Text>
+                      )}
+                      {event.description && (
+                        <Text style={{ display: 'block', marginTop: 12, fontSize: 14, color: token.colorText, lineHeight: 1.6 }}>
+                          {event.description}
+                        </Text>
+                      )}
+                      {event.socialLinks && event.socialLinks.length > 0 && (
+                        <div style={{ marginTop: 12 }}>
+                          <Space wrap size="small">
+                            {event.socialLinks.map((link, linkIdx) => (
+                              <Button
+                                key={linkIdx}
+                                type="link"
+                                size="small"
+                                href={link}
+                                target="_blank"
+                                style={{ padding: 0, height: 'auto' }}
+                              >
+                                {link}
+                              </Button>
+                            ))}
+                          </Space>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Space>
+            ) : (
+              <Text type="secondary">No event experiences added</Text>
+            )}
+          </Card>
+
+          {/* Interests Card */}
+          <Card
+            title={<Text strong style={{ fontSize: 18 }}>Interests</Text>}
+            extra={isOwner && <Button type="text" icon={<EditOutlined />} size="small" onClick={() => onEditSection('interests')} />}
+            style={{
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.08)",
+              border: `1px solid ${token.colorBorder}`,
+              borderRadius: 8,
+              backgroundColor: token.colorBgContainer
+            }}
+          >
+          {user?.internProfile?.interests && user.internProfile.interests.length > 0 ? (
+            <Space direction="vertical" style={{ width: '100%' }} size={0} split={<div style={{ borderBottom: `1px solid ${token.colorBorder}`, margin: '16px 0' }} />}>
+              {user.internProfile.interests.map((interest, idx) => (
+                <div key={idx} style={{ padding: '8px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <Text strong style={{ fontSize: 16, display: 'block', color: token.colorText }}>
+                        {interest.title}
+                      </Text>
+                      {interest.description && (
+                        <Text style={{ display: 'block', marginTop: 8, fontSize: 14, color: token.colorText, lineHeight: 1.6 }}>
+                          {interest.description}
+                        </Text>
+                      )}
+                      {interest.socialLinks && interest.socialLinks.length > 0 && (
+                        <div style={{ marginTop: 12 }}>
+                          <Space wrap size="small">
+                            {interest.socialLinks.map((link, linkIdx) => (
+                              <Button
+                                key={linkIdx}
+                                type="link"
+                                size="small"
+                                href={link}
+                                target="_blank"
+                                style={{ padding: 0, height: 'auto' }}
+                              >
+                                {link}
+                              </Button>
+                            ))}
+                          </Space>
+                        </div>
+                      )}
+                    </div>
+                    {interest.thumbnailUrl && (
+                      <div style={{ flexShrink: 0 }}>
+                        <img
+                          src={interest.thumbnailUrl}
+                          alt={interest.title}
+                          style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </Space>
+            ) : (
+              <Text type="secondary">No interests added</Text>
             )}
           </Card>
 

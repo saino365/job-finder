@@ -72,26 +72,39 @@ export default (app) => ({
         // Handle start date filtering
         if (q.startDate) {
           const now = new Date();
+          now.setHours(0, 0, 0, 0); // Start of today
           let startDateQuery = {};
 
           if (q.startDate === 'This Month') {
-            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            startDateQuery = { $gte: now, $lte: endOfMonth };
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+            startDateQuery = { $gte: startOfMonth, $lte: endOfMonth };
+            console.log('🔍 Job Backend: This Month filter:', { startOfMonth, endOfMonth });
           } else if (q.startDate === 'Next Month') {
             const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-            const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+            const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: nextMonth, $lte: endOfNextMonth };
+            console.log('🔍 Job Backend: Next Month filter:', { nextMonth, endOfNextMonth });
           } else if (q.startDate === 'Next 3 Months') {
-            const threeMonthsLater = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+            const threeMonthsLater = new Date(now.getFullYear(), now.getMonth() + 3, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: now, $lte: threeMonthsLater };
+            console.log('🔍 Job Backend: Next 3 Months filter:', { now, threeMonthsLater });
           } else if (q.startDate === 'Next 6 Months') {
-            const sixMonthsLater = new Date(now.getFullYear(), now.getMonth() + 6, 0);
+            const sixMonthsLater = new Date(now.getFullYear(), now.getMonth() + 6, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: now, $lte: sixMonthsLater };
+            console.log('🔍 Job Backend: Next 6 Months filter:', { now, sixMonthsLater });
+          } else if (q.startDate === 'Flexible') {
+            // For "Flexible", show all jobs (no date filter)
+            console.log('🔍 Job Backend: Flexible filter - no date restriction');
           }
 
           if (Object.keys(startDateQuery).length > 0) {
             ctx.params.query['project.startDate'] = startDateQuery;
-            console.log('🔍 Job Backend: Applied start date filter:', { startDate: q.startDate, query: startDateQuery });
+            console.log('🔍 Job Backend: Applied start date filter:', {
+              startDate: q.startDate,
+              query: startDateQuery,
+              queryField: 'project.startDate'
+            });
           }
         }
 
@@ -299,13 +312,15 @@ export default (app) => ({
         // Populate companies for all jobs
         jobs = await Promise.all(jobs.map(populateCompany));
 
-        // Filter by industry if specified
+        // Filter by industry if specified (case-insensitive)
         if (industryFilter && industryFilter.length > 0) {
           console.log('🔍 Job Backend: Applying industry filter after population:', { industryFilter });
           const beforeCount = jobs.length;
+          // Convert filter to lowercase for case-insensitive matching
+          const lowerIndustryFilter = industryFilter.map(ind => ind.toLowerCase());
           jobs = jobs.filter(job =>
             job.company && job.company.industry &&
-            industryFilter.includes(job.company.industry)
+            lowerIndustryFilter.includes(job.company.industry.toLowerCase())
           );
           console.log('🔍 Job Backend: Industry filter results:', { beforeCount, afterCount: jobs.length });
         }
