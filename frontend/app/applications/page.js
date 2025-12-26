@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
-import { Layout, Card, Table, Space, Typography, Button, Tag, message, Tabs, Modal, Form, InputNumber, Input } from 'antd';
+import { Layout, Card, Table, Space, Typography, Button, Tag, Tabs, Modal, Form, InputNumber, Input, App } from 'antd';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { API_BASE_URL } from '../../config';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const statusText = (s) => ({0:'Applied',1:'Shortlisted',2:'Interview',3:'Active offer',4:'Hired',5:'Rejected',6:'Withdrawn',7:'Not Attending'}[s] || String(s));
 
@@ -19,6 +19,7 @@ const tabs = [
 ];
 
 export default function MyApplicationsPage(){
+  const { message } = App.useApp();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeKey, setActiveKey] = useState('applied');
@@ -43,6 +44,8 @@ export default function MyApplicationsPage(){
       const res = await fetch(`${API_BASE_URL}/applications?$sort[createdAt]=-1`, { headers: { Authorization: `Bearer ${token}` } });
       const json = await res.json();
       const data = Array.isArray(json) ? json : (json?.data || []);
+
+      // Company data is now populated by backend, no need to fetch separately
       setItems(data);
     } catch (e) { message.error(e.message || 'Failed to load'); }
     finally { setLoading(false); }
@@ -73,11 +76,21 @@ export default function MyApplicationsPage(){
       const v = await extendForm.validateFields();
       const days = Number(v.days || 7);
       const token = localStorage.getItem('jf_token');
-      await fetch(`${API_BASE_URL}/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'extendValidity', days }) });
-      message.success('Validity extended');
-      setExtendOpen(false); extendForm.resetFields();
-      load();
-    } catch (e) { if (e?.errorFields) return; message.error(e.message || 'Failed'); }
+      const res = await fetch(`${API_BASE_URL}/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'extendValidity', days }) });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to extend validity: ${res.status}`);
+      }
+
+      message.success(`Validity extended by ${days} day${days > 1 ? 's' : ''}`);
+      setExtendOpen(false);
+      // Don't reset form - keep the last value for next time
+      await load();
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to extend validity');
+    }
   }
 
   async function viewPdf(r){
@@ -90,6 +103,17 @@ export default function MyApplicationsPage(){
       const url = j.signedUrl || j.publicUrl;
       if (url) window.open(url, '_blank'); else message.error('Failed to resolve PDF');
     } catch (e) { message.error(e.message || 'Failed to open PDF'); }
+  }
+
+  async function viewFile(key) {
+    try {
+      if (!key) { message.info('No file'); return; }
+      const token = localStorage.getItem('jf_token');
+      const res = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(key)}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      const url = data.signedUrl || data.publicUrl;
+      if (url) window.open(url, '_blank'); else message.error('Failed to resolve file');
+    } catch (e) { message.error(e.message || 'Failed to open file'); }
   }
 
   function openOffer(record){
@@ -137,11 +161,22 @@ export default function MyApplicationsPage(){
   }
 
   const columns = [
-    { title: 'Company', key: 'company', render: (_, r) => r.company?.name || r.companyName || r.companyId },
+    {
+      title: 'Company',
+      key: 'company',
+      render: (_, r) => r.company?.name || r.companyName || <Text type="secondary">Company unavailable</Text>
+    },
     { title: 'Application date', dataIndex: 'createdAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Application status', dataIndex: 'status', render: (s) => <Tag>{statusText(s)}</Tag> },
     { title: 'Last Update', key: 'last', render: (_, r) => r.updatedAt ? new Date(r.updatedAt).toLocaleString() : (r.history?.length ? new Date(r.history[r.history.length-1].at).toLocaleString() : '-') },
-    { title: 'Submitted CV', key: 'cv', render: (_, r) => r.pdfKey ? <Button size="small" onClick={(e)=>{e.stopPropagation(); viewPdf(r);}}>View PDF</Button> : '-' },
+    { title: 'Submitted CV', key: 'cv', render: (_, r) => {
+      // Check if resume is in attachments array (first attachment is usually the resume)
+      const resumeKey = r.attachments?.[0];
+      if (resumeKey) {
+        return <Button size="small" onClick={(e)=>{e.stopPropagation(); viewFile(resumeKey);}}>View Resume</Button>;
+      }
+      return '-';
+    }},
     { title: 'Action', key: 'action', render: (_, r) => {
       const canWithdraw = [0,1,2,3,4].includes(r.status);
       const canExtend = r.status === 0 && !r.extendedOnce;
@@ -158,30 +193,37 @@ export default function MyApplicationsPage(){
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Navbar />
-      <Layout.Content style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <Title level={2} style={{ margin: 0 }}>My Applications</Title>
-          <Card>
-            <Tabs activeKey={activeKey} onChange={setActiveKey} items={tabs} />
-            <Table
-              rowKey="_id"
-              columns={columns}
-              dataSource={filtered}
-              loading={loading}
-              pagination={{ pageSize: 10 }}
-              onRow={(record) => ({
-                onClick: () => handleRowClick(record),
-                style: record.status === 4 ? { cursor: 'pointer' } : {}
-              })}
-            />
-          </Card>
-        </Space>
-      </Layout.Content>
-      <Footer />
+    <App>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Navbar />
+        <Layout.Content style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Title level={2} style={{ margin: 0 }}>My Applications</Title>
+            <Card>
+              <Tabs activeKey={activeKey} onChange={setActiveKey} items={tabs} />
+              <Table
+                rowKey="_id"
+                columns={columns}
+                dataSource={filtered}
+                loading={loading}
+                pagination={{ pageSize: 10 }}
+                onRow={(record) => ({
+                  onClick: () => handleRowClick(record),
+                  style: record.status === 4 ? { cursor: 'pointer' } : {}
+                })}
+              />
+            </Card>
+          </Space>
+        </Layout.Content>
+        <Footer />
 
-      <Modal title="Extend application validity" open={extendOpen} onCancel={()=>{ setExtendOpen(false); extendForm.resetFields(); }} onOk={()=>extendValidity(currentId)} okText="Extend">
+      <Modal
+        title="Extend application validity"
+        open={extendOpen}
+        onCancel={()=> setExtendOpen(false)}
+        onOk={()=>extendValidity(currentId)}
+        okText="Extend"
+      >
         <Form form={extendForm} layout="vertical" initialValues={{ days: 7 }}>
           <Form.Item label="Extend by (days)" name="days" rules={[{ required: true, message: 'Please input days' }, { type: 'number', min: 1, max: 30 }]}>
             <InputNumber min={1} max={30} style={{ width: '100%' }} />
@@ -229,7 +271,8 @@ export default function MyApplicationsPage(){
         ) : null}
       </Modal>
 
-    </Layout>
+      </Layout>
+    </App>
   );
 }
 

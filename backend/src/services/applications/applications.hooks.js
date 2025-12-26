@@ -164,13 +164,37 @@ export default (app) => {
     console.log('📝 Backend: Received candidateStatement:', ctx.data.candidateStatement);
     console.log('📝 Backend: Full ctx.data:', JSON.stringify(ctx.data, null, 2));
 
+    // Get full user data to access resume
+    const UserModel = app.service('users').Model;
+    const fullUser = await UserModel.findById(user._id).lean();
+
+    // Automatically attach user's resume if available
+    const attachments = ctx.data.attachments || [];
+    if (fullUser?.internProfile?.resume && !attachments.includes(fullUser.internProfile.resume)) {
+      // Extract key from resume URL using same logic as ProfilePageInner.js
+      try {
+        const resumeUrl = fullUser.internProfile.resume;
+        const urlObj = new URL(resumeUrl);
+        const pathParts = urlObj.pathname.split('/');
+        // Remove empty strings and bucket name (first two parts)
+        const keyParts = pathParts.filter(Boolean).slice(1);
+        const resumeKey = keyParts.join('/');
+        if (resumeKey) {
+          attachments.push(resumeKey);
+          console.log('📎 Backend: Automatically attached resume:', resumeKey);
+        }
+      } catch (e) {
+        console.log('⚠️ Backend: Failed to extract resume key:', e.message);
+      }
+    }
+
     ctx.data = {
       userId: user._id,
       companyId: job.companyId,
       jobListingId: job._id,
       candidateStatement: ctx.data.candidateStatement || '',
       form: ctx.data.form || {},
-      attachments: ctx.data.attachments || [],
+      attachments,
       pdfKey: ctx.data.pdfKey,
       status: S.NEW,
       validityUntil: validity,
@@ -379,6 +403,46 @@ export default (app) => {
     return ctx;
   }
 
+  // Populate company name for applications
+  async function populateCompany(ctx) {
+    try {
+      const Companies = app.service('companies')?.Model;
+      if (!Companies) return ctx;
+
+      const populateOne = async (appDoc) => {
+        if (!appDoc || !appDoc.companyId) return appDoc;
+
+        // Convert to plain object if it's a Mongoose document
+        const app = appDoc.toObject ? appDoc.toObject() : { ...appDoc };
+
+        try {
+          const company = await Companies.findById(app.companyId).lean();
+          if (company && company.name) {
+            app.company = { _id: company._id, name: company.name };
+            app.companyName = company.name; // Also set companyName for backward compatibility
+          }
+        } catch (e) {
+          // Company not found or error - return app without company data
+        }
+        return app;
+      };
+
+      // Handle both single result (get) and array result (find)
+      if (Array.isArray(ctx.result)) {
+        ctx.result = await Promise.all(ctx.result.map(populateOne));
+      } else if (ctx.result?.data && Array.isArray(ctx.result.data)) {
+        // Paginated result
+        ctx.result.data = await Promise.all(ctx.result.data.map(populateOne));
+      } else if (ctx.result) {
+        // Single result
+        ctx.result = await populateOne(ctx.result);
+      }
+    } catch (e) {
+      // Silent fail - don't break the request if population fails
+    }
+    return ctx;
+  }
+
   return {
     before: {
       all: [ authenticate('jwt') ],
@@ -388,7 +452,7 @@ export default (app) => {
       patch: [ applyTransition ]
     },
     after: {
-      all: [],
+      all: [ populateCompany ],
       create: [ async (ctx) => {
         // 1) Generate and upload nicer PDF
         try {

@@ -1,36 +1,75 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, Space, Select, message, Upload } from 'antd';
+import { Modal, Form, Input, InputNumber, Button, Space, Select, Upload, App, Checkbox } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { API_BASE_URL } from '../config';
 
 const { TextArea } = Input;
 
 export default function EditProfileModal({ visible, onClose, user, onSuccess, section = 'personal' }) {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const [uploadingCert, setUploadingCert] = useState({});
 
+  // Helper function to format date for HTML date input (YYYY-MM-DD)
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  };
+
   // Initialize form with user data when modal opens
   useEffect(() => {
     if (visible && user) {
+      // Format educations with dates
+      const educations = (user?.internProfile?.educations || []).map(edu => ({
+        ...edu,
+        startDate: formatDateForInput(edu.startDate),
+        endDate: formatDateForInput(edu.endDate)
+      }));
+
+      // Format work experiences with dates
+      const workExperiences = (user?.internProfile?.workExperiences || []).map(exp => ({
+        ...exp,
+        startDate: formatDateForInput(exp.startDate),
+        endDate: formatDateForInput(exp.endDate)
+      }));
+
+      // Format event experiences with dates
+      const eventExperiences = (user?.internProfile?.eventExperiences || []).map(event => ({
+        ...event,
+        startDate: formatDateForInput(event.startDate),
+        endDate: formatDateForInput(event.endDate)
+      }));
+
+      // Format certifications with dates
+      const certifications = (user?.internProfile?.certifications || []).map(cert => ({
+        ...cert,
+        acquiredDate: formatDateForInput(cert.acquiredDate)
+      }));
+
       form.setFieldsValue({
         firstName: user?.profile?.firstName,
         middleName: user?.profile?.middleName,
         lastName: user?.profile?.lastName,
         phone: user?.profile?.phone,
         icPassportNumber: user?.profile?.icPassportNumber,
+        city: user?.profile?.location?.city,
+        state: user?.profile?.location?.state,
+        country: user?.profile?.location?.country,
         university: user?.internProfile?.university,
         major: user?.internProfile?.major,
         gpa: user?.internProfile?.gpa,
         graduationYear: user?.internProfile?.graduationYear,
-        educations: user?.internProfile?.educations || [],
-        workExperiences: user?.internProfile?.workExperiences || [],
-        certifications: user?.internProfile?.certifications || [],
+        educations,
+        workExperiences,
+        certifications,
         skills: user?.internProfile?.skills || [],
         languages: user?.internProfile?.languages || [],
         interests: user?.internProfile?.interests || [],
-        eventExperiences: user?.internProfile?.eventExperiences || [],
+        eventExperiences,
         courses: user?.internProfile?.courses || [],
         assignments: user?.internProfile?.assignments || [],
         jobTypes: user?.internProfile?.preferences?.jobTypes || [],
@@ -60,10 +99,13 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           'profile.lastName': values.lastName,
           'profile.phone': values.phone,
           'profile.icPassportNumber': values.icPassportNumber,
+          'profile.location.city': values.city,
+          'profile.location.state': values.state,
+          'profile.location.country': values.country,
           'internProfile.university': values.university,
           'internProfile.major': values.major,
-          'internProfile.gpa': values.gpa,
-          'internProfile.graduationYear': values.graduationYear,
+          'internProfile.gpa': values.gpa != null ? Number(values.gpa) : undefined,
+          'internProfile.graduationYear': values.graduationYear != null ? Number(values.graduationYear) : undefined,
         };
       } else if (section === 'preferences') {
         body = {
@@ -77,24 +119,47 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           'internProfile.languages': values.languages || [],
         };
       } else if (section === 'education') {
+        // Convert date strings to ISO format for educations
+        const educations = (values.educations || []).map(edu => ({
+          ...edu,
+          startDate: edu.startDate ? new Date(edu.startDate).toISOString() : null,
+          endDate: edu.endDate ? new Date(edu.endDate).toISOString() : null
+        }));
         body = {
-          'internProfile.educations': values.educations || [],
+          'internProfile.educations': educations,
         };
       } else if (section === 'experience') {
+        // Convert date strings to ISO format for work experiences
+        const workExperiences = (values.workExperiences || []).map(exp => ({
+          ...exp,
+          startDate: exp.startDate ? new Date(exp.startDate).toISOString() : null,
+          endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null
+        }));
         body = {
-          'internProfile.workExperiences': values.workExperiences || [],
+          'internProfile.workExperiences': workExperiences,
         };
       } else if (section === 'certifications') {
+        // Convert date strings to ISO format for certifications
+        const certifications = (values.certifications || []).map(cert => ({
+          ...cert,
+          acquiredDate: cert.acquiredDate ? new Date(cert.acquiredDate).toISOString() : null
+        }));
         body = {
-          'internProfile.certifications': values.certifications || [],
+          'internProfile.certifications': certifications,
         };
       } else if (section === 'interests') {
         body = {
           'internProfile.interests': values.interests || [],
         };
       } else if (section === 'events') {
+        // Convert date strings to ISO format for event experiences
+        const eventExperiences = (values.eventExperiences || []).map(event => ({
+          ...event,
+          startDate: event.startDate ? new Date(event.startDate).toISOString() : null,
+          endDate: event.endDate ? new Date(event.endDate).toISOString() : null
+        }));
         body = {
-          'internProfile.eventExperiences': values.eventExperiences || [],
+          'internProfile.eventExperiences': eventExperiences,
         };
       } else if (section === 'courses') {
         body = {
@@ -126,14 +191,44 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
       });
 
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || 'Failed to update');
+        let errorMessage = 'Failed to update profile';
+        try {
+          const errorData = await res.json();
+          // Extract user-friendly error message
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // If JSON parsing fails, try text
+          const txt = await res.text();
+          if (txt) errorMessage = txt;
+        }
+
+        // Make error messages more user-friendly
+        if (errorMessage.includes('Cast to Number failed')) {
+          if (errorMessage.includes('gpa')) {
+            errorMessage = 'GPA must be a valid number between 0.0 and 4.0';
+          } else if (errorMessage.includes('graduationYear')) {
+            errorMessage = 'Graduation year must be a valid year';
+          } else {
+            errorMessage = 'Please enter valid numeric values';
+          }
+        }
+
+        throw new Error(errorMessage);
       }
 
       message.success('Profile updated successfully!');
       onSuccess();
       onClose();
     } catch (e) {
+      // Show validation errors from form
+      if (e.errorFields) {
+        message.error('Please fix the validation errors');
+        return;
+      }
       message.error(e.message || 'Update failed');
     } finally {
       setLoading(false);
@@ -171,11 +266,70 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
             <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
               <Input placeholder="Last Name" />
             </Form.Item>
-            <Form.Item name="phone" label="Phone">
-              <Input placeholder="Phone Number" />
+            <Form.Item
+              name="phone"
+              label="Phone"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Only allow digits and plus sign
+                    const phoneRegex = /^[0-9+]+$/;
+                    if (!phoneRegex.test(value)) {
+                      return Promise.reject(new Error('Phone number can only contain digits (0-9) and plus sign (+)'));
+                    }
+                    // Plus sign can only be at the beginning
+                    if (value.includes('+') && !value.startsWith('+')) {
+                      return Promise.reject(new Error('Plus sign (+) can only be at the beginning'));
+                    }
+                    // Only one plus sign allowed
+                    if ((value.match(/\+/g) || []).length > 1) {
+                      return Promise.reject(new Error('Only one plus sign (+) is allowed'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+              normalize={(value) => {
+                // Remove any characters that are not digits or plus sign
+                if (!value) return value;
+                return value.replace(/[^0-9+]/g, '');
+              }}
+            >
+              <Input placeholder="e.g., +60123456789" />
             </Form.Item>
-            <Form.Item name="icPassportNumber" label="IC/Passport Number">
-              <Input placeholder="IC/Passport Number" />
+            <Form.Item
+              name="icPassportNumber"
+              label="IC/Passport Number"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Only allow alphanumeric characters (letters and numbers)
+                    const icPassportRegex = /^[A-Za-z0-9]+$/;
+                    if (!icPassportRegex.test(value)) {
+                      return Promise.reject(new Error('IC/Passport number can only contain letters (A-Z) and digits (0-9)'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+              normalize={(value) => {
+                // Remove any special characters, only keep alphanumeric
+                if (!value) return value;
+                return value.replace(/[^A-Za-z0-9]/g, '');
+              }}
+            >
+              <Input placeholder="e.g., A12345678 or 123456789012" />
+            </Form.Item>
+            <Form.Item name="city" label="City">
+              <Input placeholder="e.g., Kuala Lumpur" />
+            </Form.Item>
+            <Form.Item name="state" label="State">
+              <Input placeholder="e.g., Selangor" />
+            </Form.Item>
+            <Form.Item name="country" label="Country">
+              <Input placeholder="e.g., Malaysia" />
             </Form.Item>
             <Form.Item name="university" label="University">
               <Input placeholder="University" />
@@ -183,11 +337,59 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
             <Form.Item name="major" label="Major">
               <Input placeholder="Major/Field of Study" />
             </Form.Item>
-            <Form.Item name="gpa" label="GPA">
-              <Input placeholder="GPA" />
+            <Form.Item
+              name="gpa"
+              label="GPA"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const num = Number(value);
+                    if (isNaN(num)) {
+                      return Promise.reject(new Error('GPA must be a valid number'));
+                    }
+                    if (num < 0 || num > 4.0) {
+                      return Promise.reject(new Error('GPA must be between 0.0 and 4.0'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <InputNumber
+                placeholder="e.g., 3.75"
+                min={0}
+                max={4.0}
+                step={0.01}
+                style={{ width: '100%' }}
+              />
             </Form.Item>
-            <Form.Item name="graduationYear" label="Graduation Year">
-              <Input placeholder="Graduation Year" />
+            <Form.Item
+              name="graduationYear"
+              label="Graduation Year"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const num = Number(value);
+                    if (isNaN(num)) {
+                      return Promise.reject(new Error('Graduation year must be a valid number'));
+                    }
+                    const currentYear = new Date().getFullYear();
+                    if (num < 1900 || num > currentYear + 10) {
+                      return Promise.reject(new Error(`Graduation year must be between 1900 and ${currentYear + 10}`));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <InputNumber
+                placeholder="e.g., 2025"
+                min={1900}
+                max={new Date().getFullYear() + 10}
+                style={{ width: '100%' }}
+              />
             </Form.Item>
           </Space>
         );
@@ -224,23 +426,83 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           <Form.List name="educations">
             {(fields, { add, remove }) => (
               <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                    <Form.Item {...restField} name={[name, 'level']} label="Level">
-                      <Input placeholder="Level (e.g., Bachelor)" />
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'institutionName']} label="Institution">
-                      <Input placeholder="Institution Name" />
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'qualification']} label="Qualification">
-                      <Input placeholder="Qualification" />
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'fieldOfStudy']} label="Field of Study">
-                      <Input placeholder="Field of Study" />
-                    </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
+                {fields.map(({ key, name, ...restField }) => {
+                  const eduValues = form.getFieldValue(['educations', name]);
+                  const isOngoing = !eduValues?.endDate;
+
+                  return (
+                    <Space key={key} direction="vertical" style={{ width: '100%', marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 8 }}>
+                      <Form.Item {...restField} name={[name, 'level']} label="Level">
+                        <Input placeholder="Level (e.g., Bachelor)" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'institutionName']} label="Institution">
+                        <Input placeholder="Institution Name" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'qualification']} label="Qualification">
+                        <Input placeholder="Qualification" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'fieldOfStudy']} label="Field of Study">
+                        <Input placeholder="Field of Study" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'startDate']} label="Start Date">
+                        <Input type="date" placeholder="Start Date" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'endDate']} label="End Date">
+                        <Input
+                          type="date"
+                          placeholder="End Date"
+                          disabled={isOngoing}
+                          value={isOngoing ? '' : undefined}
+                        />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'ongoing']} valuePropName="checked">
+                        <Checkbox
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              // Clear end date when ongoing is checked
+                              const educations = form.getFieldValue('educations');
+                              educations[name].endDate = null;
+                              form.setFieldsValue({ educations });
+                            }
+                          }}
+                        >
+                          Ongoing (Present)
+                        </Checkbox>
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'gpa']}
+                        label="GPA"
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              if (!value) return Promise.resolve();
+                              const num = Number(value);
+                              if (isNaN(num)) {
+                                return Promise.reject(new Error('GPA must be a valid number'));
+                              }
+                              if (num < 0 || num > 4.0) {
+                                return Promise.reject(new Error('GPA must be between 0.0 and 4.0'));
+                              }
+                              return Promise.resolve();
+                            }
+                          }
+                        ]}
+                      >
+                        <InputNumber
+                          placeholder="e.g., 3.75 (optional)"
+                          min={0}
+                          max={4.0}
+                          step={0.01}
+                          style={{ width: '100%' }}
+                        />
+                      </Form.Item>
+                      <Button type="text" danger icon={<MinusCircleOutlined />} onClick={() => remove(name)}>
+                        Remove Education
+                      </Button>
+                    </Space>
+                  );
+                })}
                 <Form.Item>
                   <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                     Add Education
@@ -256,31 +518,63 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           <Form.List name="workExperiences">
             {(fields, { add, remove }) => (
               <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space key={key} direction="vertical" style={{ width: '100%', marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 8 }}>
-                    <Form.Item {...restField} name={[name, 'jobTitle']} label="Job Title">
-                      <Input placeholder="Job Title" />
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'companyName']} label="Company">
-                      <Input placeholder="Company Name" />
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'employmentType']} label="Employment Type">
-                      <Select placeholder="Select Type">
-                        <Select.Option value="Full-time">Full-time</Select.Option>
-                        <Select.Option value="Part-time">Part-time</Select.Option>
-                        <Select.Option value="Internship">Internship</Select.Option>
-                        <Select.Option value="Contract">Contract</Select.Option>
-                      </Select>
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'industry']} label="Industry">
-                      <Input placeholder="Industry" />
-                    </Form.Item>
-                    <Form.Item {...restField} name={[name, 'jobDescription']} label="Description">
-                      <TextArea rows={3} placeholder="Job Description" />
-                    </Form.Item>
-                    <Button danger onClick={() => remove(name)} icon={<MinusCircleOutlined />}>Remove</Button>
-                  </Space>
-                ))}
+                {fields.map(({ key, name, ...restField }) => {
+                  const workExpValues = form.getFieldValue(['workExperiences', name]);
+                  const isOngoing = !workExpValues?.endDate;
+
+                  return (
+                    <Space key={key} direction="vertical" style={{ width: '100%', marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 8 }}>
+                      <Form.Item {...restField} name={[name, 'jobTitle']} label="Job Title">
+                        <Input placeholder="Job Title" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'companyName']} label="Company">
+                        <Input placeholder="Company Name" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'employmentType']} label="Employment Type">
+                        <Select placeholder="Select Type">
+                          <Select.Option value="Full-time">Full-time</Select.Option>
+                          <Select.Option value="Part-time">Part-time</Select.Option>
+                          <Select.Option value="Internship">Internship</Select.Option>
+                          <Select.Option value="Contract">Contract</Select.Option>
+                        </Select>
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'industry']} label="Industry">
+                        <Input placeholder="Industry" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'startDate']} label="Start Date">
+                        <Input type="date" placeholder="Start Date" />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'endDate']} label="End Date">
+                        <Input
+                          type="date"
+                          placeholder="End Date"
+                          disabled={isOngoing}
+                          value={isOngoing ? '' : undefined}
+                        />
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'ongoing']} valuePropName="checked">
+                        <Checkbox
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              // Clear end date when ongoing is checked
+                              const workExps = form.getFieldValue('workExperiences');
+                              workExps[name].endDate = null;
+                              form.setFieldsValue({ workExperiences: workExps });
+                            }
+                          }}
+                        >
+                          Ongoing (Present)
+                        </Checkbox>
+                      </Form.Item>
+                      <Form.Item {...restField} name={[name, 'jobDescription']} label="Description">
+                        <TextArea rows={3} placeholder="Job Description" />
+                      </Form.Item>
+                      <Button type="text" danger icon={<MinusCircleOutlined />} onClick={() => remove(name)}>
+                        Remove Work Experience
+                      </Button>
+                    </Space>
+                  );
+                })}
                 <Form.Item>
                   <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                     Add Work Experience
@@ -320,7 +614,42 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                                 <Button
                                   type="link"
                                   icon={<UploadOutlined />}
-                                  onClick={() => window.open(certValues.fileUrl, '_blank')}
+                                  onClick={async () => {
+                                    try {
+                                      // Extract key from URL (same logic as ProfilePageInner.js)
+                                      const url = certValues.fileUrl;
+                                      if (!url) {
+                                        message.error('Invalid file URL');
+                                        return;
+                                      }
+
+                                      const urlObj = new URL(url);
+                                      const pathParts = urlObj.pathname.split('/');
+                                      // Remove empty strings and bucket name (first two parts)
+                                      const keyParts = pathParts.filter(Boolean).slice(1);
+                                      const key = keyParts.join('/');
+
+                                      if (!key) {
+                                        message.error('Invalid file URL');
+                                        return;
+                                      }
+
+                                      const token = localStorage.getItem('jf_token');
+                                      const res = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(key)}`, {
+                                        headers: { Authorization: `Bearer ${token}` }
+                                      });
+                                      const data = await res.json();
+                                      const signedUrl = data.signedUrl || data.publicUrl;
+
+                                      if (signedUrl) {
+                                        window.open(signedUrl, '_blank');
+                                      } else {
+                                        message.error('Failed to resolve file');
+                                      }
+                                    } catch (e) {
+                                      message.error(e.message || 'Failed to open file');
+                                    }
+                                  }}
                                   style={{ padding: 0 }}
                                 >
                                   View Uploaded Certificate

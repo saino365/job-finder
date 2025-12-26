@@ -45,14 +45,16 @@ export default function JobsContent() {
     }
 
     // Salary filter using FeathersJS range syntax
+    // Show jobs where salary ranges OVERLAP with the filter
     if (salary?.length > 0) {
       const salaryRange = salary[0];
       if (salaryRange === "5000+") {
-        params.set("salaryRange.min[$gte]", "5000");
+        params.set("salaryRange.max[$gte]", "5000");
       } else if (salaryRange.includes(" - ")) {
         const [min, max] = salaryRange.split(" - ").map(s => s.trim());
-        if (min) params.set("salaryRange.min[$gte]", min);
-        if (max) params.set("salaryRange.max[$lte]", max);
+        // For overlap: job's max >= filter min AND job's min <= filter max
+        if (min) params.set("salaryRange.max[$gte]", min);
+        if (max) params.set("salaryRange.min[$lte]", max);
       }
     }
 
