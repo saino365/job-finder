@@ -302,7 +302,12 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Count alphabetic characters (A-Z, a-z)
+                    // Only allow alphabetic characters, spaces, hyphens, and apostrophes
+                    const nameRegex = /^[A-Za-z\s\-']+$/;
+                    if (!nameRegex.test(value)) {
+                      return Promise.reject(new Error('First name can only contain letters, spaces, hyphens, and apostrophes'));
+                    }
+                    // Must contain at least 3 alphabetic characters
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('First name must contain at least 3 alphabetic characters'));
@@ -321,7 +326,12 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Count alphabetic characters (A-Z, a-z)
+                    // Only allow alphabetic characters, spaces, hyphens, and apostrophes
+                    const nameRegex = /^[A-Za-z\s\-']+$/;
+                    if (!nameRegex.test(value)) {
+                      return Promise.reject(new Error('Middle name can only contain letters, spaces, hyphens, and apostrophes'));
+                    }
+                    // Must contain at least 3 alphabetic characters
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Middle name must contain at least 3 alphabetic characters'));
@@ -341,7 +351,12 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Count alphabetic characters (A-Z, a-z)
+                    // Only allow alphabetic characters, spaces, hyphens, and apostrophes
+                    const nameRegex = /^[A-Za-z\s\-']+$/;
+                    if (!nameRegex.test(value)) {
+                      return Promise.reject(new Error('Last name can only contain letters, spaces, hyphens, and apostrophes'));
+                    }
+                    // Must contain at least 3 alphabetic characters
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Last name must contain at least 3 alphabetic characters'));
@@ -356,8 +371,38 @@ export default function RegisterWizard({ onStepChange }) {
             <Form.Item name="icPassportNumber" label="IC / Passport number">
               <Input />
             </Form.Item>
-            <Form.Item name="phone" label="Phone number" rules={[{ required: true }]}>
-              <Input />
+            <Form.Item
+              name="phone"
+              label="Phone number"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Only allow digits and plus sign at the beginning
+                    const phoneRegex = /^\+?[0-9]+$/;
+                    if (!phoneRegex.test(value)) {
+                      return Promise.reject(new Error('Phone number can only contain digits (0-9) and optionally a plus sign (+) at the beginning'));
+                    }
+                    // Plus sign can only be at the beginning
+                    if (value.includes('+') && !value.startsWith('+')) {
+                      return Promise.reject(new Error('Plus sign (+) can only be at the beginning of the phone number'));
+                    }
+                    // Only one plus sign allowed
+                    if ((value.match(/\+/g) || []).length > 1) {
+                      return Promise.reject(new Error('Only one plus sign (+) is allowed'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+              normalize={(value) => {
+                // Remove any characters that are not digits or plus sign
+                if (!value) return value;
+                return value.replace(/[^0-9+]/g, '');
+              }}
+            >
+              <Input placeholder="e.g., +60123456789 or 60123456789" />
             </Form.Item>
             <Form.Item label="Photo (optional)">
               <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} />
