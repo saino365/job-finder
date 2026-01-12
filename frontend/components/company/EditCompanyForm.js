@@ -13,10 +13,14 @@ export default function EditCompanyForm({ company, logoUrl, onUploadLogo, onSave
   const initialValues = useMemo(() => ({
     name: company?.name,
     industry: company?.industry,
+    size: company?.size,
     website: company?.website,
     description: company?.description,
     email: company?.email,
     phone: company?.phone,
+    picName: company?.picName,
+    picEmail: company?.picEmail,
+    picPhone: company?.picPhone,
     fullAddress: company?.address?.fullAddress,
   }), [company]);
 
@@ -58,8 +62,32 @@ export default function EditCompanyForm({ company, logoUrl, onUploadLogo, onSave
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
+                  <Form.Item name="size" label="Company Size">
+                    <Input placeholder="e.g. 11-50 employees" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="website" label="Website">
                     <Input placeholder="https://..." />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="picName" label="Point of Contact Name">
+                    <Input placeholder="e.g. Hiring Manager" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="picEmail" label="Point of Contact Email">
+                    <Input placeholder="pic@company.com" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="picPhone" label="Point of Contact Phone">
+                    <Input placeholder="+60 ..." />
                   </Form.Item>
                 </Col>
               </Row>

@@ -42,7 +42,7 @@ export default function NotificationsDropdownContent({
             <List size="small" split={false} dataSource={directNotifs} renderItem={(n) => (
               <List.Item key={n._id} style={{ cursor:'pointer', padding: '8px 8px' }} onClick={() => onItemClick(n)}>
                 <div style={{ display:'flex', gap: 8, width:'100%' }}>
-                  <span style={{ width:8, height:8, marginTop: 6, flexShrink:0, borderRadius:'50%', backgroundColor: n.read ? tokenColors.border : tokenColors.primary, display:'inline-block' }} />
+                  <span style={{ width:8, height:8, marginTop: 6, flexShrink:0, borderRadius:'50%', backgroundColor: n.isRead ? tokenColors.border : tokenColors.primary, display:'inline-block' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', gap: 12 }}>
                       <Space size={6} wrap>
@@ -54,7 +54,7 @@ export default function NotificationsDropdownContent({
                         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                           {new Date(n.createdAt || Date.now()).toLocaleString()}
                         </Typography.Text>
-                        {!n.read && <Button size="small" type="link" onClick={(e)=>{ e.stopPropagation(); onMarkAll([n._id]); }}>Mark as read</Button>}
+                        {!n.isRead && <Button size="small" type="link" onClick={(e)=>{ e.stopPropagation(); onMarkAll([n._id]); }}>Mark as read</Button>}
                       </Space>
                     </div>
                     {(n.body || n.message) && <Typography.Text type="secondary">{n.body || n.message}</Typography.Text>}
@@ -69,7 +69,7 @@ export default function NotificationsDropdownContent({
             <List size="small" split={false} dataSource={watchingNotifs} renderItem={(n) => (
               <List.Item key={n._id} style={{ cursor:'pointer', padding: '8px 8px' }} onClick={() => onItemClick(n)}>
                 <div style={{ display:'flex', gap: 8, width:'100%' }}>
-                  <span style={{ width:8, height:8, marginTop: 6, flexShrink:0, borderRadius:'50%', backgroundColor: n.read ? tokenColors.border : tokenColors.primary, display:'inline-block' }} />
+                  <span style={{ width:8, height:8, marginTop: 6, flexShrink:0, borderRadius:'50%', backgroundColor: n.isRead ? tokenColors.border : tokenColors.primary, display:'inline-block' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', gap: 12 }}>
                       <Space size={6} wrap>
@@ -81,7 +81,7 @@ export default function NotificationsDropdownContent({
                         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                           {new Date(n.createdAt || Date.now()).toLocaleString()}
                         </Typography.Text>
-                        {!n.read && <Button size="small" type="link" onClick={(e)=>{ e.stopPropagation(); onMarkAll([n._id]); }}>Mark as read</Button>}
+                        {!n.isRead && <Button size="small" type="link" onClick={(e)=>{ e.stopPropagation(); onMarkAll([n._id]); }}>Mark as read</Button>}
                       </Space>
                     </div>
                     {(n.body || n.message) && <Typography.Text type="secondary">{n.body || n.message}</Typography.Text>}

@@ -36,7 +36,7 @@ export default function NotificationsPage() {
   const markRead = async (id) => {
     try {
       const token = localStorage.getItem("jf_token");
-      await fetch(`${API_BASE_URL}/notifications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ read: true }) });
+      await fetch(`${API_BASE_URL}/notifications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ isRead: true }) });
       fetchData();
     } catch (_) {}
   };
@@ -57,7 +57,7 @@ export default function NotificationsPage() {
                   <List.Item
                     key={n._id}
                     extra={<Space>
-                      {!n.read && <Tag color="blue">Unread</Tag>}
+                      {!n.isRead && <Tag color="blue">Unread</Tag>}
                       <Button size="small" onClick={() => markRead(n._id)}>Mark as read</Button>
                       {n.link && <Link href={n.link}><Button size="small" type="link">Open</Button></Link>}
                     </Space>}

@@ -28,6 +28,7 @@ export default function CompanyEmployeesPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectForm] = Form.useForm();
   const [rejectTarget, setRejectTarget] = useState({ kind: null, id: null });
+  const [pendingLabels, setPendingLabels] = useState({});
 
   const load = useCallback(async () => {
     try {
@@ -45,9 +46,33 @@ export default function CompanyEmployeesPage() {
         fetch(`${API_BASE_URL}/early-completions?status=0`, { headers }),
         fetch(`${API_BASE_URL}/internship-terminations?status=0`, { headers })
       ]);
-      const ec = ecR.ok ? (await ecR.json()).data || [] : [];
-      const term = tR.ok ? (await tR.json()).data || [] : [];
+      const ecJson = ecR.ok ? await ecR.json() : { data: [] };
+      const termJson = tR.ok ? await tR.json() : { data: [] };
+      const ec = Array.isArray(ecJson?.data) ? ecJson.data : (Array.isArray(ecJson) ? ecJson : []);
+      const term = Array.isArray(termJson?.data) ? termJson.data : (Array.isArray(termJson) ? termJson : []);
       setPending({ ec, term });
+
+      // Pre-fetch labels (employee name + position) for pending requests
+      const ids = Array.from(new Set([
+        ...ec.map(r => String(r.employmentId)),
+        ...term.map(r => String(r.employmentId))
+      ].filter(Boolean)));
+      const labelEntries = await Promise.all(ids.map(async (id) => {
+        try {
+          const r = await fetch(`${API_BASE_URL}/employment-detail/${id}`, { headers });
+          if (!r.ok) return [id, `Employment: ${id}`];
+          const d = await r.json();
+          const emp = d?.employment || {};
+          const job = d?.job || {};
+          const userProfile = d?.user?.profile || {};
+          const name = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() || d?.user?.email || String(emp.userId || '');
+          const title = job.title || 'Intern';
+          return [id, `${name} – ${title}`];
+        } catch {
+          return [id, `Employment: ${id}`];
+        }
+      }));
+      setPendingLabels(Object.fromEntries(labelEntries));
     } catch (e) { message.error(e.message || 'Failed to load'); setItems([]); setPending({ ec: [], term: [] }); }
     finally { setLoading(false); }
   }, []);
@@ -131,7 +156,7 @@ export default function CompanyEmployeesPage() {
                     >
                       <Space>
                         <Tag color="blue">EC</Tag>
-                        <span>Employment: {String(r.employmentId)}</span>
+                        <span>{pendingLabels[String(r.employmentId)] || `Employment: ${String(r.employmentId)}`}</span>
                         {r.reason ? <span>• {r.reason}</span> : null}
                       </Space>
                     </List.Item>
@@ -151,7 +176,7 @@ export default function CompanyEmployeesPage() {
                     >
                       <Space>
                         <Tag color="red">TERM</Tag>
-                        <span>Employment: {String(r.employmentId)}</span>
+                        <span>{pendingLabels[String(r.employmentId)] || `Employment: ${String(r.employmentId)}`}</span>
                         {r.reason ? <span>• {r.reason}</span> : null}
                       </Space>
                     </List.Item>
