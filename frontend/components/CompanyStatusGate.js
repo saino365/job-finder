@@ -94,17 +94,24 @@ function CompanyStatusGateInner() {
 
         const company = list[0];
 
-        // 2) If company exists but not approved -> redirect to pending page (backend also blocks login, but double-guard)
-        if (typeof company.verifiedStatus === 'number' && company.verifiedStatus === 0) {
+        // 2) If company exists but not approved -> handle pending vs rejected explicitly
+        if (typeof company.verifiedStatus === 'number' && company.verifiedStatus !== 1) {
+          // 0 = pending, 2 = rejected
           if (!cancelled) {
-            message.warning('Your company is pending approval.');
-            window.location.href = '/company/pending-approval';
+            if (company.verifiedStatus === 0) {
+              message.warning('Your company is pending approval.');
+              window.location.href = '/company/pending-approval';
+            } else {
+              // Rejected company: block access to company features and show explanation page
+              message.error('Your company verification was rejected. Please review the reason and resubmit.');
+              window.location.href = '/company/rejected';
+            }
           }
           return;
         }
 
         // 3) Approved -> check verification status (latest company-verifications doc)
-        // If there is a verifications record still pending/rejected, show a non-blocking modal
+        // If there is a verifications record still pending, show a non-blocking modal
         try {
           const vRes = await fetch(`${API_BASE_URL}/company-verifications?companyId=${company._id}&$limit=1&$sort[submittedAt]=-1`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -114,7 +121,7 @@ function CompanyStatusGateInner() {
             const ver = Array.isArray(vJson?.data) ? vJson.data : (Array.isArray(vJson) ? vJson : []);
             const latest = ver[0];
             const status = latest?.status; // 0=pending,1=approved,2=rejected
-            if (status !== 1) {
+            if (status === 0) {
               modal.info({
                 title: 'Company Verification In Progress',
                 content: 'Your documents are undergoing verification. You may continue browsing candidates and features available to approved companies.',

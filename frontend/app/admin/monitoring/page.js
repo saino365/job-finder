@@ -393,7 +393,17 @@ function MonitoringClient() {
             </div>
             <div>
               <Text strong>Location:</Text>
-              <div>{viewingJob.location || '-'}</div>
+              <div>
+                {(() => {
+                  const loc = viewingJob.location;
+                  if (!loc) return '-';
+                  if (typeof loc === 'string') return loc;
+                  const city = loc.city || '';
+                  const state = loc.state || '';
+                  const parts = [city, state].filter(Boolean);
+                  return parts.length ? parts.join(', ') : '-';
+                })()}
+              </div>
             </div>
             <div>
               <Text strong>Salary Range:</Text>
