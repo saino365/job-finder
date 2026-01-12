@@ -36,12 +36,12 @@ export default function AdminTopbar() {
       if (!Array.isArray(notifs)) return;
       const targets = Array.isArray(ids) && ids.length
         ? notifs.filter(n => ids.includes(n._id))
-        : notifs.filter(n => !n.read && n._id);
+        : notifs.filter(n => !n.isRead && n._id);
       await Promise.all(targets.map(n => (
         fetch(`${API_BASE_URL}/notifications/${n._id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
-          body: JSON.stringify({ read: true })
+          body: JSON.stringify({ isRead: true })
         })
       )));
       fetchNotifs();

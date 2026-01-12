@@ -73,9 +73,52 @@ function ResetPasswordInner() {
           <Form.Item label="Email">
             <Input value={email} disabled />
           </Form.Item>
-          <Form.Item name="password" label="New password" rules={[{ required: true, min: 6 }]}
-            hasFeedback>
-            <Input.Password placeholder="Enter a strong password" />
+          <Form.Item
+            name="password"
+            label="New password"
+            rules={[
+              { required: true },
+              {
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  const errors = [];
+                  
+                  // At least 8 characters
+                  if (value.length < 8) {
+                    errors.push('at least 8 characters');
+                  }
+                  
+                  // At least 1 lowercase letter
+                  if (!/[a-z]/.test(value)) {
+                    errors.push('at least 1 lowercase letter');
+                  }
+                  
+                  // At least 1 uppercase letter
+                  if (!/[A-Z]/.test(value)) {
+                    errors.push('at least 1 uppercase letter');
+                  }
+                  
+                  // At least 1 numeric
+                  if (!/[0-9]/.test(value)) {
+                    errors.push('at least 1 number');
+                  }
+                  
+                  // At least 1 special character
+                  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+                    errors.push('at least 1 special character');
+                  }
+                  
+                  if (errors.length > 0) {
+                    return Promise.reject(new Error(`Password must contain: ${errors.join(', ')}`));
+                  }
+                  
+                  return Promise.resolve();
+                }
+              }
+            ]}
+            hasFeedback
+          >
+            <Input.Password placeholder="Min 8 chars: A-Z, a-z, 0-9, special" />
           </Form.Item>
           <Form.Item name="confirm" label="Confirm password" dependencies={["password"]} hasFeedback rules={[
             { required: true, message: 'Please confirm your password' },

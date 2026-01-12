@@ -27,7 +27,7 @@ export default function AdminDashboardPage() {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       const [ovrRes, ovr2Res, pJobsRes, pCoRes, expJobsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin-dashboard/overview`, { headers }),
+        fetch(`${API_BASE_URL}/admin/monitoring/overview`, { headers }),
         fetch(`${API_BASE_URL}/admin-dashboard`, { headers }),
         fetch(`${API_BASE_URL}/admin/monitoring?type=pending_jobs`, { headers }),
         fetch(`${API_BASE_URL}/admin/monitoring?type=pending_companies`, { headers }),

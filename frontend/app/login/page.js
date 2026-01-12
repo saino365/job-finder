@@ -21,10 +21,28 @@ function LoginInner() {
       // Always clear any existing token before attempting a new login to avoid stale session artifacts
       try { localStorage.removeItem('jf_token'); } catch {}
 
+      // If input doesn't contain @, treat it as username and look up the email
+      let loginIdentifier = values.email;
+      if (loginIdentifier && !loginIdentifier.includes('@')) {
+        // It's a username, try to find the user's email
+        try {
+          const userRes = await fetch(`${API_BASE_URL}/users?username=${encodeURIComponent(loginIdentifier)}&$limit=1`);
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            if (userData.data && userData.data.length > 0) {
+              loginIdentifier = userData.data[0].email;
+            }
+          }
+        } catch (e) {
+          // If lookup fails, proceed with username as-is (backend will handle it)
+          console.warn('Username lookup failed:', e);
+        }
+      }
+
       const res = await fetch(`${API_BASE_URL}/authentication`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ strategy: 'local', ...values }),
+        body: JSON.stringify({ strategy: 'local', email: loginIdentifier, password: values.password }),
       });
 
       if (!res.ok) {
@@ -200,9 +218,9 @@ function LoginInner() {
                 >
                   <Form.Item
                     name="email"
-                    rules={[{ required: true, message: 'Please input your Email!' }]}
+                    rules={[{ required: true, message: 'Please input your Email or Username!' }]}
                   >
-                    <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
+                    <Input prefix={<UserOutlined />} placeholder="Email or Username" size="large" />
                   </Form.Item>
                   <Form.Item
                     name="password"

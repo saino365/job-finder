@@ -13,12 +13,30 @@ function SectionKV({ data }){
   if (!data || typeof data !== 'object') return <span>-</span>;
   const entries = Object.entries(data || {});
   if (!entries.length) return <span>-</span>;
+  
+  const formatValue = (v) => {
+    if (v === null || v === undefined) return '-';
+    if (typeof v === 'object') {
+      // Special handling for assignment info - format natureOfAssignment and methodology
+      if (v.natureOfAssignment || v.methodology) {
+        const parts = [];
+        if (v.natureOfAssignment) parts.push(`Nature: ${v.natureOfAssignment}`);
+        if (v.methodology) parts.push(`Methodology: ${v.methodology}`);
+        return parts.join('\n');
+      }
+      // For other objects, try to format nicely
+      if (Array.isArray(v)) return v.map(String).join(', ');
+      return JSON.stringify(v);
+    }
+    return String(v);
+  };
+  
   return (
     <div style={{ display:'grid', gridTemplateColumns:'200px 1fr', gap:8 }}>
       {entries.map(([k,v], idx) => (
         <div key={idx} style={{ display: 'contents' }}>
           <div style={{ fontWeight:600, color:'#555' }}>{k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase())}</div>
-          <div style={{ whiteSpace:'pre-wrap' }}>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>
+          <div style={{ whiteSpace:'pre-wrap' }}>{formatValue(v)}</div>
         </div>
       ))}
     </div>
@@ -114,6 +132,16 @@ export default function ApplicationDetailPage({ params }) {
       const res = await fetch(`${API_BASE_URL}/applications/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error('Failed to load application');
       const json = await res.json();
+      // Fetch job details if jobListingId exists
+      if (json.jobListingId && !json.job) {
+        try {
+          const jobRes = await fetch(`${API_BASE_URL}/job-listings/${json.jobListingId}`, { headers: { Authorization: `Bearer ${token}` } });
+          if (jobRes.ok) {
+            const jobData = await jobRes.json();
+            json.job = jobData;
+          }
+        } catch {}
+      }
       setData(json);
     } catch (e) { message.error(e.message || 'Failed to load'); } finally { setLoading(false); }
   }, [id]);
@@ -261,9 +289,17 @@ export default function ApplicationDetailPage({ params }) {
 
                   <Descriptions title="Job Details" bordered column={1} size="small">
                     <Descriptions.Item label="Title">{data.job?.title || data.jobTitle || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="Company PIC">{data.job?.picName || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="Location">{data.job?.location || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="Salary Range">{data.job?.salaryRange || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Company PIC">{data.job?.picName || data.job?.pic?.name || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Location">
+                      {data.job?.location?.city && data.job?.location?.state 
+                        ? `${data.job.location.city}, ${data.job.location.state}`
+                        : (data.job?.location || '-')}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Salary Range">
+                      {data.job?.salaryRange?.min && data.job?.salaryRange?.max
+                        ? `${data.job.salaryRange.min} - ${data.job.salaryRange.max}`
+                        : (typeof data.job?.salaryRange === 'string' ? data.job.salaryRange : '-')}
+                    </Descriptions.Item>
                   </Descriptions>
 
                   {(isPendingAcceptance || (data && data.status === 4)) && (
@@ -296,11 +332,34 @@ export default function ApplicationDetailPage({ params }) {
                   )}
 
                   <Descriptions title="Intern Application Information" bordered column={1} size="small">
+                    <Descriptions.Item label="Avatar">
+                      {data.candidate?.avatar || data.form?.personalInfo?.avatar ? (
+                        <img 
+                          src={data.candidate?.avatar || data.form?.personalInfo?.avatar} 
+                          alt="Candidate avatar" 
+                          style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </Descriptions.Item>
                     <Descriptions.Item label="Candidate">{data.candidate?.fullName || data.candidateName || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Candidate Statement">{data.candidateStatement || data.statement || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Application Validity">{data.validityUntil ? new Date(data.validityUntil).toLocaleDateString() : '-'}</Descriptions.Item>
                     <Descriptions.Item label="Personal Information"><SectionKV data={data.form?.personalInfo || data.personalInfo} /></Descriptions.Item>
-                    <Descriptions.Item label="Internship Details"><SectionKV data={data.form?.internshipInfo || data.internshipInfo} /></Descriptions.Item>
+                    <Descriptions.Item label="Internship Details">
+                      <SectionKV data={(() => {
+                        const info = data.form?.internshipInfo || data.internshipInfo || {};
+                        // Format salary range if present
+                        if (info.salaryRange) {
+                          if (typeof info.salaryRange === 'object' && info.salaryRange.min && info.salaryRange.max) {
+                            return { ...info, salaryRange: `${info.salaryRange.min} - ${info.salaryRange.max}` };
+                          }
+                        }
+                        return info;
+                      })()} />
+                    </Descriptions.Item>
                     <Descriptions.Item label="Course Information"><CourseInfo data={data.form?.courseInfo || data.courseInfo} /></Descriptions.Item>
                     <Descriptions.Item label="Assignment Information"><SectionKV data={data.form?.assignmentInfo || data.assignmentInfo} /></Descriptions.Item>
                     {data.applicationDetails && (

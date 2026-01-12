@@ -167,10 +167,14 @@ export default function CompanyProfilePage() {
       const body = {
         name: values.name,
         industry: values.industry,
+        size: values.size,
         website: values.website,
         description: values.description,
         email: values.email,
         phone: values.phone,
+        picName: values.picName,
+        picEmail: values.picEmail,
+        picPhone: values.picPhone,
         address: {
           fullAddress: values.fullAddress,
         },

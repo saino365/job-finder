@@ -57,7 +57,13 @@ const applicationSchema = new mongoose.Schema({
   history: [historySchema]
 }, { timestamps: true });
 
-applicationSchema.index({ userId: 1, jobListingId: 1 }, { unique: true }); // one active application per job per user
+applicationSchema.index(
+  { userId: 1, jobListingId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: [0, 1, 2, 3] } }
+  }
+);
 
 export default mongoose.model('Application', applicationSchema);
 

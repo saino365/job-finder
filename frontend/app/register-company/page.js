@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout, Typography, Form, Input, Button, message } from 'antd';
 import { API_BASE_URL } from '../../config';
 import RegistrationHeader from "../../components/RegistrationHeader";
@@ -7,6 +7,14 @@ import RegistrationHeader from "../../components/RegistrationHeader";
 export default function RegisterCompanyPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   function onValuesChange(changed) {
     if ('username' in changed) {
@@ -49,15 +57,26 @@ export default function RegisterCompanyPage() {
       // Guide them to verification page with instructions (no token needed, they'll enter the code)
       window.location.href = `/verify-email?email=${encodeURIComponent(email)}&forCompany=1`;
     } catch (e) {
-      // Better error messages for common issues
       let errorMsg = e.message;
-      if (e.message.includes('email: value already exists')) {
-        errorMsg = 'An account with this email already exists. Please use a different email or try signing in.';
+
+      if (e.message.includes('E11000') || e.message.includes('duplicate key')) {
+        if (e.message.includes('email')) {
+          errorMsg = 'This email address is already registered. Please use a different email address.';
+        } else if (e.message.includes('username')) {
+          errorMsg = 'This username is already registered. Please use a different username.';
+        } else {
+          errorMsg = 'This account already exists. Please use different credentials.';
+        }
+      } else if (e.message.includes('email: value already exists')) {
+        errorMsg = 'This email address is already registered. Please use a different email address.';
+      } else if (e.message.includes('username: value already exists')) {
+        errorMsg = 'This username is already registered. Please use a different username.';
       } else if (e.message.includes('Conflict')) {
         errorMsg = 'This email is already registered. Please sign in or use a different email.';
       } else if (e.message.includes('validation')) {
         errorMsg = 'Please check your input and try again.';
       }
+
       message.error(errorMsg);
     } finally {
       setLoading(false);
@@ -71,18 +90,22 @@ export default function RegisterCompanyPage() {
         style={{
           minHeight: '100vh',
           backgroundImage: 'url(/images/company-registration.png)',
-          backgroundSize: '100vh',
-          backgroundPosition: 'left',
-          backgroundRepeat: 'no-repeat'
+          backgroundSize: 'cover',
+          backgroundPosition: 'left center',
+          backgroundRepeat: 'no-repeat',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
         }}
       >
-        <Layout.Content style={{ padding: 40, maxWidth: 520, margin: '0 auto', marginTop: '10vh', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', borderRadius: '8px', border: '1px solid #f0f0f0', maxHeight: '75vh', textAlign: 'center', backgroundColor: 'rgba(255, 255, 255, 0.95)', marginRight: '20vh' }}>
+        <Layout.Content style={{ padding: isMobile ? 20 : 40, maxWidth: 520, margin: '0 auto', marginTop: isMobile ? '5vh' : '10vh', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', borderRadius: '8px', border: '1px solid #f0f0f0', maxHeight: isMobile ? 'none' : '75vh', textAlign: 'center', backgroundColor: 'rgba(255, 255, 255, 0.95)', marginRight: isMobile ? 0 : '20vh', overflow: isMobile ? 'auto' : 'visible' }}>
           <Typography.Title level={3} style={{ color: 'blue'}}>Hire The Best People Anywhere</Typography.Title>
           <Typography.Title level={3}>Register Your Company Admin Account</Typography.Title>
           <Typography.Paragraph type="secondary">
             Use your work email. After verifying your email, you&apos;ll complete your company information and submit verification.
           </Typography.Paragraph>
-          <Form layout="vertical" form={form} onValuesChange={onValuesChange} onFinish={onFinish} style={{ marginTop: '5vh'}}>
+          <Form layout="vertical" form={form} onValuesChange={onValuesChange} onFinish={onFinish} style={{ marginTop: '24px'}}>
             <Form.Item
               name="username"
               label="Username (can be your email)"

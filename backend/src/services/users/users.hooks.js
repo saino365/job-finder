@@ -99,6 +99,21 @@ async function mapStudentFilters(context) {
   return context;
 }
 
+// Check if this is an availability check query (for registration)
+function isAvailabilityCheck(context) {
+  const query = context.params.query || {};
+  // Allow unauthenticated queries that only check for email/username existence
+  // These queries should have $limit=1 and $or with email/username checks
+  if (query.$limit === '1' && query.$or && Array.isArray(query.$or)) {
+    const hasEmailOrUsernameCheck = query.$or.every(condition =>
+      (condition.email && typeof condition.email === 'string') ||
+      (condition.username && typeof condition.username === 'string')
+    );
+    return hasEmailOrUsernameCheck;
+  }
+  return false;
+}
+
 export default {
   before: {
     all: [],
@@ -107,9 +122,29 @@ export default {
         console.log('🔍 Users.find hook - provider:', context.params.provider, 'query:', JSON.stringify(context.params.query));
         return context;
       },
-      iff(isProvider('external'), authenticate('jwt')),
-      iff(isProvider('external'), requireVerifiedCompany),
-      iff(isProvider('external'), mapStudentFilters)
+      // Skip authentication for availability checks during registration
+      iff(
+        isProvider('external'),
+        iff(
+          (context) => !isAvailabilityCheck(context),
+          authenticate('jwt')
+        )
+      ),
+      // Skip these hooks for availability checks (they require authenticated user)
+      iff(
+        isProvider('external'),
+        iff(
+          (context) => !isAvailabilityCheck(context),
+          requireVerifiedCompany
+        )
+      ),
+      iff(
+        isProvider('external'),
+        iff(
+          (context) => !isAvailabilityCheck(context),
+          mapStudentFilters
+        )
+      )
     ],
     get: [
       iff(isProvider('external'), authenticate('jwt')),
@@ -134,6 +169,41 @@ export default {
         if (!password) {
           throw new Error('Password is required');
         }
+
+        // Validate username contains at least 3 alphabetic characters
+        if (data.username) {
+          const username = String(data.username).trim();
+          const alphabeticCount = (username.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('Username must contain at least 3 alphabetic characters');
+          }
+        }
+
+        // Validate name fields contain at least 3 alphabetic characters
+        if (data.profile) {
+          if (data.profile.firstName) {
+            const firstName = String(data.profile.firstName).trim();
+            const alphabeticCount = (firstName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('First name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.middleName) {
+            const middleName = String(data.profile.middleName).trim();
+            const alphabeticCount = (middleName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Middle name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.lastName) {
+            const lastName = String(data.profile.lastName).trim();
+            const alphabeticCount = (lastName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Last name must contain at least 3 alphabetic characters');
+            }
+          }
+        }
+
         // Default role to student if not provided
         if (!data.role) data.role = 'student';
         // If username not given, use email (or lowercase of provided username)
@@ -171,6 +241,60 @@ export default {
         }
         context.data = filtered;
       },
+      // Validate name fields contain at least 3 alphabetic characters
+      (context) => {
+        const data = context.data || {};
+
+        // Check nested profile object
+        if (data.profile) {
+          if (data.profile.firstName) {
+            const firstName = String(data.profile.firstName).trim();
+            const alphabeticCount = (firstName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('First name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.middleName) {
+            const middleName = String(data.profile.middleName).trim();
+            const alphabeticCount = (middleName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Middle name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.lastName) {
+            const lastName = String(data.profile.lastName).trim();
+            const alphabeticCount = (lastName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Last name must contain at least 3 alphabetic characters');
+            }
+          }
+        }
+
+        // Check dot-notation fields (e.g., 'profile.firstName')
+        if (data['profile.firstName']) {
+          const firstName = String(data['profile.firstName']).trim();
+          const alphabeticCount = (firstName.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('First name must contain at least 3 alphabetic characters');
+          }
+        }
+        if (data['profile.middleName']) {
+          const middleName = String(data['profile.middleName']).trim();
+          const alphabeticCount = (middleName.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('Middle name must contain at least 3 alphabetic characters');
+          }
+        }
+        if (data['profile.lastName']) {
+          const lastName = String(data['profile.lastName']).trim();
+          const alphabeticCount = (lastName.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('Last name must contain at least 3 alphabetic characters');
+          }
+        }
+
+        return context;
+      },
       hashPassword('password')
     ],
     remove: [
@@ -192,7 +316,22 @@ export default {
       // Make sure the password field is never sent to external clients
       iff(isProvider('external'), protect('password'))
     ],
-    find: [ maskForCompanies ],
+    find: [
+      // For availability checks, only return email and username (no other sensitive data)
+      (context) => {
+        if (isProvider('external')(context) && isAvailabilityCheck(context)) {
+          const data = context.result.data || context.result;
+          if (Array.isArray(data)) {
+            context.result.data = data.map(user => ({
+              email: user.email,
+              username: user.username
+            }));
+          }
+        }
+        return context;
+      },
+      maskForCompanies
+    ],
     get: [ maskForCompanies ],
     create: [
       // Send welcome email or verification email here
@@ -210,7 +349,22 @@ export default {
     all: [],
     find: [],
     get: [],
-    create: [],
+    create: [
+      (context) => {
+        const error = context.error;
+        if (error && error.code === 11000) {
+          if (error.message && error.message.includes('email')) {
+            error.message = 'This email address is already registered. Please use a different email address.';
+          } else if (error.message && error.message.includes('username')) {
+            error.message = 'This username is already registered. Please use a different username.';
+          } else {
+            error.message = 'This account already exists. Please use different credentials.';
+          }
+          error.code = 409;
+        }
+        return context;
+      }
+    ],
     update: [],
     patch: [],
     remove: []

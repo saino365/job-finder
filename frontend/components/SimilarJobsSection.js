@@ -100,8 +100,8 @@ function JobCard({ job }) {
       }}
       bodyStyle={{ padding: 16 }}
     >
-      <Link href={`/jobs/${job._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Link href={`/jobs/${job._id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
           {/* Job Title */}
           <Title
             level={5}
@@ -162,9 +162,11 @@ function JobCard({ job }) {
               </div>
             )}
           </Space>
+        </Link>
 
-          {/* Apply Button */}
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+        {/* Apply Button */}
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+          <Link href={`/jobs/${job._id}/apply`} style={{ textDecoration: 'none' }}>
             <Button
               type="primary"
               size="small"
@@ -180,9 +182,9 @@ function JobCard({ job }) {
             >
               Apply Now
             </Button>
-          </div>
+          </Link>
         </div>
-      </Link>
+      </div>
     </Card>
   );
 }

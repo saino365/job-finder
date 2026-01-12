@@ -49,7 +49,23 @@ export default function ApplyJobClient({ jobId }) {
         if (profRes.ok) {
           setProfile(await profRes.json());
         } else {
-          setError('Please complete your student profile before applying');
+          // Get more specific error message
+          let errorMsg = 'Unable to load your profile';
+          try {
+            const errorData = await profRes.json();
+            if (errorData.message) {
+              errorMsg = errorData.message;
+            }
+          } catch (e) {
+            // If JSON parsing fails, use default message
+          }
+
+          // Check if it's a role issue (403 Forbidden)
+          if (profRes.status === 403) {
+            errorMsg = 'Only student accounts can apply for internships. Please ensure you are logged in with a student account.';
+          }
+
+          setError(errorMsg);
           return;
         }
 
@@ -324,7 +340,7 @@ export default function ApplyJobClient({ jobId }) {
         )}
 
         {/* Warning if profile incomplete */}
-        {(!p.firstName || !p.lastName || !p.email) && (
+        {(!p.firstName || !p.lastName || !userEmail) && (
           <Alert
             message="Incomplete Profile"
             description="Some personal information is missing. Consider updating your profile to improve your application."

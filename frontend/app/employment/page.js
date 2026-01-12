@@ -404,45 +404,48 @@ function EmploymentPageContent() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div>
-                <Divider />
-                <Space size="middle" wrap>
-                  <Button
-                    type="primary"
-                    onClick={() => setEcOpen(true)}
-                    disabled={pendingEC}
-                    style={{
-                      borderRadius: '25px',
-                      background: 'linear-gradient(to right, #7d69ff, #917fff)',
-                      border: 'none',
-                      fontWeight: '600',
-                      padding: '8px 25px',
-                      height: 'auto',
-                      fontSize: '16px',
-                      boxShadow: '0 4px 20px rgba(125, 105, 255, 0.3)'
-                    }}
-                  >
-                    Request Early Completion
-                  </Button>
-                  <Button
-                    onClick={() => setTerminationOpen(true)}
-                    style={{
-                      borderRadius: '25px',
-                      background: '#fff',
-                      border: 'none',
-                      color: '#000',
-                      fontWeight: '500',
-                      padding: '8px 25px',
-                      height: 'auto',
-                      fontSize: '16px',
-                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-                    }}
-                  >
-                    Request Termination
-                  </Button>
-                </Space>
-              </div>
+              {/* Action Buttons - Only show when employment is ONGOING (status === 1) */}
+              {emp?.status === 1 && (
+                <div>
+                  <Divider />
+                  <Space size="middle" wrap>
+                    <Button
+                      type="primary"
+                      onClick={() => setEcOpen(true)}
+                      disabled={pendingEC}
+                      style={{
+                        borderRadius: '25px',
+                        background: 'linear-gradient(to right, #7d69ff, #917fff)',
+                        border: 'none',
+                        fontWeight: '600',
+                        padding: '8px 25px',
+                        height: 'auto',
+                        fontSize: '16px',
+                        boxShadow: '0 4px 20px rgba(125, 105, 255, 0.3)'
+                      }}
+                    >
+                      Request Early Completion
+                    </Button>
+                    <Button
+                      onClick={() => setTerminationOpen(true)}
+                      disabled={pendingEC}
+                      style={{
+                        borderRadius: '25px',
+                        background: '#fff',
+                        border: 'none',
+                        color: '#000',
+                        fontWeight: '500',
+                        padding: '8px 25px',
+                        height: 'auto',
+                        fontSize: '16px',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+                      }}
+                    >
+                      Request Termination
+                    </Button>
+                  </Space>
+                </div>
+              )}
 
               {emp?.status === 2 && ( // CLOSURE
                 <div>

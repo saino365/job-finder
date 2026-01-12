@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, Suspense } from 'react';
-import { Layout, Typography, Button, Alert, Space, message } from 'antd';
+import { Layout, Typography, Button, Alert, Space, message, Input, Form } from 'antd';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -15,32 +15,67 @@ function VerifyInner() {
   const forCompany = search.get('forCompany') === '1';
   const [status, setStatus] = useState('idle'); // idle | ok | error
   const [error, setError] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [form] = Form.useForm();
 
   const next = forCompany ? '/company/setup' : '/';
   const nextLogin = `/login?next=${encodeURIComponent(next)}`;
 
+  // Function to verify with token or code
+  async function verifyEmail(verificationToken) {
+    try {
+      setVerifying(true);
+      const res = await fetch(`${API_BASE_URL}/email-verification`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token: verificationToken })
+      });
+      const data = await res.json().catch(()=>({}));
+      if (!res.ok) throw new Error(data?.message || 'Verification failed');
+      setStatus('ok');
+      message.success('Email verified!');
+      setTimeout(() => { window.location.href = `/login?next=${encodeURIComponent(next)}`; }, 1000);
+    } catch (e) {
+      setError(e.message);
+      setStatus('error');
+      throw e;
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  // Auto-verify if token is in URL (clicked link from email)
   useEffect(() => {
     async function run() {
       if (!email) return;
       // Do not auto-verify without a token. Show instructions instead.
       if (!token) { setStatus('idle'); return; }
       try {
-        const res = await fetch(`${API_BASE_URL}/email-verification`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, token })
-        });
-        const data = await res.json().catch(()=>({}));
-        if (!res.ok) throw new Error(data?.message || 'Verification failed');
-        setStatus('ok');
-        message.success('Email verified!');
-        setTimeout(() => { window.location.href = `/login?next=${encodeURIComponent(next)}`; }, 1000);
+        await verifyEmail(token);
       } catch (e) {
-        setError(e.message);
-        setStatus('error');
+        // Error already handled in verifyEmail
       }
     }
     run();
   }, [email, next, token]);
+
+  // Handle manual code submission
+  async function handleCodeSubmit(values) {
+    const code = values.code?.trim();
+    if (!code) {
+      message.error('Please enter the verification code');
+      return;
+    }
+    if (!/^\d{6}$/.test(code)) {
+      message.error('Verification code must be 6 digits');
+      return;
+    }
+    try {
+      await verifyEmail(code);
+    } catch (e) {
+      // Error already handled in verifyEmail
+    }
+  }
 
   return (
     <>
@@ -54,9 +89,42 @@ function VerifyInner() {
           {status === 'idle' && email && (
             <Space direction="vertical" style={{ width: '100%' }} size="medium">
               <Typography.Paragraph>
-                We&apos;ve sent an email to <strong>{email}</strong> to verify your email address and activate your account. The link in the email will expire in 24 hours.
+                We&apos;ve sent an email to <strong>{email}</strong> with a 6-digit verification code and a link to verify your email address and activate your account. The code and link will expire in 24 hours.
               </Typography.Paragraph>
-              <Typography.Paragraph>
+
+              <div style={{ marginTop: 24, marginBottom: 24 }}>
+                <Typography.Title level={5}>Enter Verification Code</Typography.Title>
+                <Form form={form} onFinish={handleCodeSubmit} layout="vertical">
+                  <Form.Item
+                    name="code"
+                    rules={[
+                      { required: true, message: 'Please enter the 6-digit code' },
+                      { pattern: /^\d{6}$/, message: 'Code must be 6 digits' }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      size="large"
+                      style={{ fontSize: '20px', letterSpacing: '4px', textAlign: 'center' }}
+                    />
+                  </Form.Item>
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      block
+                      size="large"
+                      loading={verifying}
+                    >
+                      Verify Email
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </div>
+
+              <Typography.Paragraph type="secondary" style={{ fontSize: '12px' }}>
+                Didn&apos;t receive the email? {' '}
                 <a
                   onClick={async (e) => {
                     e.preventDefault();
@@ -71,8 +139,8 @@ function VerifyInner() {
                   }}
                   href="#"
                 >
-                  Click here
-                </a> if you did not receive an email or would like to change the email address you signed up with.
+                  Click here to resend
+                </a>
               </Typography.Paragraph>
             </Space>
           )}
