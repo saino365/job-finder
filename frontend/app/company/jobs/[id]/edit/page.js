@@ -203,7 +203,7 @@ export default function EditJobListingPage() {
         onboarding: { generalDocs, jobSpecificDocs: jobDocs },
         instantOnApproval: !!vals?.instantOnApproval,
         publishAt: vals?.publishAt || null,
-        submitForPreApproval: true, // Submit for approval (starts with pre-approval)
+        submitForApproval: true, // Submit for approval - changes status from DRAFT to PENDING
       };
 
       const res = await fetch(`${API_BASE_URL}/job-listings/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });

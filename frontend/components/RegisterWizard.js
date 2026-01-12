@@ -29,7 +29,7 @@ export default function RegisterWizard({ onStepChange }) {
 
   async function handleSubmitAll(values) {
     // Compose payload matching backend schema
-    const { username, password, email: emailInput, firstName, middleName, lastName, phone, icPassportNumber } = values;
+    const { username, password, email: emailInput, firstName, middleName, lastName, phone, icPassportNumber, city, state, country } = values;
 
     // Determine email/username relationship
     const usernameStr = String(username || '').trim().toLowerCase();
@@ -93,6 +93,11 @@ export default function RegisterWizard({ onStepChange }) {
         phone: phone || undefined,
         avatar: undefined,
         icPassportNumber: icPassportNumber || undefined,
+        location: {
+          city: city || undefined,
+          state: state || undefined,
+          country: country || undefined,
+        },
       },
       internProfile: {
         educations,
@@ -170,17 +175,66 @@ export default function RegisterWizard({ onStepChange }) {
 
   async function handleNext() {
     try {
-      // validate this step's fields only
       const stepKey = steps[current].key;
-      let fields = [];
-      switch (stepKey) {
-        case 'account': fields = ['username','password','email']; break;
-        case 'profile': fields = ['firstName','lastName','phone','icPassportNumber']; break;
-        default: fields = []; break;
+
+      // For steps with Form.List, we need to validate all fields in the current step
+      // because validateFields(['certifications']) doesn't validate nested fields
+      if (['education', 'certs', 'interests', 'work', 'events'].includes(stepKey)) {
+        // Validate all fields to catch nested validation errors in Form.List
+        await form.validateFields();
+      } else {
+        // For simple steps, validate specific fields
+        let fields = [];
+        switch (stepKey) {
+          case 'account': fields = ['username','password','email']; break;
+          case 'profile': fields = ['firstName','lastName','phone','icPassportNumber']; break;
+          default: fields = []; break;
+        }
+        console.log('Validating fields:', fields);
+        console.log('Form values:', form.getFieldsValue());
+        await form.validateFields(fields);
       }
-      console.log('Validating fields:', fields);
-      console.log('Form values:', form.getFieldsValue());
-      await form.validateFields(fields);
+
+      if (stepKey === 'account') {
+        const values = form.getFieldsValue(['username', 'email']);
+        const usernameStr = String(values.username || '').trim().toLowerCase();
+        const emailStr = String(values.email || '').trim().toLowerCase();
+
+        try {
+          const checkRes = await fetch(`${API_BASE_URL}/users?$limit=1&$or[0][email]=${encodeURIComponent(emailStr)}&$or[1][username]=${encodeURIComponent(usernameStr)}`);
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            const existingUsers = checkData.data || [];
+            if (existingUsers.length > 0) {
+              const existing = existingUsers[0];
+              const existingEmail = String(existing.email || '').toLowerCase();
+              const existingUsername = String(existing.username || '').toLowerCase();
+
+              if (existingEmail === emailStr) {
+                form.setFields([
+                  {
+                    name: 'email',
+                    errors: ['This email address is already registered. Please use a different email address.']
+                  }
+                ]);
+                return;
+              }
+              if (existingUsername === usernameStr) {
+                form.setFields([
+                  {
+                    name: 'username',
+                    errors: ['This username is already registered. Please use a different username.']
+                  }
+                ]);
+                return;
+              }
+            }
+          }
+        } catch (checkErr) {
+          console.warn('Failed to check email/username availability:', checkErr);
+        }
+      }
+
       const newStep = current + 1;
       setCurrent(newStep);
       if (onStepChange) onStepChange(newStep);
@@ -203,7 +257,31 @@ export default function RegisterWizard({ onStepChange }) {
       await handleSubmitAll(values);
     } catch (e) {
       if (e?.message) {
-        message.error(e.message);
+        let errorMsg = e.message;
+
+        if (e.message.includes('E11000') || e.message.includes('duplicate key')) {
+          if (e.message.includes('email')) {
+            errorMsg = 'This email address is already registered. Please use a different email address.';
+            setCurrent(0);
+          } else if (e.message.includes('username')) {
+            errorMsg = 'This username is already registered. Please use a different username.';
+            setCurrent(0);
+          } else {
+            errorMsg = 'This account already exists. Please use different credentials.';
+            setCurrent(0);
+          }
+        } else if (e.message.includes('email address is already registered')) {
+          errorMsg = 'This email address is already registered. Please use a different email address.';
+          setCurrent(0);
+        } else if (e.message.includes('username is already registered')) {
+          errorMsg = 'This username is already registered. Please use a different username.';
+          setCurrent(0);
+        } else if (e.message.includes('already exists')) {
+          errorMsg = 'This account already exists. Please use different credentials.';
+          setCurrent(0);
+        }
+
+        message.error(errorMsg);
       }
     } finally { setSubmitting(false); }
   }
@@ -266,13 +344,34 @@ export default function RegisterWizard({ onStepChange }) {
               rules={[
                 { required: true },
                 {
-                  validator: (_, value) => {
+                  validator: async (_, value) => {
                     if (!value) return Promise.resolve();
+                    
+                    // If it's an email, skip username validation (email validation will handle it)
+                    if (value.includes('@')) {
+                      return Promise.resolve();
+                    }
+                    
                     // Count alphabetic characters (A-Z, a-z)
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Username must contain at least 3 alphabetic characters'));
                     }
+                    
+                    // Check if username already exists (async check)
+                    try {
+                      const checkRes = await fetch(`${API_BASE_URL}/users?username=${encodeURIComponent(value)}&$limit=1`);
+                      if (checkRes.ok) {
+                        const data = await checkRes.json();
+                        if (data.data && data.data.length > 0) {
+                          return Promise.reject(new Error('This username is already taken. Please choose another one.'));
+                        }
+                      }
+                    } catch (e) {
+                      // If check fails, don't block registration (backend will catch it)
+                      console.warn('Username availability check failed:', e);
+                    }
+                    
                     return Promise.resolve();
                   }
                 }
@@ -280,8 +379,51 @@ export default function RegisterWizard({ onStepChange }) {
             >
               <Input placeholder="username or email" onChange={(e)=>{ const v=e.target.value; form.setFieldsValue({ username:v }); if (v && v.includes('@')) { form.setFieldsValue({ email:v }); } }} />
             </Form.Item>
-            <Form.Item name="password" label="Password" rules={[{ required: true, min: 6 }]}>
-              <Input.Password placeholder="••••••••" />
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const errors = [];
+                    
+                    // At least 8 characters
+                    if (value.length < 8) {
+                      errors.push('at least 8 characters');
+                    }
+                    
+                    // At least 1 lowercase letter
+                    if (!/[a-z]/.test(value)) {
+                      errors.push('at least 1 lowercase letter');
+                    }
+                    
+                    // At least 1 uppercase letter
+                    if (!/[A-Z]/.test(value)) {
+                      errors.push('at least 1 uppercase letter');
+                    }
+                    
+                    // At least 1 numeric
+                    if (!/[0-9]/.test(value)) {
+                      errors.push('at least 1 number');
+                    }
+                    
+                    // At least 1 special character
+                    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+                      errors.push('at least 1 special character');
+                    }
+                    
+                    if (errors.length > 0) {
+                      return Promise.reject(new Error(`Password must contain: ${errors.join(', ')}`));
+                    }
+                    
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input.Password placeholder="Min 8 chars: A-Z, a-z, 0-9, special" />
             </Form.Item>
             <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Please enter a valid email' }]}>
               <Input placeholder="name@example.com" />
@@ -302,7 +444,12 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Count alphabetic characters (A-Z, a-z)
+                    // Only allow alphabetic characters, spaces, hyphens, and apostrophes
+                    const nameRegex = /^[A-Za-z\s\-']+$/;
+                    if (!nameRegex.test(value)) {
+                      return Promise.reject(new Error('First name can only contain letters, spaces, hyphens, and apostrophes'));
+                    }
+                    // Must contain at least 3 alphabetic characters
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('First name must contain at least 3 alphabetic characters'));
@@ -321,7 +468,12 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Count alphabetic characters (A-Z, a-z)
+                    // Only allow alphabetic characters, spaces, hyphens, and apostrophes
+                    const nameRegex = /^[A-Za-z\s\-']+$/;
+                    if (!nameRegex.test(value)) {
+                      return Promise.reject(new Error('Middle name can only contain letters, spaces, hyphens, and apostrophes'));
+                    }
+                    // Must contain at least 3 alphabetic characters
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Middle name must contain at least 3 alphabetic characters'));
@@ -341,7 +493,12 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Count alphabetic characters (A-Z, a-z)
+                    // Only allow alphabetic characters, spaces, hyphens, and apostrophes
+                    const nameRegex = /^[A-Za-z\s\-']+$/;
+                    if (!nameRegex.test(value)) {
+                      return Promise.reject(new Error('Last name can only contain letters, spaces, hyphens, and apostrophes'));
+                    }
+                    // Must contain at least 3 alphabetic characters
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Last name must contain at least 3 alphabetic characters'));
@@ -356,8 +513,45 @@ export default function RegisterWizard({ onStepChange }) {
             <Form.Item name="icPassportNumber" label="IC / Passport number">
               <Input />
             </Form.Item>
-            <Form.Item name="phone" label="Phone number" rules={[{ required: true }]}>
-              <Input />
+            <Form.Item
+              name="phone"
+              label="Phone number"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Check for any non-digit, non-plus characters
+                    if (/[^0-9+]/.test(value)) {
+                      return Promise.reject(new Error('Phone number can only contain digits (0-9) and optionally a plus sign (+) at the beginning'));
+                    }
+                    // Plus sign can only be at the beginning
+                    if (value.includes('+') && !value.startsWith('+')) {
+                      return Promise.reject(new Error('Plus sign (+) can only be at the beginning of the phone number'));
+                    }
+                    // Only one plus sign allowed
+                    if ((value.match(/\+/g) || []).length > 1) {
+                      return Promise.reject(new Error('Only one plus sign (+) is allowed'));
+                    }
+                    // Must have at least one digit
+                    if (!/[0-9]/.test(value)) {
+                      return Promise.reject(new Error('Phone number must contain at least one digit'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input placeholder="e.g., +60123456789 or 60123456789" />
+            </Form.Item>
+            <Form.Item name="city" label="City">
+              <Input placeholder="e.g., Kuala Lumpur" />
+            </Form.Item>
+            <Form.Item name="state" label="State">
+              <Input placeholder="e.g., Selangor" />
+            </Form.Item>
+            <Form.Item name="country" label="Country">
+              <Input placeholder="e.g., Malaysia" />
             </Form.Item>
             <Form.Item label="Photo (optional)">
               <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} />
@@ -480,9 +674,43 @@ export default function RegisterWizard({ onStepChange }) {
                       {fields.map(({ key, name, ...rest }) => (
                         <Card key={key} size="small" style={{ marginBottom: 12 }}>
                           <Space direction="vertical" style={{ width: '100%' }}>
-                            <Form.Item {...rest} name={[name, 'title']} label="Certificate title"><Input /></Form.Item>
-                            <Form.Item {...rest} name={[name, 'issuer']} label="Certificate issuer"><Input /></Form.Item>
-                            <Form.Item {...rest} name={[name, 'acquiredDate']} label="Acquired date"><DatePicker style={{ width: '100%' }} /></Form.Item>
+                            <Form.Item
+                              {...rest}
+                              name={[name, 'title']}
+                              label="Certificate title"
+                              rules={[{ required: true, message: 'Please enter certificate title' }]}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <Form.Item
+                              {...rest}
+                              name={[name, 'issuer']}
+                              label="Certificate issuer"
+                              rules={[{ required: true, message: 'Please enter certificate issuer' }]}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <Form.Item
+                              {...rest}
+                              name={[name, 'acquiredDate']}
+                              label="Acquired date"
+                              rules={[
+                                {
+                                  validator: (_, value) => {
+                                    if (!value) return Promise.resolve();
+                                    const selectedDate = new Date(value);
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    if (selectedDate > today) {
+                                      return Promise.reject(new Error('Certificate issue date must not be set in the future'));
+                                    }
+                                    return Promise.resolve();
+                                  }
+                                }
+                              ]}
+                            >
+                              <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
                             <Form.Item {...rest} name={[name, 'description']} label="Description"><Input.TextArea rows={3} /></Form.Item>
                             <Button danger onClick={() => remove(name)}>Remove</Button>
                           </Space>
@@ -604,7 +832,7 @@ export default function RegisterWizard({ onStepChange }) {
                       <Space direction="vertical" style={{ width: '100%' }}>
                         <Form.Item {...rest} name={[name, 'companyName']} label="Company name"><Input /></Form.Item>
                         <Form.Item {...rest} name={[name, 'industry']} label="Industry">
-                          <Select allowClear options={['Finance','Technology','Education','Healthcare','Retail','Manufacturing','Other'].map(v => ({ value: v, label: v }))} />
+                          <Select allowClear options={['Finance','Information Technology','Education','Healthcare','Retail','Manufacturing','Other'].map(v => ({ value: v, label: v }))} />
                         </Form.Item>
                         <Form.Item noStyle shouldUpdate>
                           {({ getFieldValue }) => {

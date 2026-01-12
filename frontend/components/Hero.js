@@ -46,7 +46,7 @@ export default function Hero({ onSearch, industryOptions = [] }) {
                   lineHeight: '1.2'
                 }}
               >
-                Find Internships And Hire Talents!
+                Search for jobs, companies, or keywords
               </Typography.Title>
               <Typography.Text
                 style={{

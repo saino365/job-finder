@@ -39,7 +39,7 @@ export default (app) => ({
           }
         } catch (err) {
           // Authentication failed or no token - continue as unauthenticated
-          console.log('🔍 Job Backend FIND: Authentication failed or no token, continuing as unauthenticated');
+          console.log('Job Backend FIND: Authentication failed or no token, continuing as unauthenticated');
         }
         return ctx;
       },
@@ -47,60 +47,84 @@ export default (app) => ({
         const user = ctx.params?.user;
         ctx.params.query = ctx.params.query || {};
 
-        console.log('🔍 Job Backend FIND: User:', user ? `${user.email} (${user.role})` : 'NOT AUTHENTICATED');
+        console.log('Job Backend FIND: User:', user ? `${user.email} (${user.role})` : 'NOT AUTHENTICATED');
 
         // Company sees own jobs (all statuses); admin sees all; students/unauthenticated see ACTIVE only
         if (!user || user.role === 'student') {
-        ctx.params.query.status = STATUS.ACTIVE; // public browse (but still auth in our app)
+        ctx.params.query.status = STATUS.ACTIVE;
+
+        // Also filter out expired jobs (expiresAt has passed)
+        // This ensures expired jobs are hidden immediately, not just after scheduler runs
+        ctx.params.query.expiresAt = { $gt: new Date() };
 
         // Handle custom filters that need backend processing
         const q = { ...(ctx.params.query || {}) };
-        console.log('🔍 Job Backend: Received query parameters:', q);
+        console.log('Job Backend: Received query parameters:', q);
 
-        // Store keyword for comprehensive search in after hook (avoid FeathersJS validation issues)
+        // Store keyword for comprehensive search in after hook
         if (q.keyword) {
           ctx.params.keywordFilter = q.keyword;
-          console.log('🔍 Job Backend: Stored keyword for after hook search:', { keyword: q.keyword });
+          console.log('Job Backend: Stored keyword for after hook search:', { keyword: q.keyword });
         }
 
-        // Store industry filter for after hook (company population)
+        // Store industry filter for after hook
         if (q.industry) {
           ctx.params.industryFilter = Array.isArray(q.industry) ? q.industry : [q.industry];
-          console.log('🔍 Job Backend: Stored industry filter for after hook:', ctx.params.industryFilter);
+          console.log('Job Backend: Stored industry filter for after hook:', ctx.params.industryFilter);
         }
 
         // Handle start date filtering
         if (q.startDate) {
           const now = new Date();
-          now.setHours(0, 0, 0, 0); // Start of today
+          now.setHours(0, 0, 0, 0);
           let startDateQuery = {};
 
           if (q.startDate === 'This Month') {
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: startOfMonth, $lte: endOfMonth };
-            console.log('🔍 Job Backend: This Month filter:', { startOfMonth, endOfMonth });
+            console.log('Job Backend: This Month filter:', { startOfMonth, endOfMonth });
           } else if (q.startDate === 'Next Month') {
-            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
             const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: nextMonth, $lte: endOfNextMonth };
-            console.log('🔍 Job Backend: Next Month filter:', { nextMonth, endOfNextMonth });
+            console.log('Job Backend: Next Month filter:', { nextMonth, endOfNextMonth });
           } else if (q.startDate === 'Next 3 Months') {
+            // End of the 3rd month from now (e.g., Dec -> end of Feb)
             const threeMonthsLater = new Date(now.getFullYear(), now.getMonth() + 3, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: now, $lte: threeMonthsLater };
-            console.log('🔍 Job Backend: Next 3 Months filter:', { now, threeMonthsLater });
+            console.log('Job Backend: Next 3 Months filter:', { now, threeMonthsLater });
           } else if (q.startDate === 'Next 6 Months') {
+            // End of the 6th month from now (e.g., Dec -> end of May)
             const sixMonthsLater = new Date(now.getFullYear(), now.getMonth() + 6, 0, 23, 59, 59, 999);
             startDateQuery = { $gte: now, $lte: sixMonthsLater };
-            console.log('🔍 Job Backend: Next 6 Months filter:', { now, sixMonthsLater });
+            console.log('Job Backend: Next 6 Months filter:', { now, sixMonthsLater });
           } else if (q.startDate === 'Flexible') {
-            // For "Flexible", show all jobs (no date filter)
-            console.log('🔍 Job Backend: Flexible filter - no date restriction');
+            console.log('Job Backend: Flexible filter - no date restriction');
           }
 
           if (Object.keys(startDateQuery).length > 0) {
-            ctx.params.query['project.startDate'] = startDateQuery;
-            console.log('🔍 Job Backend: Applied start date filter:', {
+            // Include jobs that match the date range OR have no start date set (flexible/TBD)
+            const startDateOrConditions = [
+              { 'project.startDate': startDateQuery },
+              { 'project.startDate': { $exists: false } },
+              { 'project.startDate': null }
+            ];
+
+            // If there's already a $or query (e.g., from location filter), merge with $and
+            if (ctx.params.query.$or) {
+              const existingOr = ctx.params.query.$or;
+              delete ctx.params.query.$or;
+              ctx.params.query.$and = [
+                { $or: existingOr },
+                { $or: startDateOrConditions }
+              ];
+              console.log('Job Backend: Merged start date filter with existing $or using $and');
+            } else {
+              ctx.params.query.$or = startDateOrConditions;
+            }
+
+            console.log('Job Backend: Applied start date filter with flexible jobs:', {
               startDate: q.startDate,
               query: startDateQuery,
               queryField: 'project.startDate'
@@ -109,26 +133,27 @@ export default (app) => ({
         }
 
         // Remove custom params so they don't leak to the adapter
-        // Note: location, salaryRange filters are handled by FeathersJS directly
         ['keyword', 'industry', 'startDate'].forEach(k => delete ctx.params.query[k]);
 
-        console.log('🔍 Job Backend: Final query after cleanup:', ctx.params.query);
+        console.log('Job Backend: Final query after cleanup:', ctx.params.query);
 
       } else if (user.role === 'company') {
         const company = await getCompanyForUser(app, user._id);
         if (!company) throw new Error('Company profile not found');
-        console.log('🔍 Job Backend FIND: Company user, filtering by companyId:', company._id);
+        console.log('Job Backend FIND: Company user, filtering by companyId:', company._id);
         ctx.params.query.companyId = company._id;
       }
 
-      console.log('🔍 Job Backend FIND: Final query:', ctx.params.query);
+      console.log('Job Backend FIND: Final query:', ctx.params.query);
     } ],
     get: [ async (ctx) => {
       const user = ctx.params?.user;
       if (!user || user.role === 'student') {
-        // Only allow getting ACTIVE listings publicly
+        // Only allow getting ACTIVE and non-expired listings publicly
         const current = await app.service('job-listings').Model.findById(ctx.id).lean();
-        if (!current || current.status !== STATUS.ACTIVE) {
+        const now = new Date();
+        const isExpired = current?.expiresAt && new Date(current.expiresAt) <= now;
+        if (!current || current.status !== STATUS.ACTIVE || isExpired) {
           const e = new Error('Not found'); e.code = 404; throw e;
         }
       }
@@ -312,39 +337,54 @@ export default (app) => ({
         // Populate companies for all jobs
         jobs = await Promise.all(jobs.map(populateCompany));
 
-        // Filter by industry if specified (case-insensitive)
+        // Filter by industry if specified
         if (industryFilter && industryFilter.length > 0) {
-          console.log('🔍 Job Backend: Applying industry filter after population:', { industryFilter });
+          console.log('Job Backend: Applying industry filter after population:', { industryFilter });
           const beforeCount = jobs.length;
-          // Convert filter to lowercase for case-insensitive matching
           const lowerIndustryFilter = industryFilter.map(ind => ind.toLowerCase());
-          jobs = jobs.filter(job =>
-            job.company && job.company.industry &&
-            lowerIndustryFilter.includes(job.company.industry.toLowerCase())
-          );
-          console.log('🔍 Job Backend: Industry filter results:', { beforeCount, afterCount: jobs.length });
+
+          jobs = jobs.filter(job => {
+            if (!job.company) {
+              console.log('Job Backend: Job has no company data:', job._id);
+              return false;
+            }
+
+            if (!job.company.industry) {
+              console.log('Job Backend: Company has no industry field:', {
+                jobId: job._id,
+                companyId: job.company._id,
+                companyName: job.company.name
+              });
+              return true;
+            }
+
+            const matches = lowerIndustryFilter.includes(job.company.industry.toLowerCase());
+            console.log('Job Backend: Industry match check:', {
+              jobId: job._id,
+              companyIndustry: job.company.industry,
+              filterIndustries: industryFilter,
+              matches
+            });
+            return matches;
+          });
+
+          console.log('Job Backend: Industry filter results:', { beforeCount, afterCount: jobs.length });
         }
 
         // Filter by keyword across title, description, and company name
         if (keywordFilter) {
-          console.log('🔍 Job Backend: Applying comprehensive keyword filter after population:', { keywordFilter });
+          console.log('Job Backend: Applying comprehensive keyword filter after population:', { keywordFilter });
           const beforeCount = jobs.length;
           const keyword = keywordFilter.toLowerCase();
 
           jobs = jobs.filter(job => {
-            // Search in job title
             if (job.title && job.title.toLowerCase().includes(keyword)) return true;
-
-            // Search in job description
             if (job.description && job.description.toLowerCase().includes(keyword)) return true;
-
-            // Search in company name
             if (job.company && job.company.name && job.company.name.toLowerCase().includes(keyword)) return true;
-
             return false;
           });
 
-          console.log('🔍 Job Backend: Comprehensive keyword filter results:', { beforeCount, afterCount: jobs.length });
+          console.log('Job Backend: Comprehensive keyword filter results:', { beforeCount, afterCount: jobs.length });
         }
 
         // Update the result with filtered and populated jobs

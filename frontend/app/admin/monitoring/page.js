@@ -430,9 +430,15 @@ function MonitoringClient() {
             <div>
               <Text strong>Location:</Text>
               <div>
-                {viewingJob.location?.city || viewingJob.location?.state
-                  ? [viewingJob.location?.city, viewingJob.location?.state].filter(Boolean).join(', ')
-                  : '-'}
+                {(() => {
+                  const loc = viewingJob.location;
+                  if (!loc) return '-';
+                  if (typeof loc === 'string') return loc;
+                  const city = loc.city || '';
+                  const state = loc.state || '';
+                  const parts = [city, state].filter(Boolean);
+                  return parts.length ? parts.join(', ') : '-';
+                })()}
               </div>
             </div>
             <div>

@@ -186,7 +186,7 @@ export default function CompanyUniversitiesPage(){
                     <InputNumber placeholder="Salary max" value={salaryMax} onChange={setSalaryMax} min={0} />
                   </Space>
                   <Space>
-                    <Button type="primary" onClick={loadCandidates} disabled={!selectedUni || !selectedProgramme}>Search candidates</Button>
+                    <Button type="primary" onClick={loadCandidates} disabled={!selectedUni}>Search candidates</Button>
                     <Button onClick={()=>{ setStartDate(null); setEndDate(null); setLoc1(""); setLoc2(""); setLoc3(""); setSalaryMin(); setSalaryMax(); }}>Reset</Button>
                   </Space>
                 </Space>

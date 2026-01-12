@@ -23,23 +23,58 @@ const s3Client = new S3Client({
   forcePathStyle: true, // Required for some S3-compatible services
 });
 
-// File filter function
+// File filter function with field-specific validation
 const fileFilter = (req, file, cb) => {
-  // Define allowed file types
-  const allowedTypes = {
-    'image/jpeg': ['.jpg', '.jpeg'],
-    'image/png': ['.png'],
-    'image/gif': ['.gif'],
-    'application/pdf': ['.pdf'],
-    'application/msword': ['.doc'],
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-    'text/plain': ['.txt']
-  };
+  const fieldName = file.fieldname;
+  const mimetype = file.mimetype;
 
-  if (allowedTypes[file.mimetype]) {
-    cb(null, true);
+  const documentTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/rtf',
+    'text/rtf'
+  ];
+
+  const imageTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif'
+  ];
+
+  const spreadsheetTypes = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ];
+
+  const textTypes = ['text/plain'];
+
+  if (fieldName === 'resume') {
+    if (documentTypes.includes(mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Resume must be a PDF, DOC, DOCX, or RTF file. Image files are not allowed.'), false);
+    }
+  } else if (fieldName === 'avatar' || fieldName === 'logo') {
+    if (imageTypes.includes(mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Avatar and logo must be image files (JPEG, PNG, or GIF).'), false);
+    }
+  } else if (fieldName === 'portfolio' || fieldName === 'document') {
+    const allAllowedTypes = [...documentTypes, ...imageTypes, ...spreadsheetTypes, ...textTypes];
+    if (allAllowedTypes.includes(mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images, PDFs, Word documents, Excel files, and text files are allowed.'), false);
+    }
   } else {
-    cb(new Error('Invalid file type. Only images, PDFs, and documents are allowed.'), false);
+    const allAllowedTypes = [...documentTypes, ...imageTypes, ...spreadsheetTypes, ...textTypes];
+    if (allAllowedTypes.includes(mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type.'), false);
+    }
   }
 };
 

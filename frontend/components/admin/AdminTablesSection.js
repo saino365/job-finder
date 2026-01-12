@@ -23,7 +23,7 @@ export default function AdminTablesSection({ pendingJobs = [], expiringJobs = []
   return (
     <Row gutter={[16,16]}>
       <Col xs={24} md={12}>
-        <Card title="Pending Job Listings" extra={<a href="/admin/monitoring?type=pending_jobs" onClick={(e)=>{e.preventDefault(); window.location.href='/admin/dashboard';}}>View</a>}>
+        <Card title="Pending Job Listings" extra={<a href="/admin/monitoring?type=pending_jobs" onClick={(e)=>{e.preventDefault(); window.location.href='/admin/monitoring?type=pending_jobs';}}>View</a>}>
           <Table size="small" rowKey="_id" columns={jobsColumns} dataSource={pendingJobs.slice(0,10)} pagination={false} loading={loading} />
         </Card>
       </Col>

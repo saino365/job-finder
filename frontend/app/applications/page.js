@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../../config';
 const { Title, Text } = Typography;
 
 const statusText = (s) => ({0:'Applied',1:'Shortlisted',2:'Interview',3:'Active offer',4:'Hired',5:'Rejected',6:'Withdrawn',7:'Not Attending'}[s] || String(s));
+const employmentStatusText = (s) => ({0:'Upcoming',1:'Ongoing',2:'Closure',3:'Completed',4:'Terminated'}[s] || String(s));
 
 const tabs = [
   { key: 'applied', label: 'Applied', statuses: [0] },
@@ -44,6 +45,24 @@ export default function MyApplicationsPage(){
       const res = await fetch(`${API_BASE_URL}/applications?$sort[createdAt]=-1`, { headers: { Authorization: `Bearer ${token}` } });
       const json = await res.json();
       const data = Array.isArray(json) ? json : (json?.data || []);
+
+      // For hired applications (status 4), fetch employment records to check employment status
+      const hiredApps = data.filter(app => app.status === 4);
+      if (hiredApps.length > 0) {
+        const empRes = await fetch(`${API_BASE_URL}/employment-records?$limit=100`, { headers: { Authorization: `Bearer ${token}` } });
+        const empJson = await empRes.json();
+        const employments = Array.isArray(empJson) ? empJson : (empJson?.data || []);
+
+        // Map employment status to applications
+        data.forEach(app => {
+          if (app.status === 4) {
+            const employment = employments.find(emp => String(emp.applicationId) === String(app._id));
+            if (employment) {
+              app.employmentStatus = employment.status;
+            }
+          }
+        });
+      }
 
       // Company data is now populated by backend, no need to fetch separately
       setItems(data);
@@ -167,7 +186,16 @@ export default function MyApplicationsPage(){
       render: (_, r) => r.company?.name || r.companyName || <Text type="secondary">Company unavailable</Text>
     },
     { title: 'Application date', dataIndex: 'createdAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
-    { title: 'Application status', dataIndex: 'status', render: (s) => <Tag>{statusText(s)}</Tag> },
+    { title: 'Application status', dataIndex: 'status', render: (s, r) => {
+      // For hired applications (status 4), show employment status if available
+      if (s === 4 && r.employmentStatus !== undefined) {
+        const empStatusLabel = employmentStatusText(r.employmentStatus);
+        const colorMap = { 0: 'blue', 1: 'green', 2: 'orange', 3: 'default', 4: 'red' };
+        return <Tag color={colorMap[r.employmentStatus]}>{empStatusLabel}</Tag>;
+      }
+      return <Tag>{statusText(s)}</Tag>;
+    } },
+    { title: 'Validity', key: 'validity', render: (_, r) => r.validityUntil ? new Date(r.validityUntil).toLocaleDateString() : '-' },
     { title: 'Last Update', key: 'last', render: (_, r) => r.updatedAt ? new Date(r.updatedAt).toLocaleString() : (r.history?.length ? new Date(r.history[r.history.length-1].at).toLocaleString() : '-') },
     { title: 'Submitted CV', key: 'cv', render: (_, r) => {
       // Check if resume is in attachments array (first attachment is usually the resume)
@@ -178,7 +206,10 @@ export default function MyApplicationsPage(){
       return '-';
     }},
     { title: 'Action', key: 'action', render: (_, r) => {
-      const canWithdraw = [0,1,2,3,4].includes(r.status);
+      // For hired applications (status 4), check employment status
+      // Don't allow withdraw if employment is in CLOSURE (2), COMPLETED (3), or TERMINATED (4)
+      const isHiredWithAdvancedEmployment = r.status === 4 && r.employmentStatus >= 2;
+      const canWithdraw = [0,1,2,3,4].includes(r.status) && !isHiredWithAdvancedEmployment;
       const canExtend = r.status === 0 && !r.extendedOnce;
 
       return (

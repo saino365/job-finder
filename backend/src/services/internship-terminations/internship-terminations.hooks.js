@@ -27,6 +27,14 @@ export default (app) => {
     const Employment = app.service('employment-records')?.Model;
     const emp = await Employment.findById(body.employmentId).lean();
     if (!emp) throw Object.assign(new Error('Employment not found'), { code: 404 });
+
+    // Check employment status - only allow termination requests for ONGOING (status === 1)
+    if (emp.status !== ES.ONGOING) {
+      const statusLabels = { 0: 'Upcoming', 1: 'Ongoing', 2: 'Closure', 3: 'Completed', 4: 'Terminated' };
+      const currentStatus = statusLabels[emp.status] || 'Unknown';
+      throw Object.assign(new Error(`Cannot request termination. Employment status is ${currentStatus}. Termination requests are only allowed for ongoing employments.`), { code: 400 });
+    }
+
     const initiatedBy = user.role === 'company' ? 'company' : (user.role === 'student' ? 'student' : null);
     if (!initiatedBy) throw Object.assign(new Error('Forbidden'), { code: 403 });
     // Ownership check

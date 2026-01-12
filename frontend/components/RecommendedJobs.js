@@ -26,60 +26,90 @@ export default function RecommendedJobs({ user }) {
           $sort: JSON.stringify({ createdAt: -1 })
         });
 
-        // Add filters based on user's internProfile preferences
         const preferences = user?.internProfile?.preferences;
 
-        // Filter by preferred industries if available
         if (preferences?.industries && preferences.industries.length > 0) {
-          // Send all industries to backend (backend supports array filtering)
-          preferences.industries.forEach(industry => {
+          preferences.industries.forEach((industry, index) => {
             queryParams.append('industry', industry);
           });
         }
 
-        // Filter by preferred start/end dates if available
-        if (preferences?.preferredStartDate || preferences?.startDate) {
-          const userStartDate = preferences.preferredStartDate || preferences.startDate;
-          // Show jobs that start around the user's preferred start date
-          // Allow jobs that start up to 2 months before or after the user's preferred date
-          const userStart = new Date(userStartDate);
-          const twoMonthsBefore = new Date(userStart);
-          twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
-          const twoMonthsAfter = new Date(userStart);
-          twoMonthsAfter.setMonth(twoMonthsAfter.getMonth() + 2);
+        const fetchUrl = `${API_BASE_URL}/job-listings?${queryParams}`;
 
-          // Filter jobs where project.startDate is within the acceptable range
-          queryParams.append('project.startDate[$gte]', twoMonthsBefore.toISOString());
-          queryParams.append('project.startDate[$lte]', twoMonthsAfter.toISOString());
-        }
-
-        // Filter by salary range if available
-        if (preferences?.salaryRange) {
-          const { min, max } = preferences.salaryRange;
-          // Show jobs where salary ranges OVERLAP with user's preference
-          // For overlap: job's max >= user's min AND job's min <= user's max
-
-          // Job's max salary should be >= user's min preference
-          // (job can pay at least what the user wants as minimum)
-          if (min != null) {
-            queryParams.append('salaryRange.max[$gte]', min.toString());
-          }
-
-          // Job's min salary should be <= user's max preference
-          // (job doesn't start above what the user expects as maximum)
-          if (max != null) {
-            queryParams.append('salaryRange.min[$lte]', max.toString());
-          }
-        }
-
-        const response = await fetch(`${API_BASE_URL}/job-listings?${queryParams}`);
+        const response = await fetch(fetchUrl);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch jobs: ${response.status}`);
         }
 
         const data = await response.json();
-        const jobsList = data.data || data || [];
+        let jobsList = data.data || data || [];
+
+        if (preferences?.preferredStartDate || preferences?.startDate) {
+          const userStartDate = preferences.preferredStartDate || preferences.startDate;
+          const userStart = new Date(userStartDate);
+          const twoMonthsBefore = new Date(userStart);
+          twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
+          const twoMonthsAfter = new Date(userStart);
+          twoMonthsAfter.setMonth(twoMonthsAfter.getMonth() + 2);
+
+          jobsList = jobsList.filter(job => {
+            if (!job.project?.startDate) {
+              return true;
+            }
+
+            const jobStartDate = new Date(job.project.startDate);
+            const isWithinRange = jobStartDate >= twoMonthsBefore && jobStartDate <= twoMonthsAfter;
+            return isWithinRange;
+          });
+        }
+
+        if (preferences?.salaryRange) {
+          const { min, max } = preferences.salaryRange;
+
+          jobsList = jobsList.filter(job => {
+            if (!job.salaryRange || !job.salaryRange.min || !job.salaryRange.max) {
+              return true;
+            }
+
+            const jobMin = job.salaryRange.min;
+            const jobMax = job.salaryRange.max;
+
+            if (min != null && max != null) {
+              return jobMax >= min && jobMin <= max;
+            } else if (min != null) {
+              return jobMax >= min;
+            } else if (max != null) {
+              return jobMin <= max;
+            }
+
+            return true;
+          });
+        }
+
+        if (preferences?.preferredDuration) {
+          const preferredDuration = preferences.preferredDuration.toLowerCase();
+
+          jobsList = jobsList.filter(job => {
+            if (!job.project?.startDate || !job.project?.endDate) {
+              return true;
+            }
+
+            const startDate = new Date(job.project.startDate);
+            const endDate = new Date(job.project.endDate);
+            const durationMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+
+            const match = preferredDuration.match(/(\d+)/);
+            if (!match) return true;
+
+            const preferredMonths = parseInt(match[1]);
+
+            const matches = Math.abs(durationMonths - preferredMonths) <= 1;
+
+            return matches;
+          });
+        }
+
         setJobs(jobsList);
 
         // Load logos for all jobs

@@ -69,10 +69,17 @@ class PasswordResetService {
     const { token, email, password } = data;
     if (!token || !password || !email) { const err = new Error('token, email and password are required'); err.code = 400; throw err; }
 
-    const user = await Users.findOne({ email: String(email).toLowerCase(), passwordResetToken: token }).lean();
+    const user = await Users.findOne({ email: String(email).toLowerCase(), passwordResetToken: token });
     if (!user) { const err = new Error('Invalid token'); err.code = 400; throw err; }
     if (user.passwordResetExpires && new Date(user.passwordResetExpires) < new Date()) {
       const err = new Error('Token expired'); err.code = 400; throw err;
+    }
+
+    const isSamePassword = await user.comparePassword(password);
+    if (isSamePassword) {
+      const err = new Error('New password cannot be the same as your current password');
+      err.code = 400;
+      throw err;
     }
 
     // Update password via service (to use hashPassword hook)

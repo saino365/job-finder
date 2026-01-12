@@ -236,7 +236,7 @@ const FilterBar = ({
               color: '#fff',
               border: 'none',
               fontWeight: '500',
-              marginLeft: '410px'
+              marginLeft: 'auto'
             }}
           >
             Clear All

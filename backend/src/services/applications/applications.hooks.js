@@ -157,12 +157,18 @@ export default (app) => {
     const job = await JobModel.findById(jobId).lean();
     if (!job) throw Object.assign(new Error('Job not found'), { code: 404 });
 
+    const ACTIVE_STATUSES = [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE];
+    const existingApp = await Applications.findOne({ userId: user._id, jobListingId: jobId });
+    if (existingApp && ACTIVE_STATUSES.includes(existingApp.status)) {
+      throw Object.assign(new Error('You have already applied for this position'), { code: 409 });
+    }
+
     const now = new Date();
     const defaultValidityDays = Number(process.env.APPLICATION_VALIDITY_DAYS || 14);
     const validity = ctx.data.validityUntil ? new Date(ctx.data.validityUntil) : new Date(now.getTime() + defaultValidityDays * 86400000);
 
-    console.log('📝 Backend: Received candidateStatement:', ctx.data.candidateStatement);
-    console.log('📝 Backend: Full ctx.data:', JSON.stringify(ctx.data, null, 2));
+    console.log('Backend: Received candidateStatement:', ctx.data.candidateStatement);
+    console.log('Backend: Full ctx.data:', JSON.stringify(ctx.data, null, 2));
 
     // Get full user data to access resume
     const UserModel = app.service('users').Model;
@@ -171,20 +177,18 @@ export default (app) => {
     // Automatically attach user's resume if available
     const attachments = ctx.data.attachments || [];
     if (fullUser?.internProfile?.resume && !attachments.includes(fullUser.internProfile.resume)) {
-      // Extract key from resume URL using same logic as ProfilePageInner.js
       try {
         const resumeUrl = fullUser.internProfile.resume;
         const urlObj = new URL(resumeUrl);
         const pathParts = urlObj.pathname.split('/');
-        // Remove empty strings and bucket name (first two parts)
         const keyParts = pathParts.filter(Boolean).slice(1);
         const resumeKey = keyParts.join('/');
         if (resumeKey) {
           attachments.push(resumeKey);
-          console.log('📎 Backend: Automatically attached resume:', resumeKey);
+          console.log('Backend: Automatically attached resume:', resumeKey);
         }
       } catch (e) {
-        console.log('⚠️ Backend: Failed to extract resume key:', e.message);
+        console.log('Backend: Failed to extract resume key:', e.message);
       }
     }
 
@@ -284,6 +288,20 @@ export default (app) => {
     // Student-driven
     if (user.role === 'student') {
       if (action === 'withdraw' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE, S.ACCEPTED].includes(doc.status)) {
+        // For ACCEPTED (hired) applications, check employment status
+        if (doc.status === S.ACCEPTED) {
+          const Employment = app.service('employment-records')?.Model;
+          const employment = await Employment.findOne({ applicationId: doc._id }).lean();
+          if (employment) {
+            // Don't allow withdraw if employment is in CLOSURE (2), COMPLETED (3), or TERMINATED (4)
+            if (employment.status >= ES.CLOSURE) {
+              const statusLabels = { 0: 'Upcoming', 1: 'Ongoing', 2: 'Closure', 3: 'Completed', 4: 'Terminated' };
+              const empStatus = statusLabels[employment.status] || 'Unknown';
+              throw Object.assign(new Error(`Cannot withdraw application. Employment status is ${empStatus}. Withdrawals are not allowed once employment reaches closure phase.`), { code: 400 });
+            }
+          }
+        }
+
         const reason = String(ctx.data.reason || '').trim();
         const data = { status: S.WITHDRAWN, withdrawnAt: now };
         if (reason) data.withdrawReason = reason;
