@@ -99,6 +99,21 @@ async function mapStudentFilters(context) {
   return context;
 }
 
+// Check if this is an availability check query (for registration)
+function isAvailabilityCheck(context) {
+  const query = context.params.query || {};
+  // Allow unauthenticated queries that only check for email/username existence
+  // These queries should have $limit=1 and $or with email/username checks
+  if (query.$limit === '1' && query.$or && Array.isArray(query.$or)) {
+    const hasEmailOrUsernameCheck = query.$or.every(condition =>
+      (condition.email && typeof condition.email === 'string') ||
+      (condition.username && typeof condition.username === 'string')
+    );
+    return hasEmailOrUsernameCheck;
+  }
+  return false;
+}
+
 export default {
   before: {
     all: [],
@@ -107,9 +122,29 @@ export default {
         console.log('🔍 Users.find hook - provider:', context.params.provider, 'query:', JSON.stringify(context.params.query));
         return context;
       },
-      iff(isProvider('external'), authenticate('jwt')),
-      iff(isProvider('external'), requireVerifiedCompany),
-      iff(isProvider('external'), mapStudentFilters)
+      // Skip authentication for availability checks during registration
+      iff(
+        isProvider('external'),
+        iff(
+          (context) => !isAvailabilityCheck(context),
+          authenticate('jwt')
+        )
+      ),
+      // Skip these hooks for availability checks (they require authenticated user)
+      iff(
+        isProvider('external'),
+        iff(
+          (context) => !isAvailabilityCheck(context),
+          requireVerifiedCompany
+        )
+      ),
+      iff(
+        isProvider('external'),
+        iff(
+          (context) => !isAvailabilityCheck(context),
+          mapStudentFilters
+        )
+      )
     ],
     get: [
       iff(isProvider('external'), authenticate('jwt')),
@@ -281,7 +316,22 @@ export default {
       // Make sure the password field is never sent to external clients
       iff(isProvider('external'), protect('password'))
     ],
-    find: [ maskForCompanies ],
+    find: [
+      // For availability checks, only return email and username (no other sensitive data)
+      (context) => {
+        if (isProvider('external')(context) && isAvailabilityCheck(context)) {
+          const data = context.result.data || context.result;
+          if (Array.isArray(data)) {
+            context.result.data = data.map(user => ({
+              email: user.email,
+              username: user.username
+            }));
+          }
+        }
+        return context;
+      },
+      maskForCompanies
+    ],
     get: [ maskForCompanies ],
     create: [
       // Send welcome email or verification email here

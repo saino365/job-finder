@@ -84,7 +84,7 @@ async function main() {
 
   // 5 companies (approved)
   const companies = await Promise.all([
-    ensureCompany({ name: 'TechNova Sdn Bhd', ownerUserId: owners[0]._id, industry: 'Technology', city: 'Kuala Lumpur', description: 'Software and AI solutions', website: 'https://technova.example.com' }),
+    ensureCompany({ name: 'TechNova Sdn Bhd', ownerUserId: owners[0]._id, industry: 'Information Technology', city: 'Kuala Lumpur', description: 'Software and AI solutions', website: 'https://technova.example.com' }),
     ensureCompany({ name: 'FinTrust Berhad', ownerUserId: owners[1]._id, industry: 'Finance', city: 'George Town', description: 'Financial services and analytics', website: 'https://fintrust.example.com' }),
     ensureCompany({ name: 'MediHeal Holdings', ownerUserId: owners[2]._id, industry: 'Healthcare', city: 'Johor Bahru', description: 'Healthcare and biotech', website: 'https://mediheal.example.com' }),
     ensureCompany({ name: 'EduSpark Malaysia', ownerUserId: owners[3]._id, industry: 'Education', city: 'Shah Alam', description: 'EdTech and training', website: 'https://eduspark.example.com' }),

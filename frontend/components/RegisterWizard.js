@@ -176,15 +176,24 @@ export default function RegisterWizard({ onStepChange }) {
   async function handleNext() {
     try {
       const stepKey = steps[current].key;
-      let fields = [];
-      switch (stepKey) {
-        case 'account': fields = ['username','password','email']; break;
-        case 'profile': fields = ['firstName','lastName','phone','icPassportNumber']; break;
-        default: fields = []; break;
+
+      // For steps with Form.List, we need to validate all fields in the current step
+      // because validateFields(['certifications']) doesn't validate nested fields
+      if (['education', 'certs', 'interests', 'work', 'events'].includes(stepKey)) {
+        // Validate all fields to catch nested validation errors in Form.List
+        await form.validateFields();
+      } else {
+        // For simple steps, validate specific fields
+        let fields = [];
+        switch (stepKey) {
+          case 'account': fields = ['username','password','email']; break;
+          case 'profile': fields = ['firstName','lastName','phone','icPassportNumber']; break;
+          default: fields = []; break;
+        }
+        console.log('Validating fields:', fields);
+        console.log('Form values:', form.getFieldsValue());
+        await form.validateFields(fields);
       }
-      console.log('Validating fields:', fields);
-      console.log('Form values:', form.getFieldsValue());
-      await form.validateFields(fields);
 
       if (stepKey === 'account') {
         const values = form.getFieldsValue(['username', 'email']);
@@ -198,12 +207,25 @@ export default function RegisterWizard({ onStepChange }) {
             const existingUsers = checkData.data || [];
             if (existingUsers.length > 0) {
               const existing = existingUsers[0];
-              if (existing.email === emailStr) {
-                message.error('This email address is already registered. Please use a different email address.');
+              const existingEmail = String(existing.email || '').toLowerCase();
+              const existingUsername = String(existing.username || '').toLowerCase();
+
+              if (existingEmail === emailStr) {
+                form.setFields([
+                  {
+                    name: 'email',
+                    errors: ['This email address is already registered. Please use a different email address.']
+                  }
+                ]);
                 return;
               }
-              if (existing.username === usernameStr) {
-                message.error('This username is already registered. Please use a different username.');
+              if (existingUsername === usernameStr) {
+                form.setFields([
+                  {
+                    name: 'username',
+                    errors: ['This username is already registered. Please use a different username.']
+                  }
+                ]);
                 return;
               }
             }
@@ -652,9 +674,43 @@ export default function RegisterWizard({ onStepChange }) {
                       {fields.map(({ key, name, ...rest }) => (
                         <Card key={key} size="small" style={{ marginBottom: 12 }}>
                           <Space direction="vertical" style={{ width: '100%' }}>
-                            <Form.Item {...rest} name={[name, 'title']} label="Certificate title"><Input /></Form.Item>
-                            <Form.Item {...rest} name={[name, 'issuer']} label="Certificate issuer"><Input /></Form.Item>
-                            <Form.Item {...rest} name={[name, 'acquiredDate']} label="Acquired date"><DatePicker style={{ width: '100%' }} /></Form.Item>
+                            <Form.Item
+                              {...rest}
+                              name={[name, 'title']}
+                              label="Certificate title"
+                              rules={[{ required: true, message: 'Please enter certificate title' }]}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <Form.Item
+                              {...rest}
+                              name={[name, 'issuer']}
+                              label="Certificate issuer"
+                              rules={[{ required: true, message: 'Please enter certificate issuer' }]}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <Form.Item
+                              {...rest}
+                              name={[name, 'acquiredDate']}
+                              label="Acquired date"
+                              rules={[
+                                {
+                                  validator: (_, value) => {
+                                    if (!value) return Promise.resolve();
+                                    const selectedDate = new Date(value);
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    if (selectedDate > today) {
+                                      return Promise.reject(new Error('Certificate issue date must not be set in the future'));
+                                    }
+                                    return Promise.resolve();
+                                  }
+                                }
+                              ]}
+                            >
+                              <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
                             <Form.Item {...rest} name={[name, 'description']} label="Description"><Input.TextArea rows={3} /></Form.Item>
                             <Button danger onClick={() => remove(name)}>Remove</Button>
                           </Space>
@@ -776,7 +832,7 @@ export default function RegisterWizard({ onStepChange }) {
                       <Space direction="vertical" style={{ width: '100%' }}>
                         <Form.Item {...rest} name={[name, 'companyName']} label="Company name"><Input /></Form.Item>
                         <Form.Item {...rest} name={[name, 'industry']} label="Industry">
-                          <Select allowClear options={['Finance','Technology','Education','Healthcare','Retail','Manufacturing','Other'].map(v => ({ value: v, label: v }))} />
+                          <Select allowClear options={['Finance','Information Technology','Education','Healthcare','Retail','Manufacturing','Other'].map(v => ({ value: v, label: v }))} />
                         </Form.Item>
                         <Form.Item noStyle shouldUpdate>
                           {({ getFieldValue }) => {

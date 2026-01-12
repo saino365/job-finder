@@ -149,9 +149,11 @@ export default (app) => ({
     get: [ async (ctx) => {
       const user = ctx.params?.user;
       if (!user || user.role === 'student') {
-        // Only allow getting ACTIVE listings publicly
+        // Only allow getting ACTIVE and non-expired listings publicly
         const current = await app.service('job-listings').Model.findById(ctx.id).lean();
-        if (!current || current.status !== STATUS.ACTIVE) {
+        const now = new Date();
+        const isExpired = current?.expiresAt && new Date(current.expiresAt) <= now;
+        if (!current || current.status !== STATUS.ACTIVE || isExpired) {
           const e = new Error('Not found'); e.code = 404; throw e;
         }
       }

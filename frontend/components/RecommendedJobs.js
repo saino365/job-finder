@@ -26,53 +26,15 @@ export default function RecommendedJobs({ user }) {
           $sort: JSON.stringify({ createdAt: -1 })
         });
 
-        // Add filters based on user's internProfile preferences
         const preferences = user?.internProfile?.preferences;
-        console.log('RecommendedJobs: User preferences:', preferences);
 
-        // Filter by preferred industries if available
         if (preferences?.industries && preferences.industries.length > 0) {
           preferences.industries.forEach((industry, index) => {
             queryParams.append('industry', industry);
           });
-          console.log('RecommendedJobs: Filtering by industries:', preferences.industries);
-        }
-
-        // Filter by preferred start/end dates if available
-        if (preferences?.preferredStartDate || preferences?.startDate) {
-          const userStartDate = preferences.preferredStartDate || preferences.startDate;
-          // Show jobs that start around the user's preferred start date
-          // Allow jobs that start up to 2 months before or after the user's preferred date
-          const userStart = new Date(userStartDate);
-          const twoMonthsBefore = new Date(userStart);
-          twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
-          const twoMonthsAfter = new Date(userStart);
-          twoMonthsAfter.setMonth(twoMonthsAfter.getMonth() + 2);
-
-          // Filter jobs where project.startDate is within the acceptable range
-          queryParams.append('project.startDate[$gte]', twoMonthsBefore.toISOString());
-          queryParams.append('project.startDate[$lte]', twoMonthsAfter.toISOString());
-        }
-
-        // Filter by salary range if available
-        if (preferences?.salaryRange) {
-          const { min, max } = preferences.salaryRange;
-
-          if (min != null && max != null) {
-            queryParams.append('$or[0][salaryRange.max][$gte]', min.toString());
-            queryParams.append('$or[0][salaryRange.min][$lte]', max.toString());
-            queryParams.append('$or[1][salaryRange][$exists]', 'false');
-          } else if (min != null) {
-            queryParams.append('$or[0][salaryRange.max][$gte]', min.toString());
-            queryParams.append('$or[1][salaryRange][$exists]', 'false');
-          } else if (max != null) {
-            queryParams.append('$or[0][salaryRange.min][$lte]', max.toString());
-            queryParams.append('$or[1][salaryRange][$exists]', 'false');
-          }
         }
 
         const fetchUrl = `${API_BASE_URL}/job-listings?${queryParams}`;
-        console.log('RecommendedJobs: Fetching from URL:', fetchUrl);
 
         const response = await fetch(fetchUrl);
 
@@ -82,36 +44,70 @@ export default function RecommendedJobs({ user }) {
 
         const data = await response.json();
         let jobsList = data.data || data || [];
-        console.log('RecommendedJobs: Received jobs before duration filter:', jobsList.length, jobsList);
 
-        // Client-side filter by duration if user has preferredDuration
+        if (preferences?.preferredStartDate || preferences?.startDate) {
+          const userStartDate = preferences.preferredStartDate || preferences.startDate;
+          const userStart = new Date(userStartDate);
+          const twoMonthsBefore = new Date(userStart);
+          twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
+          const twoMonthsAfter = new Date(userStart);
+          twoMonthsAfter.setMonth(twoMonthsAfter.getMonth() + 2);
+
+          jobsList = jobsList.filter(job => {
+            if (!job.project?.startDate) {
+              return true;
+            }
+
+            const jobStartDate = new Date(job.project.startDate);
+            const isWithinRange = jobStartDate >= twoMonthsBefore && jobStartDate <= twoMonthsAfter;
+            return isWithinRange;
+          });
+        }
+
+        if (preferences?.salaryRange) {
+          const { min, max } = preferences.salaryRange;
+
+          jobsList = jobsList.filter(job => {
+            if (!job.salaryRange || !job.salaryRange.min || !job.salaryRange.max) {
+              return true;
+            }
+
+            const jobMin = job.salaryRange.min;
+            const jobMax = job.salaryRange.max;
+
+            if (min != null && max != null) {
+              return jobMax >= min && jobMin <= max;
+            } else if (min != null) {
+              return jobMax >= min;
+            } else if (max != null) {
+              return jobMin <= max;
+            }
+
+            return true;
+          });
+        }
+
         if (preferences?.preferredDuration) {
           const preferredDuration = preferences.preferredDuration.toLowerCase();
-          console.log('RecommendedJobs: Filtering by duration:', preferredDuration);
 
           jobsList = jobsList.filter(job => {
             if (!job.project?.startDate || !job.project?.endDate) {
-              return false; // Skip jobs without duration info
+              return true;
             }
 
             const startDate = new Date(job.project.startDate);
             const endDate = new Date(job.project.endDate);
             const durationMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
 
-            // Extract number from preferredDuration (e.g., "3 months" -> 3)
             const match = preferredDuration.match(/(\d+)/);
-            if (!match) return true; // If can't parse, include the job
+            if (!match) return true;
 
             const preferredMonths = parseInt(match[1]);
 
-            // Allow ±1 month tolerance
             const matches = Math.abs(durationMonths - preferredMonths) <= 1;
-            console.log(`Job "${job.title}": ${durationMonths} months vs preferred ${preferredMonths} months = ${matches ? 'MATCH' : 'NO MATCH'}`);
 
             return matches;
           });
-
-          console.log('RecommendedJobs: Jobs after duration filter:', jobsList.length);
         }
 
         setJobs(jobsList);
