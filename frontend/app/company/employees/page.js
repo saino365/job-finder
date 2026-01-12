@@ -89,9 +89,36 @@ export default function CompanyEmployeesPage() {
     } catch { setDrawerUser(null); }
   })(); }, [open, viewing?.userId]);
 
+  const [employeeLabels, setEmployeeLabels] = useState({});
+
+  // Load employee names and job titles
+  useEffect(() => {
+    (async () => {
+      if (items.length === 0) return;
+      try {
+        const token = localStorage.getItem('jf_token');
+        const headers = { Authorization: `Bearer ${token}` };
+        const labelEntries = await Promise.all(items.map(async (item) => {
+          try {
+            const r = await fetch(`${API_BASE_URL}/employment-detail/${item._id}`, { headers });
+            if (!r.ok) return [item._id, { name: String(item.userId), job: String(item.jobListingId) }];
+            const d = await r.json();
+            const userProfile = d?.user?.profile || {};
+            const name = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() || d?.user?.email || String(item.userId);
+            const jobTitle = d?.job?.title || String(item.jobListingId);
+            return [item._id, { name, job: jobTitle }];
+          } catch {
+            return [item._id, { name: String(item.userId), job: String(item.jobListingId) }];
+          }
+        }));
+        setEmployeeLabels(Object.fromEntries(labelEntries));
+      } catch {}
+    })();
+  }, [items]);
+
   const columns = [
-    { title: 'Candidate', dataIndex: 'userId', key: 'userId' },
-    { title: 'Job', dataIndex: 'jobListingId', key: 'jobListingId' },
+    { title: 'Candidate', key: 'candidate', render: (_, r) => employeeLabels[r._id]?.name || String(r.userId) },
+    { title: 'Job', key: 'job', render: (_, r) => employeeLabels[r._id]?.job || String(r.jobListingId) },
     { title: 'Start', dataIndex: 'startDate', key: 'startDate', render: (d) => d ? new Date(d).toLocaleDateString() : '-' },
     { title: 'End', dataIndex: 'endDate', key: 'endDate', render: (d) => d ? new Date(d).toLocaleDateString() : '-' },
     { title: 'Status', dataIndex: 'status', key: 'status', render: statusTag },

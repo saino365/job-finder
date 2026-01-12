@@ -196,7 +196,7 @@ export default function NewJobListingPage() {
         },
         onboardingMaterials: [...generalDocs, ...jobDocs],
         publishAt: vals?.publishAt ? (vals.publishAt.toDate ? vals.publishAt.toDate().toISOString() : new Date(vals.publishAt).toISOString()) : null,
-        submitForApproval: true, // Submit for approval
+        submitForApproval: true, // Submit for approval - changes status from DRAFT to PENDING
       };
 
       console.log('📤 Payload being sent:', JSON.stringify(payload, null, 2));
