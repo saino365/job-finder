@@ -19,7 +19,16 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    validate: {
+      validator: function(v) {
+        if (!v) return true; // Allow empty (sparse index handles uniqueness)
+        // Username must contain at least 3 alphabetic characters
+        const alphabeticCount = (v.match(/[A-Za-z]/g) || []).length;
+        return alphabeticCount >= 3;
+      },
+      message: 'Username must contain at least 3 alphabetic characters'
+    }
   },
 
   password: {

@@ -134,6 +134,41 @@ export default {
         if (!password) {
           throw new Error('Password is required');
         }
+
+        // Validate username contains at least 3 alphabetic characters
+        if (data.username) {
+          const username = String(data.username).trim();
+          const alphabeticCount = (username.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('Username must contain at least 3 alphabetic characters');
+          }
+        }
+
+        // Validate name fields contain at least 3 alphabetic characters
+        if (data.profile) {
+          if (data.profile.firstName) {
+            const firstName = String(data.profile.firstName).trim();
+            const alphabeticCount = (firstName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('First name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.middleName) {
+            const middleName = String(data.profile.middleName).trim();
+            const alphabeticCount = (middleName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Middle name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.lastName) {
+            const lastName = String(data.profile.lastName).trim();
+            const alphabeticCount = (lastName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Last name must contain at least 3 alphabetic characters');
+            }
+          }
+        }
+
         // Default role to student if not provided
         if (!data.role) data.role = 'student';
         // If username not given, use email (or lowercase of provided username)
@@ -170,6 +205,60 @@ export default {
           }
         }
         context.data = filtered;
+      },
+      // Validate name fields contain at least 3 alphabetic characters
+      (context) => {
+        const data = context.data || {};
+
+        // Check nested profile object
+        if (data.profile) {
+          if (data.profile.firstName) {
+            const firstName = String(data.profile.firstName).trim();
+            const alphabeticCount = (firstName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('First name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.middleName) {
+            const middleName = String(data.profile.middleName).trim();
+            const alphabeticCount = (middleName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Middle name must contain at least 3 alphabetic characters');
+            }
+          }
+          if (data.profile.lastName) {
+            const lastName = String(data.profile.lastName).trim();
+            const alphabeticCount = (lastName.match(/[A-Za-z]/g) || []).length;
+            if (alphabeticCount < 3) {
+              throw new Error('Last name must contain at least 3 alphabetic characters');
+            }
+          }
+        }
+
+        // Check dot-notation fields (e.g., 'profile.firstName')
+        if (data['profile.firstName']) {
+          const firstName = String(data['profile.firstName']).trim();
+          const alphabeticCount = (firstName.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('First name must contain at least 3 alphabetic characters');
+          }
+        }
+        if (data['profile.middleName']) {
+          const middleName = String(data['profile.middleName']).trim();
+          const alphabeticCount = (middleName.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('Middle name must contain at least 3 alphabetic characters');
+          }
+        }
+        if (data['profile.lastName']) {
+          const lastName = String(data['profile.lastName']).trim();
+          const alphabeticCount = (lastName.match(/[A-Za-z]/g) || []).length;
+          if (alphabeticCount < 3) {
+            throw new Error('Last name must contain at least 3 alphabetic characters');
+          }
+        }
+
+        return context;
       },
       hashPassword('password')
     ],
@@ -210,7 +299,22 @@ export default {
     all: [],
     find: [],
     get: [],
-    create: [],
+    create: [
+      (context) => {
+        const error = context.error;
+        if (error && error.code === 11000) {
+          if (error.message && error.message.includes('email')) {
+            error.message = 'This email address is already registered. Please use a different email address.';
+          } else if (error.message && error.message.includes('username')) {
+            error.message = 'This username is already registered. Please use a different username.';
+          } else {
+            error.message = 'This account already exists. Please use different credentials.';
+          }
+          error.code = 409;
+        }
+        return context;
+      }
+    ],
     update: [],
     patch: [],
     remove: []

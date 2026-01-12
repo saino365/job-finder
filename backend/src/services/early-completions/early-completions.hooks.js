@@ -27,6 +27,14 @@ export default (app) => {
     const emp = await Employment.findById(body.employmentId).lean();
     if (!emp) throw Object.assign(new Error('Employment not found'), { code: 404 });
     if (String(emp.userId) !== String(user._id)) throw Object.assign(new Error('Forbidden'), { code: 403 });
+
+    // Check employment status - only allow early completion requests for ONGOING (status === 1)
+    if (emp.status !== ES.ONGOING) {
+      const statusLabels = { 0: 'Upcoming', 1: 'Ongoing', 2: 'Closure', 3: 'Completed', 4: 'Terminated' };
+      const currentStatus = statusLabels[emp.status] || 'Unknown';
+      throw Object.assign(new Error(`Cannot request early completion. Employment status is ${currentStatus}. Early completion requests are only allowed for ongoing employments.`), { code: 400 });
+    }
+
     ctx.data = { employmentId: emp._id, initiatedBy: 'student', reason: body.reason, proposedCompletionDate: body.proposedCompletionDate ? new Date(body.proposedCompletionDate) : null, status: RS.PENDING };
 
     // Notify company owner

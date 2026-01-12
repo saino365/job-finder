@@ -4,16 +4,43 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import CompanyVerifications from './models/company-verifications.model.js';
 
-// Custom LocalStrategy that ensures internal calls don't have provider set
+// Custom LocalStrategy that supports login with both email and username
 class CustomLocalStrategy extends LocalStrategy {
   async findEntity(username, params) {
     console.log('CustomLocalStrategy.findEntity called with:', { username, provider: params.provider });
+
     // Ensure this is treated as an internal call by removing provider
     const internalParams = { ...params, provider: undefined };
-    console.log('CustomLocalStrategy calling super.findEntity with provider:', internalParams.provider);
-    const result = await super.findEntity(username, internalParams);
-    console.log('CustomLocalStrategy.findEntity result:', !!result);
-    return result;
+
+    // Get the entity service (users)
+    const entityService = this.entityService;
+
+    // Try to find user by email OR username
+    // The 'username' parameter here is actually the value from the login form (could be email or username)
+    const usernameValue = username ? String(username).toLowerCase() : username;
+
+    try {
+      // Search for user with email OR username matching the input
+      const result = await entityService.find({
+        ...internalParams,
+        query: {
+          $or: [
+            { email: usernameValue },
+            { username: usernameValue }
+          ]
+        },
+        paginate: false
+      });
+
+      const users = Array.isArray(result) ? result : result?.data || [];
+      const user = users[0];
+
+      console.log('CustomLocalStrategy.findEntity result:', !!user);
+      return user || null;
+    } catch (error) {
+      console.error('CustomLocalStrategy.findEntity error:', error);
+      return null;
+    }
   }
 }
 

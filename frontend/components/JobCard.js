@@ -63,6 +63,15 @@ export default function JobCard({ job, companyView = false }) {
     }
   }
 
+  function handleApplyClick() {
+    if (!getToken()) {
+      message.info('Please sign in to apply');
+      router.push(`/login?next=/jobs/${job._id}/apply`);
+      return;
+    }
+    router.push(`/jobs/${job._id}/apply`);
+  }
+
   // Load company logo with signed URL
   useEffect(() => {
     async function loadLogo() {
@@ -343,7 +352,7 @@ export default function JobCard({ job, companyView = false }) {
             <Button size="large" onClick={(e) => { e.stopPropagation(); handleCardClick(); }}>
               View Details
             </Button>
-            <Button type="primary" size="large" onClick={(e) => { e.stopPropagation(); handleCardClick(); }}>
+            <Button type="primary" size="large" onClick={(e) => { e.stopPropagation(); handleApplyClick(); }}>
               Apply Now
             </Button>
           </Space>

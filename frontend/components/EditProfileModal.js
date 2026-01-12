@@ -30,11 +30,12 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
         endDate: formatDateForInput(edu.endDate)
       }));
 
-      // Format work experiences with dates
+      // Format work experiences with dates and ongoing status
       const workExperiences = (user?.internProfile?.workExperiences || []).map(exp => ({
         ...exp,
         startDate: formatDateForInput(exp.startDate),
-        endDate: formatDateForInput(exp.endDate)
+        endDate: formatDateForInput(exp.endDate),
+        ongoing: !exp.endDate // If no end date, it's ongoing
       }));
 
       // Format event experiences with dates
@@ -75,12 +76,8 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
         jobTypes: user?.internProfile?.preferences?.jobTypes || [],
         locations: user?.internProfile?.preferences?.locations || [],
         industries: user?.internProfile?.preferences?.industries || [],
-        preferredStartDate: user?.internProfile?.preferences?.preferredStartDate 
-          ? new Date(user.internProfile.preferences.preferredStartDate).toISOString().split('T')[0]
-          : undefined,
-        preferredEndDate: user?.internProfile?.preferences?.preferredEndDate
-          ? new Date(user.internProfile.preferences.preferredEndDate).toISOString().split('T')[0]
-          : undefined,
+        preferredStartDate: formatDateForInput(user?.internProfile?.preferences?.preferredStartDate),
+        preferredEndDate: formatDateForInput(user?.internProfile?.preferences?.preferredEndDate),
         salaryMin: user?.internProfile?.preferences?.salaryRange?.min,
         salaryMax: user?.internProfile?.preferences?.salaryRange?.max,
       });
@@ -134,11 +131,14 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
         };
       } else if (section === 'experience') {
         // Convert date strings to ISO format for work experiences
-        const workExperiences = (values.workExperiences || []).map(exp => ({
-          ...exp,
-          startDate: exp.startDate ? new Date(exp.startDate).toISOString() : null,
-          endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null
-        }));
+        const workExperiences = (values.workExperiences || []).map(exp => {
+          const { ongoing, ...rest } = exp; // Remove 'ongoing' field (not stored in DB)
+          return {
+            ...rest,
+            startDate: rest.startDate ? new Date(rest.startDate).toISOString() : null,
+            endDate: ongoing ? null : (rest.endDate ? new Date(rest.endDate).toISOString() : null)
+          };
+        });
         body = {
           'internProfile.workExperiences': workExperiences,
         };
@@ -174,9 +174,19 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           'internProfile.assignments': values.assignments || [],
         };
       } else if (section === 'internship') {
+        // Calculate duration from start and end dates
+        let preferredDuration = undefined;
+        if (values.preferredStartDate && values.preferredEndDate) {
+          const startDate = new Date(values.preferredStartDate);
+          const endDate = new Date(values.preferredEndDate);
+          const durationMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+          preferredDuration = `${durationMonths} months`;
+        }
+
         body = {
           'internProfile.preferences.preferredStartDate': values.preferredStartDate,
           'internProfile.preferences.preferredEndDate': values.preferredEndDate,
+          'internProfile.preferences.preferredDuration': preferredDuration,
           'internProfile.preferences.industries': values.industries || [],
           'internProfile.preferences.locations': values.locations || [],
           'internProfile.preferences.salaryRange.min': values.salaryMin,
@@ -261,13 +271,63 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
       case 'personal':
         return (
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
+            <Form.Item
+              name="firstName"
+              label="First Name"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('First name must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input placeholder="First Name" />
             </Form.Item>
-            <Form.Item name="middleName" label="Middle Name">
+            <Form.Item
+              name="middleName"
+              label="Middle Name"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('Middle name must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input placeholder="Middle Name" />
             </Form.Item>
-            <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
+            <Form.Item
+              name="lastName"
+              label="Last Name"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Count alphabetic characters (A-Z, a-z)
+                    const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
+                    if (alphabeticCount < 3) {
+                      return Promise.reject(new Error('Last name must contain at least 3 alphabetic characters'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <Input placeholder="Last Name" />
             </Form.Item>
             <Form.Item
@@ -377,7 +437,7 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                     if (!value) return Promise.resolve();
                     const num = Number(value);
                     if (isNaN(num)) {
-                      return Promise.reject(new Error('Graduation year must be a valid number'));
+                      return Promise.reject(new Error('Please enter only numbers'));
                     }
                     const currentYear = new Date().getFullYear();
                     if (num < 1900 || num > currentYear + 10) {
@@ -393,6 +453,7 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                 min={1900}
                 max={new Date().getFullYear() + 10}
                 style={{ width: '100%' }}
+                controls={false}
               />
             </Form.Item>
           </Space>
@@ -432,26 +493,61 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
               <>
                 {fields.map(({ key, name, ...restField }) => {
                   const eduValues = form.getFieldValue(['educations', name]);
-                  const isOngoing = !eduValues?.endDate;
+                  const isOngoing = eduValues?.ongoing === true;
 
                   return (
                     <Space key={key} direction="vertical" style={{ width: '100%', marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 8 }}>
-                      <Form.Item {...restField} name={[name, 'level']} label="Level">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'level']}
+                        label="Level"
+                        rules={[{ required: true, message: 'Please enter education level' }]}
+                      >
                         <Input placeholder="Level (e.g., Bachelor)" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'institutionName']} label="Institution">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'institutionName']}
+                        label="Institution"
+                        rules={[{ required: true, message: 'Please enter institution name' }]}
+                      >
                         <Input placeholder="Institution Name" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'qualification']} label="Qualification">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'qualification']}
+                        label="Qualification"
+                        rules={[{ required: true, message: 'Please enter qualification' }]}
+                      >
                         <Input placeholder="Qualification" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'fieldOfStudy']} label="Field of Study">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'fieldOfStudy']}
+                        label="Field of Study"
+                        rules={[{ required: true, message: 'Please enter field of study' }]}
+                      >
                         <Input placeholder="Field of Study" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'startDate']} label="Start Date">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'startDate']}
+                        label="Start Date"
+                        rules={[{ required: true, message: 'Please select start date' }]}
+                      >
                         <Input type="date" placeholder="Start Date" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'endDate']} label="End Date">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'endDate']}
+                        label="End Date"
+                        rules={[
+                          {
+                            required: !isOngoing,
+                            message: 'Please select end date or mark as ongoing'
+                          }
+                        ]}
+                      >
                         <Input
                           type="date"
                           placeholder="End Date"
@@ -462,12 +558,13 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       <Form.Item {...restField} name={[name, 'ongoing']} valuePropName="checked">
                         <Checkbox
                           onChange={(e) => {
+                            const educations = form.getFieldValue('educations');
                             if (e.target.checked) {
                               // Clear end date when ongoing is checked
-                              const educations = form.getFieldValue('educations');
                               educations[name].endDate = null;
-                              form.setFieldsValue({ educations });
                             }
+                            // Update form to trigger re-render
+                            form.setFieldsValue({ educations });
                           }}
                         >
                           Ongoing (Present)
@@ -524,7 +621,7 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
               <>
                 {fields.map(({ key, name, ...restField }) => {
                   const workExpValues = form.getFieldValue(['workExperiences', name]);
-                  const isOngoing = !workExpValues?.endDate;
+                  const isOngoing = workExpValues?.ongoing === true;
 
                   return (
                     <Space key={key} direction="vertical" style={{ width: '100%', marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 8 }}>
@@ -559,12 +656,13 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       <Form.Item {...restField} name={[name, 'ongoing']} valuePropName="checked">
                         <Checkbox
                           onChange={(e) => {
+                            const workExps = form.getFieldValue('workExperiences');
                             if (e.target.checked) {
                               // Clear end date when ongoing is checked
-                              const workExps = form.getFieldValue('workExperiences');
                               workExps[name].endDate = null;
-                              form.setFieldsValue({ workExperiences: workExps });
                             }
+                            // Update form to trigger re-render
+                            form.setFieldsValue({ workExperiences: workExps });
                           }}
                         >
                           Ongoing (Present)
@@ -604,7 +702,25 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       <Form.Item {...restField} name={[name, 'issuer']} label="Issuer">
                         <Input placeholder="Issuing Organization" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'acquiredDate']} label="Acquired Date">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'acquiredDate']}
+                        label="Acquired Date"
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              if (!value) return Promise.resolve();
+                              const selectedDate = new Date(value);
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              if (selectedDate > today) {
+                                return Promise.reject(new Error('Certificate issue date must not be set in the future'));
+                              }
+                              return Promise.resolve();
+                            }
+                          }
+                        ]}
+                      >
                         <Input type="date" />
                       </Form.Item>
                       <Form.Item {...restField} name={[name, 'description']} label="Description">
@@ -710,7 +826,7 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                               return false;
                             }}
                             maxCount={1}
-                            accept=".pdf,.jpg,.jpeg,.png"
+                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt"
                             showUploadList={false}
                           >
                             <Button icon={<UploadOutlined />} loading={uploadingCert[name]}>
@@ -774,6 +890,56 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                     </Form.Item>
                     <Form.Item {...restField} name={[name, 'location']} label="Location">
                       <Input placeholder="Location" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'startDate']}
+                      label="Start Date"
+                      rules={[
+                        {
+                          validator: (_, value) => {
+                            if (!value) return Promise.resolve();
+                            const selectedDate = new Date(value);
+                            const today = new Date();
+                            today.setHours(23, 59, 59, 999);
+                            if (selectedDate > today) {
+                              return Promise.reject(new Error('Event start date must not be set in the future'));
+                            }
+                            return Promise.resolve();
+                          }
+                        }
+                      ]}
+                    >
+                      <Input type="date" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'endDate']}
+                      label="End Date"
+                      rules={[
+                        {
+                          validator: (_, value) => {
+                            if (!value) return Promise.resolve();
+                            const selectedDate = new Date(value);
+                            const today = new Date();
+                            today.setHours(23, 59, 59, 999);
+                            if (selectedDate > today) {
+                              return Promise.reject(new Error('Event end date must not be set in the future'));
+                            }
+
+                            const eventValues = form.getFieldValue(['eventExperiences', name]);
+                            if (eventValues?.startDate) {
+                              const startDate = new Date(eventValues.startDate);
+                              if (selectedDate < startDate) {
+                                return Promise.reject(new Error('End date must be after start date'));
+                              }
+                            }
+                            return Promise.resolve();
+                          }
+                        }
+                      ]}
+                    >
+                      <Input type="date" />
                     </Form.Item>
                     <Form.Item {...restField} name={[name, 'description']} label="Description">
                       <TextArea rows={2} placeholder="Description" />
