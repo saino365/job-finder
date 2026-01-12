@@ -266,13 +266,34 @@ export default function RegisterWizard({ onStepChange }) {
               rules={[
                 { required: true },
                 {
-                  validator: (_, value) => {
+                  validator: async (_, value) => {
                     if (!value) return Promise.resolve();
+                    
+                    // If it's an email, skip username validation (email validation will handle it)
+                    if (value.includes('@')) {
+                      return Promise.resolve();
+                    }
+                    
                     // Count alphabetic characters (A-Z, a-z)
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Username must contain at least 3 alphabetic characters'));
                     }
+                    
+                    // Check if username already exists (async check)
+                    try {
+                      const checkRes = await fetch(`${API_BASE_URL}/users?username=${encodeURIComponent(value)}&$limit=1`);
+                      if (checkRes.ok) {
+                        const data = await checkRes.json();
+                        if (data.data && data.data.length > 0) {
+                          return Promise.reject(new Error('This username is already taken. Please choose another one.'));
+                        }
+                      }
+                    } catch (e) {
+                      // If check fails, don't block registration (backend will catch it)
+                      console.warn('Username availability check failed:', e);
+                    }
+                    
                     return Promise.resolve();
                   }
                 }
@@ -280,8 +301,51 @@ export default function RegisterWizard({ onStepChange }) {
             >
               <Input placeholder="username or email" onChange={(e)=>{ const v=e.target.value; form.setFieldsValue({ username:v }); if (v && v.includes('@')) { form.setFieldsValue({ email:v }); } }} />
             </Form.Item>
-            <Form.Item name="password" label="Password" rules={[{ required: true, min: 6 }]}>
-              <Input.Password placeholder="••••••••" />
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const errors = [];
+                    
+                    // At least 8 characters
+                    if (value.length < 8) {
+                      errors.push('at least 8 characters');
+                    }
+                    
+                    // At least 1 lowercase letter
+                    if (!/[a-z]/.test(value)) {
+                      errors.push('at least 1 lowercase letter');
+                    }
+                    
+                    // At least 1 uppercase letter
+                    if (!/[A-Z]/.test(value)) {
+                      errors.push('at least 1 uppercase letter');
+                    }
+                    
+                    // At least 1 numeric
+                    if (!/[0-9]/.test(value)) {
+                      errors.push('at least 1 number');
+                    }
+                    
+                    // At least 1 special character
+                    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+                      errors.push('at least 1 special character');
+                    }
+                    
+                    if (errors.length > 0) {
+                      return Promise.reject(new Error(`Password must contain: ${errors.join(', ')}`));
+                    }
+                    
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input.Password placeholder="Min 8 chars: A-Z, a-z, 0-9, special" />
             </Form.Item>
             <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Please enter a valid email' }]}>
               <Input placeholder="name@example.com" />
@@ -379,9 +443,8 @@ export default function RegisterWizard({ onStepChange }) {
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Only allow digits and plus sign at the beginning
-                    const phoneRegex = /^\+?[0-9]+$/;
-                    if (!phoneRegex.test(value)) {
+                    // Check for any non-digit, non-plus characters
+                    if (/[^0-9+]/.test(value)) {
                       return Promise.reject(new Error('Phone number can only contain digits (0-9) and optionally a plus sign (+) at the beginning'));
                     }
                     // Plus sign can only be at the beginning
@@ -392,15 +455,14 @@ export default function RegisterWizard({ onStepChange }) {
                     if ((value.match(/\+/g) || []).length > 1) {
                       return Promise.reject(new Error('Only one plus sign (+) is allowed'));
                     }
+                    // Must have at least one digit
+                    if (!/[0-9]/.test(value)) {
+                      return Promise.reject(new Error('Phone number must contain at least one digit'));
+                    }
                     return Promise.resolve();
                   }
                 }
               ]}
-              normalize={(value) => {
-                // Remove any characters that are not digits or plus sign
-                if (!value) return value;
-                return value.replace(/[^0-9+]/g, '');
-              }}
             >
               <Input placeholder="e.g., +60123456789 or 60123456789" />
             </Form.Item>
