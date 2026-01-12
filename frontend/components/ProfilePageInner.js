@@ -1095,9 +1095,18 @@ function ProfilePageContent() {
       fd.append('resume', file);
       message.loading('Uploading resume...', 0);
       const up = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
-      if (!up.ok) throw new Error('Upload failed');
+      if (!up.ok) {
+        let errorMsg = 'Upload failed';
+        try {
+          const errorData = await up.json();
+          errorMsg = errorData.error || errorData.message || errorMsg;
+        } catch (e) {
+          const errorText = await up.text();
+          if (errorText) errorMsg = errorText;
+        }
+        throw new Error(errorMsg);
+      }
       const data = await up.json();
-      // Use public URL instead of signedUrl (signedUrl expires after 1 hour)
       const url = data?.files?.resume?.[0]?.url || data?.files?.resume?.[0]?.signedUrl;
       const originalName = data?.files?.resume?.[0]?.originalName;
       if (url) {
