@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout, Typography, Form, Input, Button, message } from 'antd';
 import { API_BASE_URL } from '../../config';
 import RegistrationHeader from "../../components/RegistrationHeader";
@@ -7,6 +7,14 @@ import RegistrationHeader from "../../components/RegistrationHeader";
 export default function RegisterCompanyPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   function onValuesChange(changed) {
     if ('username' in changed) {
@@ -76,7 +84,7 @@ export default function RegisterCompanyPage() {
           backgroundRepeat: 'no-repeat'
         }}
       >
-        <Layout.Content style={{ padding: 40, maxWidth: 520, margin: '0 auto', marginTop: '10vh', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', borderRadius: '8px', border: '1px solid #f0f0f0', maxHeight: '75vh', textAlign: 'center', backgroundColor: 'rgba(255, 255, 255, 0.95)', marginRight: '20vh' }}>
+        <Layout.Content style={{ padding: isMobile ? 20 : 40, maxWidth: 520, margin: '0 auto', marginTop: isMobile ? '5vh' : '10vh', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', borderRadius: '8px', border: '1px solid #f0f0f0', maxHeight: isMobile ? 'none' : '75vh', textAlign: 'center', backgroundColor: 'rgba(255, 255, 255, 0.95)', marginRight: isMobile ? 0 : '20vh', overflow: isMobile ? 'auto' : 'visible' }}>
           <Typography.Title level={3} style={{ color: 'blue'}}>Hire The Best People Anywhere</Typography.Title>
           <Typography.Title level={3}>Register Your Company Admin Account</Typography.Title>
           <Typography.Paragraph type="secondary">

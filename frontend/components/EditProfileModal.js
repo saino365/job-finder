@@ -75,8 +75,12 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
         jobTypes: user?.internProfile?.preferences?.jobTypes || [],
         locations: user?.internProfile?.preferences?.locations || [],
         industries: user?.internProfile?.preferences?.industries || [],
-        preferredStartDate: user?.internProfile?.preferences?.preferredStartDate,
-        preferredEndDate: user?.internProfile?.preferences?.preferredEndDate,
+        preferredStartDate: user?.internProfile?.preferences?.preferredStartDate 
+          ? new Date(user.internProfile.preferences.preferredStartDate).toISOString().split('T')[0]
+          : undefined,
+        preferredEndDate: user?.internProfile?.preferences?.preferredEndDate
+          ? new Date(user.internProfile.preferences.preferredEndDate).toISOString().split('T')[0]
+          : undefined,
         salaryMin: user?.internProfile?.preferences?.salaryRange?.min,
         salaryMax: user?.internProfile?.preferences?.salaryRange?.max,
       });

@@ -427,6 +427,7 @@ function EmploymentPageContent() {
                   </Button>
                   <Button
                     onClick={() => setTerminationOpen(true)}
+                    disabled={pendingEC}
                     style={{
                       borderRadius: '25px',
                       background: '#fff',

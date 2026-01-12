@@ -196,7 +196,7 @@ export default function NewJobListingPage() {
         },
         onboardingMaterials: [...generalDocs, ...jobDocs],
         publishAt: vals?.publishAt ? (vals.publishAt.toDate ? vals.publishAt.toDate().toISOString() : new Date(vals.publishAt).toISOString()) : null,
-        submitForApproval: true, // Submit for approval
+        submitForApproval: true, // Submit for approval - changes status from DRAFT to PENDING
       };
 
       console.log('📤 Payload being sent:', JSON.stringify(payload, null, 2));
@@ -362,7 +362,31 @@ export default function NewJobListingPage() {
     },
   ];
 
-  const next = () => setCurrent((c) => Math.min(c + 1, steps.length - 1));
+  // Fields that must be valid before moving past each step
+  const stepFieldNames = [
+    ['profession', 'title', 'description', 'city', 'state', 'salaryMin', 'salaryMax', 'quantity', 'picName', 'picContact'],
+    ['projectTitle', 'projectDescription', 'roleDescription'],
+    [],
+    []
+  ];
+
+  const next = async () => {
+    try {
+      const fields = stepFieldNames[current] || [];
+      if (fields.length) {
+        await form.validateFields(fields);
+      }
+      setCurrent((c) => Math.min(c + 1, steps.length - 1));
+      setErrorMessage(null);
+    } catch (e) {
+      // Validation errors from AntD include errorFields
+      if (e?.errorFields) {
+        setErrorMessage('Please fill in all required fields on this step before proceeding');
+      } else if (e?.message) {
+        message.error(e.message);
+      }
+    }
+  };
   const prev = () => setCurrent((c) => Math.max(c - 1, 0));
 
   return (

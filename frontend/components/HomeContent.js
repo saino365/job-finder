@@ -501,6 +501,30 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     }
   }
 
+  async function handleSaveCompanySearchProfile() {
+    try {
+      await apiAuth('/search-profiles', {
+        method: 'POST',
+        body: {
+          kind: 'intern-search',
+          filters: {
+            keyword: q || undefined,
+            industry: selectedFilters.industry || undefined,
+            location: selectedFilters.location || undefined,
+            // keep structure similar for future backend extensions
+          },
+        },
+      });
+      message.success('Company search profile saved');
+    } catch (e) {
+      if (e.message?.includes('Not authenticated')) {
+        message.warning('Sign in to save your company search profile');
+      } else {
+        message.error('Failed to save company search profile');
+      }
+    }
+  }
+
 
   return (
     <Layout>

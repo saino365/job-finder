@@ -49,6 +49,8 @@ const userSchema = new mongoose.Schema({
     avatar: String, // photo
     bio: String,
     icPassportNumber: String, // national ID / IC / passport
+    language: { type: String, default: 'en' },
+    timezone: { type: String, default: 'Asia/Kuala_Lumpur' },
     location: {
       city: String,
       state: String,

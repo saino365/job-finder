@@ -1,10 +1,12 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout, Card, Typography, Switch, Space, Divider, Button, message, Select } from 'antd';
 import { MoonOutlined, SunOutlined, BellOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useTheme } from '../../components/Providers';
+import { API_BASE_URL } from '../../config';
+import { getToken } from '../../lib/api';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -20,6 +22,30 @@ export default function SettingsPage() {
   });
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState('Asia/Kuala_Lumpur');
+  const [loading, setLoading] = useState(false);
+
+  // Load user preferences on mount
+  useEffect(() => {
+    async function loadPreferences() {
+      const token = getToken();
+      if (!token) return;
+      
+      try {
+        const res = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const user = await res.json();
+          // Load language and timezone from user profile if available
+          if (user?.profile?.language) setLanguage(user.profile.language);
+          if (user?.profile?.timezone) setTimezone(user.profile.timezone);
+        }
+      } catch (e) {
+        console.warn('Failed to load preferences:', e);
+      }
+    }
+    loadPreferences();
+  }, []);
 
   const handleNotificationChange = (key, value) => {
     setNotifications(prev => ({
@@ -29,14 +55,58 @@ export default function SettingsPage() {
     message.success('Notification preferences updated');
   };
 
-  const handleLanguageChange = (value) => {
+  const handleLanguageChange = async (value) => {
     setLanguage(value);
-    message.success('Language preference updated');
+    const token = getToken();
+    if (!token) {
+      message.warning('Please sign in to save preferences');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ 'profile.language': value })
+      });
+      if (res.ok) {
+        message.success('Language preference saved');
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (e) {
+      message.error('Failed to save language preference');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleTimezoneChange = (value) => {
+  const handleTimezoneChange = async (value) => {
     setTimezone(value);
-    message.success('Timezone preference updated');
+    const token = getToken();
+    if (!token) {
+      message.warning('Please sign in to save preferences');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ 'profile.timezone': value })
+      });
+      if (res.ok) {
+        message.success('Timezone preference saved');
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (e) {
+      message.error('Failed to save timezone preference');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
