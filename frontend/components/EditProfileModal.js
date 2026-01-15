@@ -80,7 +80,12 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
         certifications,
         skills: user?.internProfile?.skills || [],
         languages: user?.internProfile?.languages || [],
-        interests: user?.internProfile?.interests || [],
+        // D161: Ensure interests include socialLinks and thumbnailUrl
+        interests: (user?.internProfile?.interests || []).map(interest => ({
+          ...interest,
+          socialLinks: interest.socialLinks || [],
+          thumbnailUrl: interest.thumbnailUrl || ''
+        })),
         eventExperiences,
         courses: user?.internProfile?.courses || [],
         assignments: user?.internProfile?.assignments || [],
@@ -972,6 +977,7 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           <Form.List name="interests">
             {(fields, { add, remove }) => (
               <>
+                {/* D161: Add Social link and Thumbnail URL fields to Edit Interests section */}
                 {fields.map(({ key, name, ...restField }) => (
                   <Space key={key} direction="vertical" style={{ width: '100%', marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 8 }}>
                     <Form.Item {...restField} name={[name, 'title']} label="Title">
@@ -979,6 +985,17 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                     </Form.Item>
                     <Form.Item {...restField} name={[name, 'description']} label="Description">
                       <TextArea rows={2} placeholder="Description" />
+                    </Form.Item>
+                    <Form.Item {...restField} name={[name, 'socialLinks']} label="Social Links">
+                      <Select
+                        mode="tags"
+                        placeholder="Add social media links (e.g., https://linkedin.com/in/username)"
+                        style={{ width: '100%' }}
+                        tokenSeparators={[',']}
+                      />
+                    </Form.Item>
+                    <Form.Item {...restField} name={[name, 'thumbnailUrl']} label="Thumbnail URL (optional)">
+                      <Input placeholder="https://..." />
                     </Form.Item>
                     <Button danger onClick={() => remove(name)} icon={<MinusCircleOutlined />}>Remove</Button>
                   </Space>

@@ -55,7 +55,15 @@ export default function JobCard({ job, companyView = false }) {
     return diff;
   })();
 
+  // D157: Fix job click error - handle unauthenticated access by redirecting to login first
   function handleCardClick() {
+    // D157: Check if user is authenticated before allowing job view
+    if (!companyView && !getToken()) {
+      message.info('Please sign in to view job details');
+      router.push(`/login?next=/jobs/${job._id}`);
+      return;
+    }
+    
     if (companyView) {
       router.push(`/company/jobs/${job._id}`);
     } else {
@@ -223,7 +231,6 @@ export default function JobCard({ job, companyView = false }) {
   };
 
   return (
-    {/* D148: Ensure consistent card height */}
     <Card
       hoverable
       onClick={handleCardClick}

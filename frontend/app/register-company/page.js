@@ -33,12 +33,15 @@ export default function RegisterCompanyPage() {
     }
   }
 
+  // D156: Fix company registration loading - ensure proper error handling and loading state management
   async function onFinish(values) {
     const username = String(values.username || '').trim();
     const email = username.includes('@') ? username : String(values.email || '').trim();
     if (!email) { message.error('Email is required'); return; }
     try {
       setLoading(true);
+      // Clear any previous errors
+      message.destroy();
       // Create company user account
       const res = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -87,7 +90,11 @@ export default function RegisterCompanyPage() {
       }
 
       message.error(errorMsg);
-    } finally {
+      setLoading(false); // D156: Ensure loading state is cleared on error
+    } catch (e) {
+      // D156: Catch any unexpected errors
+      console.error('Registration error:', e);
+      message.error(e.message || 'An unexpected error occurred. Please try again.');
       setLoading(false);
     }
   }

@@ -488,7 +488,8 @@ export default function ApplicationDetailPage({ params }) {
                 onCancel: () => reject(new Error('cancel')) 
               });
             });
-            await patchAction({ action: 'reject', reason: 'Rejected while pending acceptance' });
+            // D165: Fix Reject button - use declineOffer action instead of reject
+            await patchAction({ action: 'declineOffer', reason: 'Rejected while pending acceptance' });
             message.success('Offer declined');
             setRejectOfferedOpen(false); 
             load();

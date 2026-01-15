@@ -36,22 +36,41 @@ export default function Navbar() {
     }
   };
 
+  // D154: Fix Mark all as read - ensure notifications are properly marked as read
   const markAllAsRead = async (ids) => {
     try {
       const token = localStorage.getItem('jf_token');
       if (!Array.isArray(notifs)) return;
       const targets = Array.isArray(ids) && ids.length
         ? notifs.filter(n => ids.includes(n._id))
-        : notifs.filter(n => !n.isRead && n._id);
-      await Promise.all(targets.map(n => (
-        fetch(`${API_BASE_URL}/notifications/${n._id}` , {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ isRead: true })
-        })
-      )));
-      fetchNotifs();
-    } catch (_) {}
+        : notifs.filter(n => !n.isRead && !n.read && n._id); // Check both isRead and read
+      
+      if (targets.length === 0) return;
+      
+      // Mark all as read
+      const results = await Promise.all(targets.map(async (n) => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/notifications/${n._id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ isRead: true, read: true }) // Set both fields
+          });
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to mark as read');
+          }
+          return res.json();
+        } catch (e) {
+          console.error(`Failed to mark notification ${n._id} as read:`, e);
+          return null;
+        }
+      }));
+      
+      // Refresh notifications after marking as read
+      await fetchNotifs();
+    } catch (e) {
+      console.error('Mark all as read error:', e);
+    }
   };
 
   // Moved statusTag and heavy dropdown UI into dynamic NotificationsDropdownContent

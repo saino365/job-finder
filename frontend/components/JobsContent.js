@@ -74,21 +74,34 @@ export default function JobsContent() {
     return `${API_BASE_URL}/job-listings?${params.toString()}`;
   }, [keyword, filters, page]);
 
-  // Fetch jobs
+  // D155: Fix job search loading - ensure proper error handling and response parsing
   const jobsQuery = useQuery({
     queryKey: ["jobs", jobsUrl],
     queryFn: async () => {
       console.log("🔍 Frontend: Fetching jobs from:", jobsUrl);
-      const response = await fetch(jobsUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      try {
+        const response = await fetch(jobsUrl);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("❌ Jobs fetch error:", response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+        }
+        const data = await response.json();
+        console.log("🔍 Frontend: Jobs response:", data);
+        // Ensure data structure is correct
+        if (Array.isArray(data)) {
+          return { data, total: data.length };
+        }
+        return data || { data: [], total: 0 };
+      } catch (error) {
+        console.error("❌ Jobs query error:", error);
+        throw error;
       }
-      const data = await response.json();
-      console.log("🔍 Frontend: Jobs response:", data);
-      return data;
     },
     keepPreviousData: true,
     staleTime: 30000, // 30 seconds
+    retry: 2, // Retry failed requests
+    retryDelay: 1000
   });
 
   // Handle filter changes

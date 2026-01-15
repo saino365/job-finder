@@ -949,12 +949,17 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                         </div>
                       )}
                     </div>
+                    {/* D162: Fix broken image - add error handling for thumbnail images */}
                     {interest.thumbnailUrl && (
                       <div style={{ flexShrink: 0 }}>
                         <img
                           src={interest.thumbnailUrl}
                           alt={interest.title}
                           style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                          onError={(e) => {
+                            // D162: Hide broken images instead of showing broken image icon
+                            e.target.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}

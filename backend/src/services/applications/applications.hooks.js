@@ -76,7 +76,9 @@ export default (app) => {
     } else if (user.role === 'company') {
       const company = await app.service('companies').Model.findOne({ ownerUserId: user._id }).lean();
       if (!company) { throw new Error('Company profile not found'); }
-      ctx.params.query = { ...q, companyId: company._id, status: { $ne: S.WITHDRAWN } };
+      // D166: Allow companies to see withdrawn applications (status 6)
+      // Remove the filter that excludes withdrawn applications so companies can see all statuses
+      ctx.params.query = { ...q, companyId: company._id };
     } // admin sees all
     return ctx;
   }
