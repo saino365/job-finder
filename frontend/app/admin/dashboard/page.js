@@ -18,6 +18,14 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
+  
+  // D129: Auto-refresh dashboard every 30 seconds to update status counts
+  useEffect(() => {
+    const interval = setInterval(() => {
+      load();
+    }, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   async function load() {
     try {

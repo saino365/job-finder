@@ -1,0 +1,4687 @@
+{
+  "generated_at": "2026-01-12T15:11:31.751943",
+  "summary": {
+    "total_images": 464,
+    "sheets": [
+      "Admin Login",
+      "Clarifications",
+      "Company Login",
+      "Defect",
+      "Request"
+    ],
+    "sheet_counts": {
+      "Admin Login": 1,
+      "Clarifications": 15,
+      "Company Login": 1,
+      "Defect": 319,
+      "Request": 128
+    }
+  },
+  "by_sheet": {
+    "Admin Login": {
+      "count": 1,
+      "images": [
+        {
+          "filename": "Admin Login_image_1.png",
+          "image_number": 1,
+          "dimensions": "1410x621",
+          "size_kb": 78.72,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Admin Login_image_1.png"
+        }
+      ]
+    },
+    "Clarifications": {
+      "count": 15,
+      "images": [
+        {
+          "filename": "Clarifications_image_1.png",
+          "image_number": 1,
+          "dimensions": "463x477",
+          "size_kb": 22.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_1.png"
+        },
+        {
+          "filename": "Clarifications_image_2.png",
+          "image_number": 2,
+          "dimensions": "559x542",
+          "size_kb": 25.07,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_2.png"
+        },
+        {
+          "filename": "Clarifications_image_3.png",
+          "image_number": 3,
+          "dimensions": "367x260",
+          "size_kb": 7.1,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_3.png"
+        },
+        {
+          "filename": "Clarifications_image_4.png",
+          "image_number": 4,
+          "dimensions": "1151x320",
+          "size_kb": 19.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_4.png"
+        },
+        {
+          "filename": "Clarifications_image_5.png",
+          "image_number": 5,
+          "dimensions": "1158x693",
+          "size_kb": 254.31,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_5.png"
+        },
+        {
+          "filename": "Clarifications_image_6.png",
+          "image_number": 6,
+          "dimensions": "995x597",
+          "size_kb": 29.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_6.png"
+        },
+        {
+          "filename": "Clarifications_image_7.png",
+          "image_number": 7,
+          "dimensions": "1398x458",
+          "size_kb": 37.78,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_7.png"
+        },
+        {
+          "filename": "Clarifications_image_8.png",
+          "image_number": 8,
+          "dimensions": "1322x509",
+          "size_kb": 27.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_8.png"
+        },
+        {
+          "filename": "Clarifications_image_9.png",
+          "image_number": 9,
+          "dimensions": "845x511",
+          "size_kb": 27.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_9.png"
+        },
+        {
+          "filename": "Clarifications_image_10.png",
+          "image_number": 10,
+          "dimensions": "1924x468",
+          "size_kb": 33.27,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_10.png"
+        },
+        {
+          "filename": "Clarifications_image_11.png",
+          "image_number": 11,
+          "dimensions": "1473x533",
+          "size_kb": 29.0,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_11.png"
+        },
+        {
+          "filename": "Clarifications_image_12.png",
+          "image_number": 12,
+          "dimensions": "1673x604",
+          "size_kb": 27.03,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_12.png"
+        },
+        {
+          "filename": "Clarifications_image_13.png",
+          "image_number": 13,
+          "dimensions": "1092x422",
+          "size_kb": 15.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_13.png"
+        },
+        {
+          "filename": "Clarifications_image_14.png",
+          "image_number": 14,
+          "dimensions": "1669x515",
+          "size_kb": 23.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_14.png"
+        },
+        {
+          "filename": "Clarifications_image_15.png",
+          "image_number": 15,
+          "dimensions": "1122x702",
+          "size_kb": 61.73,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Clarifications_image_15.png"
+        }
+      ]
+    },
+    "Company Login": {
+      "count": 1,
+      "images": [
+        {
+          "filename": "Company Login_image_1.png",
+          "image_number": 1,
+          "dimensions": "1410x621",
+          "size_kb": 78.72,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Company Login_image_1.png"
+        }
+      ]
+    },
+    "Defect": {
+      "count": 319,
+      "images": [
+        {
+          "filename": "Defect_image_1.png",
+          "image_number": 1,
+          "dimensions": "1271x596",
+          "size_kb": 34.76,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_1.png"
+        },
+        {
+          "filename": "Defect_image_2.png",
+          "image_number": 2,
+          "dimensions": "1751x490",
+          "size_kb": 23.11,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_2.png"
+        },
+        {
+          "filename": "Defect_image_3.png",
+          "image_number": 3,
+          "dimensions": "1622x764",
+          "size_kb": 62.24,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_3.png"
+        },
+        {
+          "filename": "Defect_image_4.png",
+          "image_number": 4,
+          "dimensions": "1380x897",
+          "size_kb": 72.18,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_4.png"
+        },
+        {
+          "filename": "Defect_image_5.png",
+          "image_number": 5,
+          "dimensions": "901x219",
+          "size_kb": 11.07,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_5.png"
+        },
+        {
+          "filename": "Defect_image_6.png",
+          "image_number": 6,
+          "dimensions": "966x460",
+          "size_kb": 22.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_6.png"
+        },
+        {
+          "filename": "Defect_image_7.png",
+          "image_number": 7,
+          "dimensions": "956x600",
+          "size_kb": 14.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_7.png"
+        },
+        {
+          "filename": "Defect_image_8.png",
+          "image_number": 8,
+          "dimensions": "992x175",
+          "size_kb": 9.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_8.png"
+        },
+        {
+          "filename": "Defect_image_9.png",
+          "image_number": 9,
+          "dimensions": "579x523",
+          "size_kb": 16.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_9.png"
+        },
+        {
+          "filename": "Defect_image_10.png",
+          "image_number": 10,
+          "dimensions": "975x656",
+          "size_kb": 16.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_10.png"
+        },
+        {
+          "filename": "Defect_image_11.png",
+          "image_number": 11,
+          "dimensions": "1353x769",
+          "size_kb": 57.66,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_11.png"
+        },
+        {
+          "filename": "Defect_image_12.png",
+          "image_number": 12,
+          "dimensions": "1166x347",
+          "size_kb": 23.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_12.png"
+        },
+        {
+          "filename": "Defect_image_13.png",
+          "image_number": 13,
+          "dimensions": "1504x553",
+          "size_kb": 34.52,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_13.png"
+        },
+        {
+          "filename": "Defect_image_14.png",
+          "image_number": 14,
+          "dimensions": "750x271",
+          "size_kb": 37.18,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_14.png"
+        },
+        {
+          "filename": "Defect_image_15.png",
+          "image_number": 15,
+          "dimensions": "1661x813",
+          "size_kb": 93.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_15.png"
+        },
+        {
+          "filename": "Defect_image_16.png",
+          "image_number": 16,
+          "dimensions": "1684x867",
+          "size_kb": 200.35,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_16.png"
+        },
+        {
+          "filename": "Defect_image_17.png",
+          "image_number": 17,
+          "dimensions": "803x315",
+          "size_kb": 45.42,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_17.png"
+        },
+        {
+          "filename": "Defect_image_18.png",
+          "image_number": 18,
+          "dimensions": "1456x882",
+          "size_kb": 127.47,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_18.png"
+        },
+        {
+          "filename": "Defect_image_19.png",
+          "image_number": 19,
+          "dimensions": "1793x750",
+          "size_kb": 48.36,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_19.png"
+        },
+        {
+          "filename": "Defect_image_20.png",
+          "image_number": 20,
+          "dimensions": "663x684",
+          "size_kb": 26.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_20.png"
+        },
+        {
+          "filename": "Defect_image_21.png",
+          "image_number": 21,
+          "dimensions": "658x713",
+          "size_kb": 45.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_21.png"
+        },
+        {
+          "filename": "Defect_image_22.png",
+          "image_number": 22,
+          "dimensions": "467x400",
+          "size_kb": 16.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_22.png"
+        },
+        {
+          "filename": "Defect_image_23.png",
+          "image_number": 23,
+          "dimensions": "457x820",
+          "size_kb": 19.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_23.png"
+        },
+        {
+          "filename": "Defect_image_24.png",
+          "image_number": 24,
+          "dimensions": "1741x396",
+          "size_kb": 62.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_24.png"
+        },
+        {
+          "filename": "Defect_image_25.png",
+          "image_number": 25,
+          "dimensions": "931x339",
+          "size_kb": 12.74,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_25.png"
+        },
+        {
+          "filename": "Defect_image_26.png",
+          "image_number": 26,
+          "dimensions": "885x467",
+          "size_kb": 16.47,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_26.png"
+        },
+        {
+          "filename": "Defect_image_27.png",
+          "image_number": 27,
+          "dimensions": "901x302",
+          "size_kb": 7.13,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_27.png"
+        },
+        {
+          "filename": "Defect_image_28.png",
+          "image_number": 28,
+          "dimensions": "948x290",
+          "size_kb": 8.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_28.png"
+        },
+        {
+          "filename": "Defect_image_29.png",
+          "image_number": 29,
+          "dimensions": "971x297",
+          "size_kb": 12.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_29.png"
+        },
+        {
+          "filename": "Defect_image_30.png",
+          "image_number": 30,
+          "dimensions": "971x297",
+          "size_kb": 12.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_30.png"
+        },
+        {
+          "filename": "Defect_image_31.png",
+          "image_number": 31,
+          "dimensions": "899x265",
+          "size_kb": 15.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_31.png"
+        },
+        {
+          "filename": "Defect_image_32.png",
+          "image_number": 32,
+          "dimensions": "917x327",
+          "size_kb": 7.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_32.png"
+        },
+        {
+          "filename": "Defect_image_33.png",
+          "image_number": 33,
+          "dimensions": "808x135",
+          "size_kb": 3.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_33.png"
+        },
+        {
+          "filename": "Defect_image_34.png",
+          "image_number": 34,
+          "dimensions": "508x128",
+          "size_kb": 3.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_34.png"
+        },
+        {
+          "filename": "Defect_image_35.png",
+          "image_number": 35,
+          "dimensions": "811x113",
+          "size_kb": 3.69,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_35.png"
+        },
+        {
+          "filename": "Defect_image_36.png",
+          "image_number": 36,
+          "dimensions": "890x235",
+          "size_kb": 8.78,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_36.png"
+        },
+        {
+          "filename": "Defect_image_37.png",
+          "image_number": 37,
+          "dimensions": "547x745",
+          "size_kb": 20.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_37.png"
+        },
+        {
+          "filename": "Defect_image_38.png",
+          "image_number": 38,
+          "dimensions": "463x206",
+          "size_kb": 8.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_38.png"
+        },
+        {
+          "filename": "Defect_image_39.png",
+          "image_number": 39,
+          "dimensions": "284x179",
+          "size_kb": 5.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_39.png"
+        },
+        {
+          "filename": "Defect_image_40.png",
+          "image_number": 40,
+          "dimensions": "1370x786",
+          "size_kb": 43.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_40.png"
+        },
+        {
+          "filename": "Defect_image_41.png",
+          "image_number": 41,
+          "dimensions": "1475x716",
+          "size_kb": 48.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_41.png"
+        },
+        {
+          "filename": "Defect_image_42.png",
+          "image_number": 42,
+          "dimensions": "437x643",
+          "size_kb": 18.14,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_42.png"
+        },
+        {
+          "filename": "Defect_image_43.png",
+          "image_number": 43,
+          "dimensions": "909x205",
+          "size_kb": 8.53,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_43.png"
+        },
+        {
+          "filename": "Defect_image_44.png",
+          "image_number": 44,
+          "dimensions": "385x391",
+          "size_kb": 7.41,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_44.png"
+        },
+        {
+          "filename": "Defect_image_45.png",
+          "image_number": 45,
+          "dimensions": "792x606",
+          "size_kb": 15.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_45.png"
+        },
+        {
+          "filename": "Defect_image_46.png",
+          "image_number": 46,
+          "dimensions": "1113x295",
+          "size_kb": 20.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_46.png"
+        },
+        {
+          "filename": "Defect_image_47.png",
+          "image_number": 47,
+          "dimensions": "1216x448",
+          "size_kb": 40.35,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_47.png"
+        },
+        {
+          "filename": "Defect_image_48.png",
+          "image_number": 48,
+          "dimensions": "1231x694",
+          "size_kb": 43.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_48.png"
+        },
+        {
+          "filename": "Defect_image_49.png",
+          "image_number": 49,
+          "dimensions": "1529x291",
+          "size_kb": 28.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_49.png"
+        },
+        {
+          "filename": "Defect_image_50.png",
+          "image_number": 50,
+          "dimensions": "690x553",
+          "size_kb": 20.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_50.png"
+        },
+        {
+          "filename": "Defect_image_51.png",
+          "image_number": 51,
+          "dimensions": "901x510",
+          "size_kb": 24.02,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_51.png"
+        },
+        {
+          "filename": "Defect_image_52.png",
+          "image_number": 52,
+          "dimensions": "911x557",
+          "size_kb": 42.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_52.png"
+        },
+        {
+          "filename": "Defect_image_53.png",
+          "image_number": 53,
+          "dimensions": "1394x629",
+          "size_kb": 37.07,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_53.png"
+        },
+        {
+          "filename": "Defect_image_54.png",
+          "image_number": 54,
+          "dimensions": "762x380",
+          "size_kb": 27.47,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_54.png"
+        },
+        {
+          "filename": "Defect_image_55.png",
+          "image_number": 55,
+          "dimensions": "790x604",
+          "size_kb": 16.32,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_55.png"
+        },
+        {
+          "filename": "Defect_image_56.png",
+          "image_number": 56,
+          "dimensions": "919x279",
+          "size_kb": 14.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_56.png"
+        },
+        {
+          "filename": "Defect_image_57.png",
+          "image_number": 57,
+          "dimensions": "780x262",
+          "size_kb": 12.92,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_57.png"
+        },
+        {
+          "filename": "Defect_image_58.png",
+          "image_number": 58,
+          "dimensions": "446x485",
+          "size_kb": 27.21,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_58.png"
+        },
+        {
+          "filename": "Defect_image_59.png",
+          "image_number": 59,
+          "dimensions": "436x471",
+          "size_kb": 28.27,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_59.png"
+        },
+        {
+          "filename": "Defect_image_60.png",
+          "image_number": 60,
+          "dimensions": "1199x923",
+          "size_kb": 81.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_60.png"
+        },
+        {
+          "filename": "Defect_image_61.png",
+          "image_number": 61,
+          "dimensions": "1270x859",
+          "size_kb": 46.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_61.png"
+        },
+        {
+          "filename": "Defect_image_62.png",
+          "image_number": 62,
+          "dimensions": "914x771",
+          "size_kb": 54.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_62.png"
+        },
+        {
+          "filename": "Defect_image_63.png",
+          "image_number": 63,
+          "dimensions": "298x576",
+          "size_kb": 87.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_63.png"
+        },
+        {
+          "filename": "Defect_image_64.png",
+          "image_number": 64,
+          "dimensions": "959x358",
+          "size_kb": 68.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_64.png"
+        },
+        {
+          "filename": "Defect_image_65.png",
+          "image_number": 65,
+          "dimensions": "292x583",
+          "size_kb": 89.7,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_65.png"
+        },
+        {
+          "filename": "Defect_image_66.png",
+          "image_number": 66,
+          "dimensions": "316x347",
+          "size_kb": 37.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_66.png"
+        },
+        {
+          "filename": "Defect_image_67.png",
+          "image_number": 67,
+          "dimensions": "1070x447",
+          "size_kb": 20.58,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_67.png"
+        },
+        {
+          "filename": "Defect_image_68.png",
+          "image_number": 68,
+          "dimensions": "1111x311",
+          "size_kb": 19.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_68.png"
+        },
+        {
+          "filename": "Defect_image_69.png",
+          "image_number": 69,
+          "dimensions": "244x150",
+          "size_kb": 18.73,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_69.png"
+        },
+        {
+          "filename": "Defect_image_70.png",
+          "image_number": 70,
+          "dimensions": "343x351",
+          "size_kb": 11.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_70.png"
+        },
+        {
+          "filename": "Defect_image_71.png",
+          "image_number": 71,
+          "dimensions": "1517x396",
+          "size_kb": 24.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_71.png"
+        },
+        {
+          "filename": "Defect_image_72.png",
+          "image_number": 72,
+          "dimensions": "1432x393",
+          "size_kb": 17.46,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_72.png"
+        },
+        {
+          "filename": "Defect_image_73.png",
+          "image_number": 73,
+          "dimensions": "508x464",
+          "size_kb": 14.42,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_73.png"
+        },
+        {
+          "filename": "Defect_image_74.png",
+          "image_number": 74,
+          "dimensions": "1307x618",
+          "size_kb": 63.47,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_74.png"
+        },
+        {
+          "filename": "Defect_image_75.png",
+          "image_number": 75,
+          "dimensions": "1715x375",
+          "size_kb": 28.39,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_75.png"
+        },
+        {
+          "filename": "Defect_image_76.png",
+          "image_number": 76,
+          "dimensions": "483x697",
+          "size_kb": 19.92,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_76.png"
+        },
+        {
+          "filename": "Defect_image_77.png",
+          "image_number": 77,
+          "dimensions": "1736x376",
+          "size_kb": 27.26,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_77.png"
+        },
+        {
+          "filename": "Defect_image_78.png",
+          "image_number": 78,
+          "dimensions": "1451x306",
+          "size_kb": 24.56,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_78.png"
+        },
+        {
+          "filename": "Defect_image_79.png",
+          "image_number": 79,
+          "dimensions": "1089x124",
+          "size_kb": 8.31,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_79.png"
+        },
+        {
+          "filename": "Defect_image_80.png",
+          "image_number": 80,
+          "dimensions": "1638x559",
+          "size_kb": 35.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_80.png"
+        },
+        {
+          "filename": "Defect_image_81.png",
+          "image_number": 81,
+          "dimensions": "1638x559",
+          "size_kb": 35.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_81.png"
+        },
+        {
+          "filename": "Defect_image_82.png",
+          "image_number": 82,
+          "dimensions": "1273x389",
+          "size_kb": 21.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_82.png"
+        },
+        {
+          "filename": "Defect_image_83.png",
+          "image_number": 83,
+          "dimensions": "856x42",
+          "size_kb": 2.36,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_83.png"
+        },
+        {
+          "filename": "Defect_image_84.png",
+          "image_number": 84,
+          "dimensions": "750x39",
+          "size_kb": 2.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_84.png"
+        },
+        {
+          "filename": "Defect_image_85.png",
+          "image_number": 85,
+          "dimensions": "419x273",
+          "size_kb": 9.46,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_85.png"
+        },
+        {
+          "filename": "Defect_image_86.png",
+          "image_number": 86,
+          "dimensions": "932x304",
+          "size_kb": 17.71,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_86.png"
+        },
+        {
+          "filename": "Defect_image_87.png",
+          "image_number": 87,
+          "dimensions": "792x625",
+          "size_kb": 32.93,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_87.png"
+        },
+        {
+          "filename": "Defect_image_88.png",
+          "image_number": 88,
+          "dimensions": "795x620",
+          "size_kb": 35.72,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_88.png"
+        },
+        {
+          "filename": "Defect_image_89.png",
+          "image_number": 89,
+          "dimensions": "939x528",
+          "size_kb": 24.69,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_89.png"
+        },
+        {
+          "filename": "Defect_image_90.png",
+          "image_number": 90,
+          "dimensions": "413x384",
+          "size_kb": 10.9,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_90.png"
+        },
+        {
+          "filename": "Defect_image_91.png",
+          "image_number": 91,
+          "dimensions": "1147x592",
+          "size_kb": 25.34,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_91.png"
+        },
+        {
+          "filename": "Defect_image_92.png",
+          "image_number": 92,
+          "dimensions": "996x491",
+          "size_kb": 22.6,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_92.png"
+        },
+        {
+          "filename": "Defect_image_93.png",
+          "image_number": 93,
+          "dimensions": "1132x703",
+          "size_kb": 29.6,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_93.png"
+        },
+        {
+          "filename": "Defect_image_94.png",
+          "image_number": 94,
+          "dimensions": "255x342",
+          "size_kb": 19.51,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_94.png"
+        },
+        {
+          "filename": "Defect_image_95.png",
+          "image_number": 95,
+          "dimensions": "861x658",
+          "size_kb": 31.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_95.png"
+        },
+        {
+          "filename": "Defect_image_96.png",
+          "image_number": 96,
+          "dimensions": "861x422",
+          "size_kb": 23.9,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_96.png"
+        },
+        {
+          "filename": "Defect_image_97.png",
+          "image_number": 97,
+          "dimensions": "938x311",
+          "size_kb": 20.32,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_97.png"
+        },
+        {
+          "filename": "Defect_image_98.png",
+          "image_number": 98,
+          "dimensions": "794x561",
+          "size_kb": 25.02,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_98.png"
+        },
+        {
+          "filename": "Defect_image_99.png",
+          "image_number": 99,
+          "dimensions": "800x56",
+          "size_kb": 3.63,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_99.png"
+        },
+        {
+          "filename": "Defect_image_100.png",
+          "image_number": 100,
+          "dimensions": "616x244",
+          "size_kb": 10.34,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_100.png"
+        },
+        {
+          "filename": "Defect_image_101.png",
+          "image_number": 101,
+          "dimensions": "798x282",
+          "size_kb": 10.86,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_101.png"
+        },
+        {
+          "filename": "Defect_image_102.png",
+          "image_number": 102,
+          "dimensions": "1443x596",
+          "size_kb": 149.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_102.png"
+        },
+        {
+          "filename": "Defect_image_103.png",
+          "image_number": 103,
+          "dimensions": "560x824",
+          "size_kb": 38.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_103.png"
+        },
+        {
+          "filename": "Defect_image_104.png",
+          "image_number": 104,
+          "dimensions": "1318x571",
+          "size_kb": 35.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_104.png"
+        },
+        {
+          "filename": "Defect_image_105.png",
+          "image_number": 105,
+          "dimensions": "472x239",
+          "size_kb": 9.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_105.png"
+        },
+        {
+          "filename": "Defect_image_106.png",
+          "image_number": 106,
+          "dimensions": "1754x583",
+          "size_kb": 44.02,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_106.png"
+        },
+        {
+          "filename": "Defect_image_107.png",
+          "image_number": 107,
+          "dimensions": "1704x538",
+          "size_kb": 41.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_107.png"
+        },
+        {
+          "filename": "Defect_image_108.png",
+          "image_number": 108,
+          "dimensions": "1059x296",
+          "size_kb": 13.18,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_108.png"
+        },
+        {
+          "filename": "Defect_image_109.png",
+          "image_number": 109,
+          "dimensions": "1446x368",
+          "size_kb": 27.93,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_109.png"
+        },
+        {
+          "filename": "Defect_image_110.png",
+          "image_number": 110,
+          "dimensions": "815x745",
+          "size_kb": 13.39,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_110.png"
+        },
+        {
+          "filename": "Defect_image_111.png",
+          "image_number": 111,
+          "dimensions": "621x513",
+          "size_kb": 24.08,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_111.png"
+        },
+        {
+          "filename": "Defect_image_112.png",
+          "image_number": 112,
+          "dimensions": "486x442",
+          "size_kb": 14.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_112.png"
+        },
+        {
+          "filename": "Defect_image_113.png",
+          "image_number": 113,
+          "dimensions": "499x473",
+          "size_kb": 15.47,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_113.png"
+        },
+        {
+          "filename": "Defect_image_114.png",
+          "image_number": 114,
+          "dimensions": "1385x532",
+          "size_kb": 28.51,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_114.png"
+        },
+        {
+          "filename": "Defect_image_115.png",
+          "image_number": 115,
+          "dimensions": "1309x848",
+          "size_kb": 47.03,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_115.png"
+        },
+        {
+          "filename": "Defect_image_116.png",
+          "image_number": 116,
+          "dimensions": "741x69",
+          "size_kb": 6.79,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_116.png"
+        },
+        {
+          "filename": "Defect_image_117.png",
+          "image_number": 117,
+          "dimensions": "761x506",
+          "size_kb": 33.56,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_117.png"
+        },
+        {
+          "filename": "Defect_image_118.png",
+          "image_number": 118,
+          "dimensions": "948x200",
+          "size_kb": 13.56,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_118.png"
+        },
+        {
+          "filename": "Defect_image_119.png",
+          "image_number": 119,
+          "dimensions": "1394x386",
+          "size_kb": 32.06,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_119.png"
+        },
+        {
+          "filename": "Defect_image_120.png",
+          "image_number": 120,
+          "dimensions": "1387x679",
+          "size_kb": 24.84,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_120.png"
+        },
+        {
+          "filename": "Defect_image_121.png",
+          "image_number": 121,
+          "dimensions": "791x306",
+          "size_kb": 18.22,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_121.png"
+        },
+        {
+          "filename": "Defect_image_122.png",
+          "image_number": 122,
+          "dimensions": "1708x438",
+          "size_kb": 32.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_122.png"
+        },
+        {
+          "filename": "Defect_image_123.png",
+          "image_number": 123,
+          "dimensions": "1415x537",
+          "size_kb": 33.78,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_123.png"
+        },
+        {
+          "filename": "Defect_image_124.png",
+          "image_number": 124,
+          "dimensions": "630x594",
+          "size_kb": 30.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_124.png"
+        },
+        {
+          "filename": "Defect_image_125.png",
+          "image_number": 125,
+          "dimensions": "592x330",
+          "size_kb": 11.5,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_125.png"
+        },
+        {
+          "filename": "Defect_image_126.png",
+          "image_number": 126,
+          "dimensions": "959x823",
+          "size_kb": 56.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_126.png"
+        },
+        {
+          "filename": "Defect_image_127.png",
+          "image_number": 127,
+          "dimensions": "1686x663",
+          "size_kb": 55.95,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_127.png"
+        },
+        {
+          "filename": "Defect_image_128.png",
+          "image_number": 128,
+          "dimensions": "1186x836",
+          "size_kb": 56.11,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_128.png"
+        },
+        {
+          "filename": "Defect_image_129.png",
+          "image_number": 129,
+          "dimensions": "1621x719",
+          "size_kb": 69.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_129.png"
+        },
+        {
+          "filename": "Defect_image_130.png",
+          "image_number": 130,
+          "dimensions": "1172x362",
+          "size_kb": 23.52,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_130.png"
+        },
+        {
+          "filename": "Defect_image_131.png",
+          "image_number": 131,
+          "dimensions": "1062x581",
+          "size_kb": 28.8,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_131.png"
+        },
+        {
+          "filename": "Defect_image_132.png",
+          "image_number": 132,
+          "dimensions": "1000x387",
+          "size_kb": 22.37,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_132.png"
+        },
+        {
+          "filename": "Defect_image_133.png",
+          "image_number": 133,
+          "dimensions": "1132x299",
+          "size_kb": 23.95,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_133.png"
+        },
+        {
+          "filename": "Defect_image_134.png",
+          "image_number": 134,
+          "dimensions": "1131x492",
+          "size_kb": 18.53,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_134.png"
+        },
+        {
+          "filename": "Defect_image_135.png",
+          "image_number": 135,
+          "dimensions": "659x840",
+          "size_kb": 21.06,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_135.png"
+        },
+        {
+          "filename": "Defect_image_136.png",
+          "image_number": 136,
+          "dimensions": "1157x315",
+          "size_kb": 22.22,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_136.png"
+        },
+        {
+          "filename": "Defect_image_137.png",
+          "image_number": 137,
+          "dimensions": "1438x522",
+          "size_kb": 77.32,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_137.png"
+        },
+        {
+          "filename": "Defect_image_138.png",
+          "image_number": 138,
+          "dimensions": "1421x926",
+          "size_kb": 110.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_138.png"
+        },
+        {
+          "filename": "Defect_image_139.png",
+          "image_number": 139,
+          "dimensions": "830x893",
+          "size_kb": 52.14,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_139.png"
+        },
+        {
+          "filename": "Defect_image_140.png",
+          "image_number": 140,
+          "dimensions": "864x515",
+          "size_kb": 44.9,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_140.png"
+        },
+        {
+          "filename": "Defect_image_141.png",
+          "image_number": 141,
+          "dimensions": "777x826",
+          "size_kb": 46.75,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_141.png"
+        },
+        {
+          "filename": "Defect_image_142.png",
+          "image_number": 142,
+          "dimensions": "1080x447",
+          "size_kb": 25.48,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_142.png"
+        },
+        {
+          "filename": "Defect_image_143.png",
+          "image_number": 143,
+          "dimensions": "1106x637",
+          "size_kb": 31.86,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_143.png"
+        },
+        {
+          "filename": "Defect_image_144.png",
+          "image_number": 144,
+          "dimensions": "987x534",
+          "size_kb": 46.73,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_144.png"
+        },
+        {
+          "filename": "Defect_image_145.png",
+          "image_number": 145,
+          "dimensions": "939x583",
+          "size_kb": 85.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_145.png"
+        },
+        {
+          "filename": "Defect_image_146.png",
+          "image_number": 146,
+          "dimensions": "772x253",
+          "size_kb": 27.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_146.png"
+        },
+        {
+          "filename": "Defect_image_147.png",
+          "image_number": 147,
+          "dimensions": "817x221",
+          "size_kb": 32.01,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_147.png"
+        },
+        {
+          "filename": "Defect_image_148.png",
+          "image_number": 148,
+          "dimensions": "735x237",
+          "size_kb": 27.63,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_148.png"
+        },
+        {
+          "filename": "Defect_image_149.png",
+          "image_number": 149,
+          "dimensions": "653x844",
+          "size_kb": 39.41,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_149.png"
+        },
+        {
+          "filename": "Defect_image_150.png",
+          "image_number": 150,
+          "dimensions": "693x212",
+          "size_kb": 10.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_150.png"
+        },
+        {
+          "filename": "Defect_image_151.png",
+          "image_number": 151,
+          "dimensions": "907x231",
+          "size_kb": 21.58,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_151.png"
+        },
+        {
+          "filename": "Defect_image_152.png",
+          "image_number": 152,
+          "dimensions": "1025x331",
+          "size_kb": 18.64,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_152.png"
+        },
+        {
+          "filename": "Defect_image_153.png",
+          "image_number": 153,
+          "dimensions": "935x239",
+          "size_kb": 25.33,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_153.png"
+        },
+        {
+          "filename": "Defect_image_154.png",
+          "image_number": 154,
+          "dimensions": "769x368",
+          "size_kb": 36.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_154.png"
+        },
+        {
+          "filename": "Defect_image_155.png",
+          "image_number": 155,
+          "dimensions": "884x460",
+          "size_kb": 6.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_155.png"
+        },
+        {
+          "filename": "Defect_image_156.png",
+          "image_number": 156,
+          "dimensions": "1304x652",
+          "size_kb": 34.04,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_156.png"
+        },
+        {
+          "filename": "Defect_image_157.png",
+          "image_number": 157,
+          "dimensions": "1429x886",
+          "size_kb": 233.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_157.png"
+        },
+        {
+          "filename": "Defect_image_158.png",
+          "image_number": 158,
+          "dimensions": "817x402",
+          "size_kb": 17.0,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_158.png"
+        },
+        {
+          "filename": "Defect_image_159.png",
+          "image_number": 159,
+          "dimensions": "1156x142",
+          "size_kb": 12.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_159.png"
+        },
+        {
+          "filename": "Defect_image_160.png",
+          "image_number": 160,
+          "dimensions": "1080x348",
+          "size_kb": 21.82,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_160.png"
+        },
+        {
+          "filename": "Defect_image_161.png",
+          "image_number": 161,
+          "dimensions": "930x419",
+          "size_kb": 34.24,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_161.png"
+        },
+        {
+          "filename": "Defect_image_162.png",
+          "image_number": 162,
+          "dimensions": "1242x786",
+          "size_kb": 56.08,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_162.png"
+        },
+        {
+          "filename": "Defect_image_163.png",
+          "image_number": 163,
+          "dimensions": "1242x786",
+          "size_kb": 56.08,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_163.png"
+        },
+        {
+          "filename": "Defect_image_164.png",
+          "image_number": 164,
+          "dimensions": "838x210",
+          "size_kb": 9.94,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_164.png"
+        },
+        {
+          "filename": "Defect_image_165.png",
+          "image_number": 165,
+          "dimensions": "838x210",
+          "size_kb": 9.94,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_165.png"
+        },
+        {
+          "filename": "Defect_image_166.png",
+          "image_number": 166,
+          "dimensions": "789x589",
+          "size_kb": 20.71,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_166.png"
+        },
+        {
+          "filename": "Defect_image_167.png",
+          "image_number": 167,
+          "dimensions": "1161x567",
+          "size_kb": 44.42,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_167.png"
+        },
+        {
+          "filename": "Defect_image_168.png",
+          "image_number": 168,
+          "dimensions": "1350x493",
+          "size_kb": 31.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_168.png"
+        },
+        {
+          "filename": "Defect_image_169.png",
+          "image_number": 169,
+          "dimensions": "1584x888",
+          "size_kb": 53.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_169.png"
+        },
+        {
+          "filename": "Defect_image_170.png",
+          "image_number": 170,
+          "dimensions": "1529x873",
+          "size_kb": 42.81,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_170.png"
+        },
+        {
+          "filename": "Defect_image_171.png",
+          "image_number": 171,
+          "dimensions": "1668x365",
+          "size_kb": 25.48,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_171.png"
+        },
+        {
+          "filename": "Defect_image_172.png",
+          "image_number": 172,
+          "dimensions": "1440x871",
+          "size_kb": 56.89,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_172.png"
+        },
+        {
+          "filename": "Defect_image_173.png",
+          "image_number": 173,
+          "dimensions": "1429x893",
+          "size_kb": 51.31,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_173.png"
+        },
+        {
+          "filename": "Defect_image_174.png",
+          "image_number": 174,
+          "dimensions": "1641x510",
+          "size_kb": 33.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_174.png"
+        },
+        {
+          "filename": "Defect_image_175.png",
+          "image_number": 175,
+          "dimensions": "938x519",
+          "size_kb": 21.83,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_175.png"
+        },
+        {
+          "filename": "Defect_image_176.png",
+          "image_number": 176,
+          "dimensions": "1087x752",
+          "size_kb": 62.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_176.png"
+        },
+        {
+          "filename": "Defect_image_177.png",
+          "image_number": 177,
+          "dimensions": "1380x776",
+          "size_kb": 74.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_177.png"
+        },
+        {
+          "filename": "Defect_image_178.png",
+          "image_number": 178,
+          "dimensions": "1026x755",
+          "size_kb": 46.51,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_178.png"
+        },
+        {
+          "filename": "Defect_image_179.png",
+          "image_number": 179,
+          "dimensions": "900x581",
+          "size_kb": 73.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_179.png"
+        },
+        {
+          "filename": "Defect_image_180.png",
+          "image_number": 180,
+          "dimensions": "811x533",
+          "size_kb": 19.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_180.png"
+        },
+        {
+          "filename": "Defect_image_181.png",
+          "image_number": 181,
+          "dimensions": "1176x814",
+          "size_kb": 45.14,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_181.png"
+        },
+        {
+          "filename": "Defect_image_182.png",
+          "image_number": 182,
+          "dimensions": "1386x476",
+          "size_kb": 41.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_182.png"
+        },
+        {
+          "filename": "Defect_image_183.png",
+          "image_number": 183,
+          "dimensions": "569x558",
+          "size_kb": 29.21,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_183.png"
+        },
+        {
+          "filename": "Defect_image_184.png",
+          "image_number": 184,
+          "dimensions": "1258x204",
+          "size_kb": 38.79,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_184.png"
+        },
+        {
+          "filename": "Defect_image_185.png",
+          "image_number": 185,
+          "dimensions": "837x367",
+          "size_kb": 27.5,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_185.png"
+        },
+        {
+          "filename": "Defect_image_186.png",
+          "image_number": 186,
+          "dimensions": "1752x366",
+          "size_kb": 29.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_186.png"
+        },
+        {
+          "filename": "Defect_image_187.png",
+          "image_number": 187,
+          "dimensions": "1143x248",
+          "size_kb": 10.26,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_187.png"
+        },
+        {
+          "filename": "Defect_image_188.png",
+          "image_number": 188,
+          "dimensions": "1071x820",
+          "size_kb": 69.6,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_188.png"
+        },
+        {
+          "filename": "Defect_image_189.png",
+          "image_number": 189,
+          "dimensions": "875x330",
+          "size_kb": 14.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_189.png"
+        },
+        {
+          "filename": "Defect_image_190.png",
+          "image_number": 190,
+          "dimensions": "1093x678",
+          "size_kb": 26.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_190.png"
+        },
+        {
+          "filename": "Defect_image_191.png",
+          "image_number": 191,
+          "dimensions": "1708x469",
+          "size_kb": 37.78,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_191.png"
+        },
+        {
+          "filename": "Defect_image_192.png",
+          "image_number": 192,
+          "dimensions": "1720x879",
+          "size_kb": 68.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_192.png"
+        },
+        {
+          "filename": "Defect_image_193.png",
+          "image_number": 193,
+          "dimensions": "1633x934",
+          "size_kb": 78.76,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_193.png"
+        },
+        {
+          "filename": "Defect_image_194.png",
+          "image_number": 194,
+          "dimensions": "1388x176",
+          "size_kb": 10.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_194.png"
+        },
+        {
+          "filename": "Defect_image_195.png",
+          "image_number": 195,
+          "dimensions": "1456x715",
+          "size_kb": 30.94,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_195.png"
+        },
+        {
+          "filename": "Defect_image_196.png",
+          "image_number": 196,
+          "dimensions": "1529x325",
+          "size_kb": 23.02,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_196.png"
+        },
+        {
+          "filename": "Defect_image_197.png",
+          "image_number": 197,
+          "dimensions": "962x442",
+          "size_kb": 29.33,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_197.png"
+        },
+        {
+          "filename": "Defect_image_198.png",
+          "image_number": 198,
+          "dimensions": "1569x777",
+          "size_kb": 69.58,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_198.png"
+        },
+        {
+          "filename": "Defect_image_199.png",
+          "image_number": 199,
+          "dimensions": "1882x280",
+          "size_kb": 23.02,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_199.png"
+        },
+        {
+          "filename": "Defect_image_200.png",
+          "image_number": 200,
+          "dimensions": "1079x623",
+          "size_kb": 35.6,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_200.png"
+        },
+        {
+          "filename": "Defect_image_201.png",
+          "image_number": 201,
+          "dimensions": "1381x372",
+          "size_kb": 16.31,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_201.png"
+        },
+        {
+          "filename": "Defect_image_202.png",
+          "image_number": 202,
+          "dimensions": "1096x236",
+          "size_kb": 7.14,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_202.png"
+        },
+        {
+          "filename": "Defect_image_203.png",
+          "image_number": 203,
+          "dimensions": "1573x389",
+          "size_kb": 21.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_203.png"
+        },
+        {
+          "filename": "Defect_image_204.png",
+          "image_number": 204,
+          "dimensions": "1667x470",
+          "size_kb": 46.71,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_204.png"
+        },
+        {
+          "filename": "Defect_image_205.png",
+          "image_number": 205,
+          "dimensions": "1391x579",
+          "size_kb": 52.79,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_205.png"
+        },
+        {
+          "filename": "Defect_image_206.png",
+          "image_number": 206,
+          "dimensions": "1354x363",
+          "size_kb": 37.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_206.png"
+        },
+        {
+          "filename": "Defect_image_207.png",
+          "image_number": 207,
+          "dimensions": "1287x822",
+          "size_kb": 58.37,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_207.png"
+        },
+        {
+          "filename": "Defect_image_208.png",
+          "image_number": 208,
+          "dimensions": "1211x320",
+          "size_kb": 21.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_208.png"
+        },
+        {
+          "filename": "Defect_image_209.png",
+          "image_number": 209,
+          "dimensions": "1315x827",
+          "size_kb": 73.63,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_209.png"
+        },
+        {
+          "filename": "Defect_image_210.png",
+          "image_number": 210,
+          "dimensions": "1427x880",
+          "size_kb": 78.06,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_210.png"
+        },
+        {
+          "filename": "Defect_image_211.png",
+          "image_number": 211,
+          "dimensions": "1069x617",
+          "size_kb": 38.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_211.png"
+        },
+        {
+          "filename": "Defect_image_212.png",
+          "image_number": 212,
+          "dimensions": "1282x376",
+          "size_kb": 19.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_212.png"
+        },
+        {
+          "filename": "Defect_image_213.png",
+          "image_number": 213,
+          "dimensions": "851x770",
+          "size_kb": 42.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_213.png"
+        },
+        {
+          "filename": "Defect_image_214.png",
+          "image_number": 214,
+          "dimensions": "1323x546",
+          "size_kb": 56.83,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_214.png"
+        },
+        {
+          "filename": "Defect_image_215.png",
+          "image_number": 215,
+          "dimensions": "1379x716",
+          "size_kb": 57.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_215.png"
+        },
+        {
+          "filename": "Defect_image_216.png",
+          "image_number": 216,
+          "dimensions": "1072x493",
+          "size_kb": 29.21,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_216.png"
+        },
+        {
+          "filename": "Defect_image_217.png",
+          "image_number": 217,
+          "dimensions": "993x753",
+          "size_kb": 23.52,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_217.png"
+        },
+        {
+          "filename": "Defect_image_218.png",
+          "image_number": 218,
+          "dimensions": "959x365",
+          "size_kb": 12.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_218.png"
+        },
+        {
+          "filename": "Defect_image_219.png",
+          "image_number": 219,
+          "dimensions": "1824x590",
+          "size_kb": 42.69,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_219.png"
+        },
+        {
+          "filename": "Defect_image_220.png",
+          "image_number": 220,
+          "dimensions": "1369x661",
+          "size_kb": 39.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_220.png"
+        },
+        {
+          "filename": "Defect_image_221.png",
+          "image_number": 221,
+          "dimensions": "992x535",
+          "size_kb": 16.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_221.png"
+        },
+        {
+          "filename": "Defect_image_222.png",
+          "image_number": 222,
+          "dimensions": "1821x682",
+          "size_kb": 74.26,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_222.png"
+        },
+        {
+          "filename": "Defect_image_223.png",
+          "image_number": 223,
+          "dimensions": "852x622",
+          "size_kb": 25.62,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_223.png"
+        },
+        {
+          "filename": "Defect_image_224.png",
+          "image_number": 224,
+          "dimensions": "1442x254",
+          "size_kb": 21.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_224.png"
+        },
+        {
+          "filename": "Defect_image_225.png",
+          "image_number": 225,
+          "dimensions": "849x144",
+          "size_kb": 2.27,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_225.png"
+        },
+        {
+          "filename": "Defect_image_226.png",
+          "image_number": 226,
+          "dimensions": "339x301",
+          "size_kb": 9.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_226.png"
+        },
+        {
+          "filename": "Defect_image_227.png",
+          "image_number": 227,
+          "dimensions": "258x116",
+          "size_kb": 1.6,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_227.png"
+        },
+        {
+          "filename": "Defect_image_228.png",
+          "image_number": 228,
+          "dimensions": "1140x657",
+          "size_kb": 41.83,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_228.png"
+        },
+        {
+          "filename": "Defect_image_229.png",
+          "image_number": 229,
+          "dimensions": "381x821",
+          "size_kb": 36.34,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_229.png"
+        },
+        {
+          "filename": "Defect_image_230.png",
+          "image_number": 230,
+          "dimensions": "1369x779",
+          "size_kb": 72.9,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_230.png"
+        },
+        {
+          "filename": "Defect_image_231.png",
+          "image_number": 231,
+          "dimensions": "977x733",
+          "size_kb": 49.01,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_231.png"
+        },
+        {
+          "filename": "Defect_image_232.png",
+          "image_number": 232,
+          "dimensions": "1480x745",
+          "size_kb": 49.92,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_232.png"
+        },
+        {
+          "filename": "Defect_image_233.png",
+          "image_number": 233,
+          "dimensions": "986x421",
+          "size_kb": 14.66,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_233.png"
+        },
+        {
+          "filename": "Defect_image_234.png",
+          "image_number": 234,
+          "dimensions": "986x421",
+          "size_kb": 14.66,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_234.png"
+        },
+        {
+          "filename": "Defect_image_235.png",
+          "image_number": 235,
+          "dimensions": "974x733",
+          "size_kb": 22.37,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_235.png"
+        },
+        {
+          "filename": "Defect_image_236.png",
+          "image_number": 236,
+          "dimensions": "947x415",
+          "size_kb": 13.64,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_236.png"
+        },
+        {
+          "filename": "Defect_image_237.png",
+          "image_number": 237,
+          "dimensions": "1415x700",
+          "size_kb": 38.69,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_237.png"
+        },
+        {
+          "filename": "Defect_image_238.png",
+          "image_number": 238,
+          "dimensions": "1213x588",
+          "size_kb": 34.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_238.png"
+        },
+        {
+          "filename": "Defect_image_239.png",
+          "image_number": 239,
+          "dimensions": "1429x515",
+          "size_kb": 55.73,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_239.png"
+        },
+        {
+          "filename": "Defect_image_240.png",
+          "image_number": 240,
+          "dimensions": "1058x497",
+          "size_kb": 41.8,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_240.png"
+        },
+        {
+          "filename": "Defect_image_241.png",
+          "image_number": 241,
+          "dimensions": "877x624",
+          "size_kb": 62.36,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_241.png"
+        },
+        {
+          "filename": "Defect_image_242.png",
+          "image_number": 242,
+          "dimensions": "918x431",
+          "size_kb": 18.55,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_242.png"
+        },
+        {
+          "filename": "Defect_image_243.png",
+          "image_number": 243,
+          "dimensions": "580x855",
+          "size_kb": 56.51,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_243.png"
+        },
+        {
+          "filename": "Defect_image_244.png",
+          "image_number": 244,
+          "dimensions": "1929x319",
+          "size_kb": 29.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_244.png"
+        },
+        {
+          "filename": "Defect_image_245.png",
+          "image_number": 245,
+          "dimensions": "1932x294",
+          "size_kb": 28.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_245.png"
+        },
+        {
+          "filename": "Defect_image_246.png",
+          "image_number": 246,
+          "dimensions": "806x543",
+          "size_kb": 17.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_246.png"
+        },
+        {
+          "filename": "Defect_image_247.png",
+          "image_number": 247,
+          "dimensions": "923x651",
+          "size_kb": 29.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_247.png"
+        },
+        {
+          "filename": "Defect_image_248.png",
+          "image_number": 248,
+          "dimensions": "936x312",
+          "size_kb": 11.52,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_248.png"
+        },
+        {
+          "filename": "Defect_image_249.png",
+          "image_number": 249,
+          "dimensions": "770x338",
+          "size_kb": 9.03,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_249.png"
+        },
+        {
+          "filename": "Defect_image_250.png",
+          "image_number": 250,
+          "dimensions": "258x254",
+          "size_kb": 4.55,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_250.png"
+        },
+        {
+          "filename": "Defect_image_251.png",
+          "image_number": 251,
+          "dimensions": "907x181",
+          "size_kb": 7.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_251.png"
+        },
+        {
+          "filename": "Defect_image_252.png",
+          "image_number": 252,
+          "dimensions": "745x198",
+          "size_kb": 4.77,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_252.png"
+        },
+        {
+          "filename": "Defect_image_253.png",
+          "image_number": 253,
+          "dimensions": "799x604",
+          "size_kb": 18.21,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_253.png"
+        },
+        {
+          "filename": "Defect_image_254.png",
+          "image_number": 254,
+          "dimensions": "905x266",
+          "size_kb": 8.35,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_254.png"
+        },
+        {
+          "filename": "Defect_image_255.png",
+          "image_number": 255,
+          "dimensions": "763x491",
+          "size_kb": 14.19,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_255.png"
+        },
+        {
+          "filename": "Defect_image_256.png",
+          "image_number": 256,
+          "dimensions": "1341x164",
+          "size_kb": 11.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_256.png"
+        },
+        {
+          "filename": "Defect_image_257.png",
+          "image_number": 257,
+          "dimensions": "833x445",
+          "size_kb": 34.01,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_257.png"
+        },
+        {
+          "filename": "Defect_image_258.png",
+          "image_number": 258,
+          "dimensions": "1739x267",
+          "size_kb": 50.51,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_258.png"
+        },
+        {
+          "filename": "Defect_image_259.png",
+          "image_number": 259,
+          "dimensions": "1112x726",
+          "size_kb": 25.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_259.png"
+        },
+        {
+          "filename": "Defect_image_260.png",
+          "image_number": 260,
+          "dimensions": "887x210",
+          "size_kb": 6.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_260.png"
+        },
+        {
+          "filename": "Defect_image_261.png",
+          "image_number": 261,
+          "dimensions": "1870x692",
+          "size_kb": 227.91,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_261.png"
+        },
+        {
+          "filename": "Defect_image_262.png",
+          "image_number": 262,
+          "dimensions": "1870x692",
+          "size_kb": 227.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_262.png"
+        },
+        {
+          "filename": "Defect_image_263.png",
+          "image_number": 263,
+          "dimensions": "683x688",
+          "size_kb": 19.31,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_263.png"
+        },
+        {
+          "filename": "Defect_image_264.png",
+          "image_number": 264,
+          "dimensions": "1218x799",
+          "size_kb": 182.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_264.png"
+        },
+        {
+          "filename": "Defect_image_265.png",
+          "image_number": 265,
+          "dimensions": "1372x748",
+          "size_kb": 41.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_265.png"
+        },
+        {
+          "filename": "Defect_image_266.png",
+          "image_number": 266,
+          "dimensions": "1276x779",
+          "size_kb": 41.76,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_266.png"
+        },
+        {
+          "filename": "Defect_image_267.png",
+          "image_number": 267,
+          "dimensions": "818x634",
+          "size_kb": 30.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_267.png"
+        },
+        {
+          "filename": "Defect_image_268.png",
+          "image_number": 268,
+          "dimensions": "1794x362",
+          "size_kb": 23.97,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_268.png"
+        },
+        {
+          "filename": "Defect_image_269.png",
+          "image_number": 269,
+          "dimensions": "1515x618",
+          "size_kb": 51.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_269.png"
+        },
+        {
+          "filename": "Defect_image_270.png",
+          "image_number": 270,
+          "dimensions": "1678x837",
+          "size_kb": 46.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_270.png"
+        },
+        {
+          "filename": "Defect_image_271.png",
+          "image_number": 271,
+          "dimensions": "1260x752",
+          "size_kb": 41.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_271.png"
+        },
+        {
+          "filename": "Defect_image_272.png",
+          "image_number": 272,
+          "dimensions": "1391x886",
+          "size_kb": 63.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_272.png"
+        },
+        {
+          "filename": "Defect_image_273.png",
+          "image_number": 273,
+          "dimensions": "716x323",
+          "size_kb": 7.73,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_273.png"
+        },
+        {
+          "filename": "Defect_image_274.png",
+          "image_number": 274,
+          "dimensions": "520x764",
+          "size_kb": 17.93,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_274.png"
+        },
+        {
+          "filename": "Defect_image_275.png",
+          "image_number": 275,
+          "dimensions": "845x233",
+          "size_kb": 7.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_275.png"
+        },
+        {
+          "filename": "Defect_image_276.png",
+          "image_number": 276,
+          "dimensions": "847x220",
+          "size_kb": 7.92,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_276.png"
+        },
+        {
+          "filename": "Defect_image_277.png",
+          "image_number": 277,
+          "dimensions": "1554x820",
+          "size_kb": 58.0,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_277.png"
+        },
+        {
+          "filename": "Defect_image_278.png",
+          "image_number": 278,
+          "dimensions": "1218x554",
+          "size_kb": 46.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_278.png"
+        },
+        {
+          "filename": "Defect_image_279.png",
+          "image_number": 279,
+          "dimensions": "1623x484",
+          "size_kb": 49.62,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_279.png"
+        },
+        {
+          "filename": "Defect_image_280.png",
+          "image_number": 280,
+          "dimensions": "483x525",
+          "size_kb": 16.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_280.png"
+        },
+        {
+          "filename": "Defect_image_281.png",
+          "image_number": 281,
+          "dimensions": "1354x564",
+          "size_kb": 32.46,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_281.png"
+        },
+        {
+          "filename": "Defect_image_282.png",
+          "image_number": 282,
+          "dimensions": "861x273",
+          "size_kb": 10.37,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_282.png"
+        },
+        {
+          "filename": "Defect_image_283.png",
+          "image_number": 283,
+          "dimensions": "749x569",
+          "size_kb": 18.01,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_283.png"
+        },
+        {
+          "filename": "Defect_image_284.png",
+          "image_number": 284,
+          "dimensions": "1510x782",
+          "size_kb": 103.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_284.png"
+        },
+        {
+          "filename": "Defect_image_285.png",
+          "image_number": 285,
+          "dimensions": "1303x321",
+          "size_kb": 20.78,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_285.png"
+        },
+        {
+          "filename": "Defect_image_286.png",
+          "image_number": 286,
+          "dimensions": "714x296",
+          "size_kb": 11.22,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_286.png"
+        },
+        {
+          "filename": "Defect_image_287.png",
+          "image_number": 287,
+          "dimensions": "1402x534",
+          "size_kb": 31.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_287.png"
+        },
+        {
+          "filename": "Defect_image_288.png",
+          "image_number": 288,
+          "dimensions": "1214x506",
+          "size_kb": 39.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_288.png"
+        },
+        {
+          "filename": "Defect_image_289.png",
+          "image_number": 289,
+          "dimensions": "307x607",
+          "size_kb": 48.75,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_289.png"
+        },
+        {
+          "filename": "Defect_image_290.png",
+          "image_number": 290,
+          "dimensions": "309x615",
+          "size_kb": 65.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_290.png"
+        },
+        {
+          "filename": "Defect_image_291.png",
+          "image_number": 291,
+          "dimensions": "469x295",
+          "size_kb": 9.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_291.png"
+        },
+        {
+          "filename": "Defect_image_292.png",
+          "image_number": 292,
+          "dimensions": "300x256",
+          "size_kb": 7.77,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_292.png"
+        },
+        {
+          "filename": "Defect_image_293.png",
+          "image_number": 293,
+          "dimensions": "463x423",
+          "size_kb": 14.52,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_293.png"
+        },
+        {
+          "filename": "Defect_image_294.png",
+          "image_number": 294,
+          "dimensions": "968x609",
+          "size_kb": 36.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_294.png"
+        },
+        {
+          "filename": "Defect_image_295.png",
+          "image_number": 295,
+          "dimensions": "772x782",
+          "size_kb": 43.86,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_295.png"
+        },
+        {
+          "filename": "Defect_image_296.png",
+          "image_number": 296,
+          "dimensions": "433x842",
+          "size_kb": 38.51,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_296.png"
+        },
+        {
+          "filename": "Defect_image_297.png",
+          "image_number": 297,
+          "dimensions": "1293x625",
+          "size_kb": 56.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_297.png"
+        },
+        {
+          "filename": "Defect_image_298.png",
+          "image_number": 298,
+          "dimensions": "1479x653",
+          "size_kb": 41.48,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_298.png"
+        },
+        {
+          "filename": "Defect_image_299.png",
+          "image_number": 299,
+          "dimensions": "842x191",
+          "size_kb": 9.62,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_299.png"
+        },
+        {
+          "filename": "Defect_image_300.png",
+          "image_number": 300,
+          "dimensions": "1023x424",
+          "size_kb": 45.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_300.png"
+        },
+        {
+          "filename": "Defect_image_301.png",
+          "image_number": 301,
+          "dimensions": "607x794",
+          "size_kb": 33.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_301.png"
+        },
+        {
+          "filename": "Defect_image_302.png",
+          "image_number": 302,
+          "dimensions": "943x293",
+          "size_kb": 16.84,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_302.png"
+        },
+        {
+          "filename": "Defect_image_303.png",
+          "image_number": 303,
+          "dimensions": "1124x350",
+          "size_kb": 25.62,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_303.png"
+        },
+        {
+          "filename": "Defect_image_304.png",
+          "image_number": 304,
+          "dimensions": "1593x542",
+          "size_kb": 37.49,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_304.png"
+        },
+        {
+          "filename": "Defect_image_305.png",
+          "image_number": 305,
+          "dimensions": "1476x670",
+          "size_kb": 39.06,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_305.png"
+        },
+        {
+          "filename": "Defect_image_306.png",
+          "image_number": 306,
+          "dimensions": "815x647",
+          "size_kb": 33.1,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_306.png"
+        },
+        {
+          "filename": "Defect_image_307.png",
+          "image_number": 307,
+          "dimensions": "712x716",
+          "size_kb": 34.97,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_307.png"
+        },
+        {
+          "filename": "Defect_image_308.png",
+          "image_number": 308,
+          "dimensions": "1053x339",
+          "size_kb": 28.63,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_308.png"
+        },
+        {
+          "filename": "Defect_image_309.png",
+          "image_number": 309,
+          "dimensions": "815x255",
+          "size_kb": 15.43,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_309.png"
+        },
+        {
+          "filename": "Defect_image_310.png",
+          "image_number": 310,
+          "dimensions": "1101x387",
+          "size_kb": 23.94,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_310.png"
+        },
+        {
+          "filename": "Defect_image_311.png",
+          "image_number": 311,
+          "dimensions": "1276x360",
+          "size_kb": 19.95,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_311.png"
+        },
+        {
+          "filename": "Defect_image_312.png",
+          "image_number": 312,
+          "dimensions": "760x503",
+          "size_kb": 31.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_312.png"
+        },
+        {
+          "filename": "Defect_image_313.png",
+          "image_number": 313,
+          "dimensions": "1633x600",
+          "size_kb": 88.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_313.png"
+        },
+        {
+          "filename": "Defect_image_314.png",
+          "image_number": 314,
+          "dimensions": "708x115",
+          "size_kb": 5.08,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_314.png"
+        },
+        {
+          "filename": "Defect_image_315.png",
+          "image_number": 315,
+          "dimensions": "797x307",
+          "size_kb": 7.44,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_315.png"
+        },
+        {
+          "filename": "Defect_image_316.png",
+          "image_number": 316,
+          "dimensions": "1344x655",
+          "size_kb": 31.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_316.png"
+        },
+        {
+          "filename": "Defect_image_317.png",
+          "image_number": 317,
+          "dimensions": "1919x787",
+          "size_kb": 83.11,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_317.png"
+        },
+        {
+          "filename": "Defect_image_318.png",
+          "image_number": 318,
+          "dimensions": "498x613",
+          "size_kb": 91.79,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_318.png"
+        },
+        {
+          "filename": "Defect_image_319.png",
+          "image_number": 319,
+          "dimensions": "1384x1021",
+          "size_kb": 123.52,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Defect_image_319.png"
+        }
+      ]
+    },
+    "Request": {
+      "count": 128,
+      "images": [
+        {
+          "filename": "Request_image_1.png",
+          "image_number": 1,
+          "dimensions": "1889x383",
+          "size_kb": 51.64,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_1.png"
+        },
+        {
+          "filename": "Request_image_2.png",
+          "image_number": 2,
+          "dimensions": "956x600",
+          "size_kb": 14.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_2.png"
+        },
+        {
+          "filename": "Request_image_3.png",
+          "image_number": 3,
+          "dimensions": "992x175",
+          "size_kb": 9.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_3.png"
+        },
+        {
+          "filename": "Request_image_4.png",
+          "image_number": 4,
+          "dimensions": "975x656",
+          "size_kb": 16.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_4.png"
+        },
+        {
+          "filename": "Request_image_5.png",
+          "image_number": 5,
+          "dimensions": "1456x882",
+          "size_kb": 127.47,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_5.png"
+        },
+        {
+          "filename": "Request_image_6.png",
+          "image_number": 6,
+          "dimensions": "1724x815",
+          "size_kb": 167.46,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_6.png"
+        },
+        {
+          "filename": "Request_image_7.png",
+          "image_number": 7,
+          "dimensions": "524x641",
+          "size_kb": 21.33,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_7.png"
+        },
+        {
+          "filename": "Request_image_8.png",
+          "image_number": 8,
+          "dimensions": "373x218",
+          "size_kb": 22.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_8.png"
+        },
+        {
+          "filename": "Request_image_9.png",
+          "image_number": 9,
+          "dimensions": "948x436",
+          "size_kb": 60.18,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_9.png"
+        },
+        {
+          "filename": "Request_image_10.png",
+          "image_number": 10,
+          "dimensions": "556x465",
+          "size_kb": 25.07,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_10.png"
+        },
+        {
+          "filename": "Request_image_11.png",
+          "image_number": 11,
+          "dimensions": "901x302",
+          "size_kb": 7.13,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_11.png"
+        },
+        {
+          "filename": "Request_image_12.png",
+          "image_number": 12,
+          "dimensions": "948x290",
+          "size_kb": 8.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_12.png"
+        },
+        {
+          "filename": "Request_image_13.png",
+          "image_number": 13,
+          "dimensions": "971x297",
+          "size_kb": 12.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_13.png"
+        },
+        {
+          "filename": "Request_image_14.png",
+          "image_number": 14,
+          "dimensions": "971x297",
+          "size_kb": 12.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_14.png"
+        },
+        {
+          "filename": "Request_image_15.png",
+          "image_number": 15,
+          "dimensions": "808x135",
+          "size_kb": 3.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_15.png"
+        },
+        {
+          "filename": "Request_image_16.png",
+          "image_number": 16,
+          "dimensions": "508x128",
+          "size_kb": 3.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_16.png"
+        },
+        {
+          "filename": "Request_image_17.png",
+          "image_number": 17,
+          "dimensions": "527x589",
+          "size_kb": 14.32,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_17.png"
+        },
+        {
+          "filename": "Request_image_18.png",
+          "image_number": 18,
+          "dimensions": "463x206",
+          "size_kb": 8.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_18.png"
+        },
+        {
+          "filename": "Request_image_19.png",
+          "image_number": 19,
+          "dimensions": "284x179",
+          "size_kb": 5.96,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_19.png"
+        },
+        {
+          "filename": "Request_image_20.png",
+          "image_number": 20,
+          "dimensions": "455x446",
+          "size_kb": 11.81,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_20.png"
+        },
+        {
+          "filename": "Request_image_21.png",
+          "image_number": 21,
+          "dimensions": "455x446",
+          "size_kb": 11.81,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_21.png"
+        },
+        {
+          "filename": "Request_image_22.png",
+          "image_number": 22,
+          "dimensions": "785x846",
+          "size_kb": 63.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_22.png"
+        },
+        {
+          "filename": "Request_image_23.png",
+          "image_number": 23,
+          "dimensions": "779x607",
+          "size_kb": 15.68,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_23.png"
+        },
+        {
+          "filename": "Request_image_24.png",
+          "image_number": 24,
+          "dimensions": "450x328",
+          "size_kb": 11.11,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_24.png"
+        },
+        {
+          "filename": "Request_image_25.png",
+          "image_number": 25,
+          "dimensions": "485x277",
+          "size_kb": 8.09,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_25.png"
+        },
+        {
+          "filename": "Request_image_26.png",
+          "image_number": 26,
+          "dimensions": "785x846",
+          "size_kb": 63.61,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_26.png"
+        },
+        {
+          "filename": "Request_image_27.png",
+          "image_number": 27,
+          "dimensions": "450x328",
+          "size_kb": 11.11,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_27.png"
+        },
+        {
+          "filename": "Request_image_28.png",
+          "image_number": 28,
+          "dimensions": "485x277",
+          "size_kb": 8.09,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_28.png"
+        },
+        {
+          "filename": "Request_image_29.png",
+          "image_number": 29,
+          "dimensions": "1113x295",
+          "size_kb": 20.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_29.png"
+        },
+        {
+          "filename": "Request_image_30.png",
+          "image_number": 30,
+          "dimensions": "1275x528",
+          "size_kb": 35.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_30.png"
+        },
+        {
+          "filename": "Request_image_31.png",
+          "image_number": 31,
+          "dimensions": "422x437",
+          "size_kb": 24.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_31.png"
+        },
+        {
+          "filename": "Request_image_32.png",
+          "image_number": 32,
+          "dimensions": "1432x370",
+          "size_kb": 24.28,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_32.png"
+        },
+        {
+          "filename": "Request_image_33.png",
+          "image_number": 33,
+          "dimensions": "853x500",
+          "size_kb": 20.62,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_33.png"
+        },
+        {
+          "filename": "Request_image_34.png",
+          "image_number": 34,
+          "dimensions": "665x251",
+          "size_kb": 10.76,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_34.png"
+        },
+        {
+          "filename": "Request_image_35.png",
+          "image_number": 35,
+          "dimensions": "949x525",
+          "size_kb": 32.48,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_35.png"
+        },
+        {
+          "filename": "Request_image_36.png",
+          "image_number": 36,
+          "dimensions": "1193x156",
+          "size_kb": 13.95,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_36.png"
+        },
+        {
+          "filename": "Request_image_37.png",
+          "image_number": 37,
+          "dimensions": "916x473",
+          "size_kb": 57.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_37.png"
+        },
+        {
+          "filename": "Request_image_38.png",
+          "image_number": 38,
+          "dimensions": "699x817",
+          "size_kb": 46.01,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_38.png"
+        },
+        {
+          "filename": "Request_image_39.png",
+          "image_number": 39,
+          "dimensions": "1318x571",
+          "size_kb": 35.67,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_39.png"
+        },
+        {
+          "filename": "Request_image_40.png",
+          "image_number": 40,
+          "dimensions": "621x513",
+          "size_kb": 24.08,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_40.png"
+        },
+        {
+          "filename": "Request_image_41.png",
+          "image_number": 41,
+          "dimensions": "592x298",
+          "size_kb": 9.16,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_41.png"
+        },
+        {
+          "filename": "Request_image_42.png",
+          "image_number": 42,
+          "dimensions": "17x20",
+          "size_kb": 0.26,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_42.png"
+        },
+        {
+          "filename": "Request_image_43.png",
+          "image_number": 43,
+          "dimensions": "1104x792",
+          "size_kb": 47.41,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_43.png"
+        },
+        {
+          "filename": "Request_image_44.png",
+          "image_number": 44,
+          "dimensions": "1363x383",
+          "size_kb": 25.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_44.png"
+        },
+        {
+          "filename": "Request_image_45.png",
+          "image_number": 45,
+          "dimensions": "577x308",
+          "size_kb": 16.37,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_45.png"
+        },
+        {
+          "filename": "Request_image_46.png",
+          "image_number": 46,
+          "dimensions": "746x633",
+          "size_kb": 34.55,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_46.png"
+        },
+        {
+          "filename": "Request_image_47.png",
+          "image_number": 47,
+          "dimensions": "1132x355",
+          "size_kb": 27.68,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_47.png"
+        },
+        {
+          "filename": "Request_image_48.png",
+          "image_number": 48,
+          "dimensions": "761x468",
+          "size_kb": 35.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_48.png"
+        },
+        {
+          "filename": "Request_image_49.png",
+          "image_number": 49,
+          "dimensions": "1565x654",
+          "size_kb": 57.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_49.png"
+        },
+        {
+          "filename": "Request_image_50.png",
+          "image_number": 50,
+          "dimensions": "1588x846",
+          "size_kb": 77.62,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_50.png"
+        },
+        {
+          "filename": "Request_image_51.png",
+          "image_number": 51,
+          "dimensions": "1244x853",
+          "size_kb": 29.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_51.png"
+        },
+        {
+          "filename": "Request_image_52.png",
+          "image_number": 52,
+          "dimensions": "651x681",
+          "size_kb": 32.78,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_52.png"
+        },
+        {
+          "filename": "Request_image_53.png",
+          "image_number": 53,
+          "dimensions": "1205x313",
+          "size_kb": 8.03,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_53.png"
+        },
+        {
+          "filename": "Request_image_54.png",
+          "image_number": 54,
+          "dimensions": "739x703",
+          "size_kb": 55.41,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_54.png"
+        },
+        {
+          "filename": "Request_image_55.png",
+          "image_number": 55,
+          "dimensions": "835x674",
+          "size_kb": 71.71,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_55.png"
+        },
+        {
+          "filename": "Request_image_56.png",
+          "image_number": 56,
+          "dimensions": "1639x523",
+          "size_kb": 34.54,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_56.png"
+        },
+        {
+          "filename": "Request_image_57.png",
+          "image_number": 57,
+          "dimensions": "930x256",
+          "size_kb": 19.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_57.png"
+        },
+        {
+          "filename": "Request_image_58.png",
+          "image_number": 58,
+          "dimensions": "1488x640",
+          "size_kb": 62.32,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_58.png"
+        },
+        {
+          "filename": "Request_image_59.png",
+          "image_number": 59,
+          "dimensions": "1518x906",
+          "size_kb": 81.7,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_59.png"
+        },
+        {
+          "filename": "Request_image_60.png",
+          "image_number": 60,
+          "dimensions": "623x810",
+          "size_kb": 25.38,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_60.png"
+        },
+        {
+          "filename": "Request_image_61.png",
+          "image_number": 61,
+          "dimensions": "630x385",
+          "size_kb": 14.65,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_61.png"
+        },
+        {
+          "filename": "Request_image_62.png",
+          "image_number": 62,
+          "dimensions": "879x218",
+          "size_kb": 8.72,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_62.png"
+        },
+        {
+          "filename": "Request_image_63.png",
+          "image_number": 63,
+          "dimensions": "1171x611",
+          "size_kb": 33.57,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_63.png"
+        },
+        {
+          "filename": "Request_image_64.png",
+          "image_number": 64,
+          "dimensions": "757x238",
+          "size_kb": 8.72,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_64.png"
+        },
+        {
+          "filename": "Request_image_65.png",
+          "image_number": 65,
+          "dimensions": "861x195",
+          "size_kb": 11.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_65.png"
+        },
+        {
+          "filename": "Request_image_66.png",
+          "image_number": 66,
+          "dimensions": "1637x907",
+          "size_kb": 69.84,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_66.png"
+        },
+        {
+          "filename": "Request_image_67.png",
+          "image_number": 67,
+          "dimensions": "702x538",
+          "size_kb": 16.12,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_67.png"
+        },
+        {
+          "filename": "Request_image_68.png",
+          "image_number": 68,
+          "dimensions": "953x697",
+          "size_kb": 30.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_68.png"
+        },
+        {
+          "filename": "Request_image_69.png",
+          "image_number": 69,
+          "dimensions": "1235x316",
+          "size_kb": 12.97,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_69.png"
+        },
+        {
+          "filename": "Request_image_70.png",
+          "image_number": 70,
+          "dimensions": "1890x629",
+          "size_kb": 84.38,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_70.png"
+        },
+        {
+          "filename": "Request_image_71.png",
+          "image_number": 71,
+          "dimensions": "1083x677",
+          "size_kb": 24.55,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_71.png"
+        },
+        {
+          "filename": "Request_image_72.png",
+          "image_number": 72,
+          "dimensions": "497x327",
+          "size_kb": 16.33,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_72.png"
+        },
+        {
+          "filename": "Request_image_73.png",
+          "image_number": 73,
+          "dimensions": "1340x857",
+          "size_kb": 41.26,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_73.png"
+        },
+        {
+          "filename": "Request_image_74.png",
+          "image_number": 74,
+          "dimensions": "709x860",
+          "size_kb": 54.58,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_74.png"
+        },
+        {
+          "filename": "Request_image_75.png",
+          "image_number": 75,
+          "dimensions": "1698x817",
+          "size_kb": 551.53,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_75.png"
+        },
+        {
+          "filename": "Request_image_76.png",
+          "image_number": 76,
+          "dimensions": "876x757",
+          "size_kb": 22.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_76.png"
+        },
+        {
+          "filename": "Request_image_77.png",
+          "image_number": 77,
+          "dimensions": "1744x839",
+          "size_kb": 39.39,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_77.png"
+        },
+        {
+          "filename": "Request_image_78.png",
+          "image_number": 78,
+          "dimensions": "1287x745",
+          "size_kb": 68.73,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_78.png"
+        },
+        {
+          "filename": "Request_image_79.png",
+          "image_number": 79,
+          "dimensions": "732x396",
+          "size_kb": 22.08,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_79.png"
+        },
+        {
+          "filename": "Request_image_80.png",
+          "image_number": 80,
+          "dimensions": "1016x783",
+          "size_kb": 68.55,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_80.png"
+        },
+        {
+          "filename": "Request_image_81.png",
+          "image_number": 81,
+          "dimensions": "1048x694",
+          "size_kb": 52.21,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_81.png"
+        },
+        {
+          "filename": "Request_image_82.png",
+          "image_number": 82,
+          "dimensions": "1032x682",
+          "size_kb": 47.38,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_82.png"
+        },
+        {
+          "filename": "Request_image_83.png",
+          "image_number": 83,
+          "dimensions": "1252x803",
+          "size_kb": 65.04,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_83.png"
+        },
+        {
+          "filename": "Request_image_84.png",
+          "image_number": 84,
+          "dimensions": "944x456",
+          "size_kb": 25.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_84.png"
+        },
+        {
+          "filename": "Request_image_85.png",
+          "image_number": 85,
+          "dimensions": "1616x335",
+          "size_kb": 24.55,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_85.png"
+        },
+        {
+          "filename": "Request_image_86.png",
+          "image_number": 86,
+          "dimensions": "980x383",
+          "size_kb": 33.25,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_86.png"
+        },
+        {
+          "filename": "Request_image_87.png",
+          "image_number": 87,
+          "dimensions": "346x209",
+          "size_kb": 28.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_87.png"
+        },
+        {
+          "filename": "Request_image_88.png",
+          "image_number": 88,
+          "dimensions": "821x230",
+          "size_kb": 9.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_88.png"
+        },
+        {
+          "filename": "Request_image_89.png",
+          "image_number": 89,
+          "dimensions": "810x395",
+          "size_kb": 26.99,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_89.png"
+        },
+        {
+          "filename": "Request_image_90.png",
+          "image_number": 90,
+          "dimensions": "662x380",
+          "size_kb": 26.37,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_90.png"
+        },
+        {
+          "filename": "Request_image_91.png",
+          "image_number": 91,
+          "dimensions": "570x317",
+          "size_kb": 18.34,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_91.png"
+        },
+        {
+          "filename": "Request_image_92.png",
+          "image_number": 92,
+          "dimensions": "778x500",
+          "size_kb": 33.53,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_92.png"
+        },
+        {
+          "filename": "Request_image_93.png",
+          "image_number": 93,
+          "dimensions": "917x695",
+          "size_kb": 28.74,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_93.png"
+        },
+        {
+          "filename": "Request_image_94.png",
+          "image_number": 94,
+          "dimensions": "655x796",
+          "size_kb": 43.14,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_94.png"
+        },
+        {
+          "filename": "Request_image_95.png",
+          "image_number": 95,
+          "dimensions": "542x671",
+          "size_kb": 21.86,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_95.png"
+        },
+        {
+          "filename": "Request_image_96.png",
+          "image_number": 96,
+          "dimensions": "564x544",
+          "size_kb": 29.63,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_96.png"
+        },
+        {
+          "filename": "Request_image_97.png",
+          "image_number": 97,
+          "dimensions": "677x624",
+          "size_kb": 14.53,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_97.png"
+        },
+        {
+          "filename": "Request_image_98.png",
+          "image_number": 98,
+          "dimensions": "843x164",
+          "size_kb": 11.94,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_98.png"
+        },
+        {
+          "filename": "Request_image_99.png",
+          "image_number": 99,
+          "dimensions": "339x179",
+          "size_kb": 21.74,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_99.png"
+        },
+        {
+          "filename": "Request_image_100.png",
+          "image_number": 100,
+          "dimensions": "863x427",
+          "size_kb": 18.71,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_100.png"
+        },
+        {
+          "filename": "Request_image_101.png",
+          "image_number": 101,
+          "dimensions": "902x235",
+          "size_kb": 11.17,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_101.png"
+        },
+        {
+          "filename": "Request_image_102.png",
+          "image_number": 102,
+          "dimensions": "893x225",
+          "size_kb": 9.68,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_102.png"
+        },
+        {
+          "filename": "Request_image_103.png",
+          "image_number": 103,
+          "dimensions": "895x246",
+          "size_kb": 9.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_103.png"
+        },
+        {
+          "filename": "Request_image_104.png",
+          "image_number": 104,
+          "dimensions": "1370x815",
+          "size_kb": 72.85,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_104.png"
+        },
+        {
+          "filename": "Request_image_105.png",
+          "image_number": 105,
+          "dimensions": "1236x694",
+          "size_kb": 29.7,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_105.png"
+        },
+        {
+          "filename": "Request_image_106.png",
+          "image_number": 106,
+          "dimensions": "407x341",
+          "size_kb": 19.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_106.png"
+        },
+        {
+          "filename": "Request_image_107.png",
+          "image_number": 107,
+          "dimensions": "365x410",
+          "size_kb": 14.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_107.png"
+        },
+        {
+          "filename": "Request_image_108.png",
+          "image_number": 108,
+          "dimensions": "958x173",
+          "size_kb": 16.8,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_108.png"
+        },
+        {
+          "filename": "Request_image_109.png",
+          "image_number": 109,
+          "dimensions": "853x844",
+          "size_kb": 23.75,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_109.png"
+        },
+        {
+          "filename": "Request_image_110.png",
+          "image_number": 110,
+          "dimensions": "1526x365",
+          "size_kb": 20.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_110.png"
+        },
+        {
+          "filename": "Request_image_111.png",
+          "image_number": 111,
+          "dimensions": "1044x810",
+          "size_kb": 146.45,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_111.png"
+        },
+        {
+          "filename": "Request_image_112.png",
+          "image_number": 112,
+          "dimensions": "823x488",
+          "size_kb": 17.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_112.png"
+        },
+        {
+          "filename": "Request_image_113.png",
+          "image_number": 113,
+          "dimensions": "1004x379",
+          "size_kb": 17.23,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_113.png"
+        },
+        {
+          "filename": "Request_image_114.png",
+          "image_number": 114,
+          "dimensions": "1302x211",
+          "size_kb": 7.15,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_114.png"
+        },
+        {
+          "filename": "Request_image_115.png",
+          "image_number": 115,
+          "dimensions": "1436x1015",
+          "size_kb": 56.2,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_115.png"
+        },
+        {
+          "filename": "Request_image_116.png",
+          "image_number": 116,
+          "dimensions": "1647x403",
+          "size_kb": 30.89,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_116.png"
+        },
+        {
+          "filename": "Request_image_117.png",
+          "image_number": 117,
+          "dimensions": "1405x769",
+          "size_kb": 25.05,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_117.png"
+        },
+        {
+          "filename": "Request_image_118.png",
+          "image_number": 118,
+          "dimensions": "1254x441",
+          "size_kb": 22.4,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_118.png"
+        },
+        {
+          "filename": "Request_image_119.png",
+          "image_number": 119,
+          "dimensions": "1495x817",
+          "size_kb": 72.87,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_119.png"
+        },
+        {
+          "filename": "Request_image_120.png",
+          "image_number": 120,
+          "dimensions": "967x681",
+          "size_kb": 21.66,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_120.png"
+        },
+        {
+          "filename": "Request_image_121.png",
+          "image_number": 121,
+          "dimensions": "1267x644",
+          "size_kb": 189.75,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_121.png"
+        },
+        {
+          "filename": "Request_image_122.png",
+          "image_number": 122,
+          "dimensions": "327x472",
+          "size_kb": 25.29,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_122.png"
+        },
+        {
+          "filename": "Request_image_123.png",
+          "image_number": 123,
+          "dimensions": "947x437",
+          "size_kb": 101.98,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_123.png"
+        },
+        {
+          "filename": "Request_image_124.png",
+          "image_number": 124,
+          "dimensions": "1523x931",
+          "size_kb": 245.3,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_124.png"
+        },
+        {
+          "filename": "Request_image_125.png",
+          "image_number": 125,
+          "dimensions": "776x393",
+          "size_kb": 11.44,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_125.png"
+        },
+        {
+          "filename": "Request_image_126.png",
+          "image_number": 126,
+          "dimensions": "630x845",
+          "size_kb": 21.9,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_126.png"
+        },
+        {
+          "filename": "Request_image_127.png",
+          "image_number": 127,
+          "dimensions": "1008x645",
+          "size_kb": 50.59,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_127.png"
+        },
+        {
+          "filename": "Request_image_128.png",
+          "image_number": 128,
+          "dimensions": "1593x542",
+          "size_kb": 37.49,
+          "has_text": false,
+          "text": null,
+          "text_lines": [],
+          "path": "extracted_images/Request_image_128.png"
+        }
+      ]
+    }
+  }
+}

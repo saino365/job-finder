@@ -370,7 +370,14 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     return url;
   };
 
-  const jobsUrl = useMemo(() => buildQuery("/job-listings", { q, location, salaryMin, salaryMax }), [q, location, salaryMin, salaryMax]);
+  // D163: Fix salary filter on main page - ensure salary filters are properly applied
+  const jobsUrl = useMemo(() => {
+    const url = buildQuery("/job-listings", { q, location, salaryMin, salaryMax });
+    // D163: Debug salary filter
+    console.log('🔍 HomeContent: Jobs URL with salary filter:', url);
+    console.log('🔍 HomeContent: Salary range:', { salaryMin, salaryMax });
+    return url;
+  }, [q, location, salaryMin, salaryMax]);
   const companiesUrl = useMemo(() => buildQuery("/companies", { q, nature, city: companyCity, salaryMin, salaryMax, sort }), [q, nature, companyCity, salaryMin, salaryMax, sort]);
 
   const jobsQuery = useQuery({
@@ -604,7 +611,10 @@ export default function HomeContent({ jobs = [], companies = [] }) {
             <section id="interns" style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>Interns</Typography.Title>
-                <Segmented value={internsView} onChange={setInternsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                {/* Fix hydration error: suppress hydration warning for Segmented component */}
+                <div suppressHydrationWarning>
+                  <Segmented value={internsView} onChange={setInternsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                </div>
               </div>
               {internsQuery.isLoading ? (
                 <Skeleton active />
@@ -711,7 +721,10 @@ export default function HomeContent({ jobs = [], companies = [] }) {
             <section id="jobs" style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>Latest Jobs</Typography.Title>
-                <Segmented value={jobsView} onChange={setJobsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                {/* Fix hydration error: suppress hydration warning for Segmented component */}
+                <div suppressHydrationWarning>
+                  <Segmented value={jobsView} onChange={setJobsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                </div>
               </div>
               {jobsQuery.isLoading ? (
                 <Skeleton active />

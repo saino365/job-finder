@@ -79,6 +79,14 @@ function LoginInner() {
         const me = meRes.ok ? await meRes.json() : null;
         const role = (me?.role || '').toLowerCase();
 
+        // Check if email is verified - redirect to verification page if not (D1)
+        if (me && !me.isEmailVerified && role !== 'admin') {
+          const email = me.email || '';
+          const forCompany = role === 'company' ? '&forCompany=1' : '';
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}${forCompany}`;
+          return;
+        }
+
         // If "next" is provided, only allow it when it matches the role access
         function isAllowed(pathname, r) {
           if (!pathname) return false;

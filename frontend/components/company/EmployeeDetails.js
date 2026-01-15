@@ -177,28 +177,31 @@ export default function EmployeeDetails({ record }) {
         } />
       )}
 
-        <Space>
-        {emp?.status === 0 && (
-          <Button type="primary" onClick={() => patchEmployment('startNow')}>Start now</Button>
+        {/* D127: Don't show Start Now/Terminate buttons if application is withdrawn (status 6) */}
+        {app?.status !== 6 && (
+          <Space>
+            {emp?.status === 0 && (
+              <Button type="primary" onClick={() => patchEmployment('startNow')}>Start now</Button>
+            )}
+            {emp?.status === 1 && (()=>{
+              const req = detail?.onboarding?.requiredDocs || [];
+              const docs = detail?.onboarding?.docs || [];
+              const verifiedTypes = new Set(docs.filter(d=>d.verified).map(d=>d.type));
+              const canMoveToClosure = req.every(rt => verifiedTypes.has(rt));
+              return (
+                <Button onClick={() => setCloseOpen(true)} disabled={!canMoveToClosure} title={!canMoveToClosure ? 'Verify all required documents before completing internship' : undefined}>
+                  Complete internship
+                </Button>
+              );
+            })()}
+            {emp?.status === 2 && (
+              <Button type="primary" onClick={() => patchEmployment('complete')}>Mark completed</Button>
+            )}
+            {[0,1,2].includes(emp?.status) && (
+              <Button danger onClick={() => { setTermOpen(true); }}>Terminate</Button>
+            )}
+          </Space>
         )}
-        {emp?.status === 1 && (()=>{
-          const req = detail?.onboarding?.requiredDocs || [];
-          const docs = detail?.onboarding?.docs || [];
-          const verifiedTypes = new Set(docs.filter(d=>d.verified).map(d=>d.type));
-          const canMoveToClosure = req.every(rt => verifiedTypes.has(rt));
-          return (
-            <Button onClick={() => setCloseOpen(true)} disabled={!canMoveToClosure} title={!canMoveToClosure ? 'Verify all required documents before completing internship' : undefined}>
-              Complete internship
-            </Button>
-          );
-        })()}
-        {emp?.status === 2 && (
-          <Button type="primary" onClick={() => patchEmployment('complete')}>Mark completed</Button>
-        )}
-        {[0,1,2].includes(emp?.status) && (
-          <Button danger onClick={() => { setTermOpen(true); }}>Terminate</Button>
-        )}
-      </Space>
 
 
       {/* Job onboarding materials from job listing */}
@@ -313,17 +316,31 @@ export default function EmployeeDetails({ record }) {
           <Divider>Application</Divider>
           <Descriptions bordered size="small" column={1}>
             <Descriptions.Item label="Application ID">{app._id}</Descriptions.Item>
-            <Descriptions.Item label="Current status">{app.status}</Descriptions.Item>
+            {/* D140: Fix status code 4 display - show proper status text instead of "4" */}
+            <Descriptions.Item label="Current status">
+              {typeof app.status === 'number' ? (
+                <Tag>{['Applied','Shortlisted','Interview','Active offer','Hired','Rejected','Withdrawn','Not Attending'][app.status] || `Status ${app.status}`}</Tag>
+              ) : app.status}
+            </Descriptions.Item>
             <Descriptions.Item label="Letter of offer">{offerUrl ? <a href={offerUrl} target="_blank" rel="noreferrer">View letter</a> : (app?.offer?.letterKey ? 'Resolving…' : '-')}</Descriptions.Item>
           </Descriptions>
+          {/* D135: Add Terminated status to history if employment is terminated */}
           {Array.isArray(detail?.applicationHistory) && detail.applicationHistory.length > 0 && (
             <div style={{ marginTop: 12 }}>
               <h4 style={{ marginBottom: 8 }}>Application status update history</h4>
-              <List size="small" dataSource={detail.applicationHistory} renderItem={(h) => (
+              <List size="small" dataSource={[
+                ...(detail.applicationHistory || []),
+                // D135: Add Terminated status to history if employment is terminated
+                ...(emp?.status === 4 && detail?.termination ? [{
+                  at: detail.termination.decidedAt || detail.termination.createdAt || new Date(),
+                  action: 'Terminated',
+                  note: detail.termination.reason || detail.termination.remark || 'Employment terminated'
+                }] : [])
+              ]} renderItem={(h) => (
                 <List.Item>
                   <Space>
                     <span>{new Date(h.at).toLocaleString()}</span>
-                    <Tag>{h.action}</Tag>
+                    <Tag color={h.action === 'Terminated' ? 'red' : undefined}>{h.action}</Tag>
                     {h.note ? <Paragraph style={{ margin: 0 }}>{h.note}</Paragraph> : null}
                   </Space>
                 </List.Item>
@@ -333,7 +350,8 @@ export default function EmployeeDetails({ record }) {
         </div>
       )}
 
-      <Modal title="Terminate internship" open={termOpen} onCancel={()=>{ setTermOpen(false); }} onOk={terminateEmployment} okText="Terminate" okButtonProps={{ danger: true }}>
+      {/* D136: Add Termination Remark Add button before submit */}
+      <Modal title="Terminate internship" open={termOpen} onCancel={()=>{ setTermOpen(false); termForm.resetFields(); }} onOk={terminateEmployment} okText="Submit Termination" okButtonProps={{ danger: true }}>
         <Form layout="vertical" form={termForm}>
           <Form.Item label="Termination reason" name="reason" rules={[{ required: true, message: 'Please enter a reason' }]}>
             <Input.TextArea rows={3} placeholder="Reason for termination" />
@@ -341,8 +359,8 @@ export default function EmployeeDetails({ record }) {
           <Form.Item label="Proposed last working day" name="lastDay">
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item label="Remark (optional)" name="remark">
-            <Input.TextArea rows={3} placeholder="Remarks to keep in record" />
+          <Form.Item label="Termination Remark" name="remark" rules={[{ required: true, message: 'Please enter a termination remark' }]}>
+            <Input.TextArea rows={3} placeholder="Remarks to keep in record (required)" />
           </Form.Item>
         </Form>
       </Modal>

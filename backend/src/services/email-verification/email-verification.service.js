@@ -29,6 +29,14 @@ class EmailVerificationService {
       throw err;
     }
 
+    // D120: Prevent duplicate emails - check if email was recently sent (within last 5 minutes)
+    const now = new Date();
+    const recentThreshold = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    if (user.emailVerificationExpires && new Date(user.emailVerificationExpires) > recentThreshold) {
+      // Email was recently sent, don't send another one
+      return { ok: true, message: 'Verification email was recently sent. Please check your inbox.' };
+    }
+
     // Generate a 6-digit OTP code and a fallback token (link)
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const token = crypto.randomBytes(24).toString('hex');

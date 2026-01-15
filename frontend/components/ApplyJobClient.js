@@ -39,6 +39,15 @@ export default function ApplyJobClient({ jobId }) {
           fetch(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
+        // D118: Check if email is verified before allowing application
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (!userData.isEmailVerified) {
+            setError('Please verify your email address before applying for jobs. Check your inbox for the verification email.');
+            return;
+          }
+        }
+
         if (!jobRes.ok) {
           throw new Error('Job not found or no longer available');
         }
@@ -339,15 +348,43 @@ export default function ApplyJobClient({ jobId }) {
           </Card>
         )}
 
-        {/* Warning if profile incomplete */}
-        {(!p.firstName || !p.lastName || !userEmail) && (
-          <Alert
-            message="Incomplete Profile"
-            description="Some personal information is missing. Consider updating your profile to improve your application."
-            type="warning"
-            showIcon
-          />
-        )}
+        {/* D144: Fix incomplete profile check - use same logic as calculateProfileScore */}
+        {(() => {
+          // Calculate profile score using same logic as ProfilePageInner
+          let score = 0;
+          const checks = [
+            { condition: p?.firstName && p?.lastName, points: 10 },
+            { condition: p?.phone, points: 5 },
+            { condition: p?.location?.city || p?.location?.state || p?.location?.country, points: 4 },
+            { condition: intern?.university, points: 8 },
+            { condition: intern?.major, points: 8 },
+            { condition: intern?.gpa, points: 5 },
+            { condition: intern?.graduationYear, points: 5 },
+            { condition: intern?.resume, points: 15 },
+            { condition: intern?.educations?.length > 0, points: 10 },
+            { condition: intern?.workExperiences?.length > 0, points: 8 },
+            { condition: intern?.skills?.length > 0, points: 8 },
+            { condition: intern?.languages?.length > 0, points: 5 },
+            { condition: intern?.certifications?.length > 0, points: 5 },
+            { condition: intern?.interests?.length > 0, points: 4 },
+            { condition: intern?.eventExperiences?.length > 0, points: 4 },
+            { condition: intern?.preferences?.industries?.length > 0, points: 4 },
+            { condition: intern?.preferences?.locations?.length > 0, points: 4 },
+          ];
+          checks.forEach(check => {
+            if (check.condition) score += check.points;
+          });
+          
+          // Only show incomplete message if score is less than 100
+          return score < 100 && (
+            <Alert
+              message="Incomplete Profile"
+              description="Some personal information is missing. Consider updating your profile to improve your application."
+              type="warning"
+              showIcon
+            />
+          );
+        })()}
       </Space>
     );
   }

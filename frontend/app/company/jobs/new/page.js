@@ -72,7 +72,42 @@ export default function NewJobListingPage() {
     }
   };
 
+  // D92: File upload validation
+  const validateFile = (file) => {
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      message.error(`${file.name} is too large. Maximum file size is 10MB.`);
+      return false;
+    }
+    
+    // Check file type - allow common document types
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
+      'image/jpeg',
+      'image/png'
+    ];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png'];
+    const fileExtension = file.name ? file.name.toLowerCase().substring(file.name.lastIndexOf('.')) : '';
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      message.error(`${file.name} has an invalid file type. Allowed types: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG`);
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleUpload = (setter, field) => async (file) => {
+    // D92: Validate file before upload
+    if (!validateFile(file)) {
+      return false;
+    }
     const meta = await uploadToServer(file, field);
     if (meta) setter((prev) => [...prev, meta]);
     return false;
@@ -259,18 +294,49 @@ export default function NewJobListingPage() {
             <Input.TextArea rows={6} />
           </Form.Item>
           <Space wrap>
-            <Form.Item name="city" label="City" rules={[{ required: true }]}>
-              <Input style={{ width: 200 }} />
+            <Form.Item 
+              name="city" 
+              label="City" 
+              rules={[
+                { required: true, message: 'City is required' },
+                { min: 2, message: 'City must be at least 2 characters' }
+              ]}
+            >
+              <Input style={{ width: 200 }} placeholder="e.g., Kuala Lumpur" />
             </Form.Item>
-            <Form.Item name="state" label="State" rules={[{ required: true }]}>
-              <Input style={{ width: 200 }} />
+            <Form.Item 
+              name="state" 
+              label="State" 
+              rules={[
+                { required: true, message: 'State is required' },
+                { min: 2, message: 'State must be at least 2 characters' }
+              ]}
+            >
+              <Input style={{ width: 200 }} placeholder="e.g., Selangor" />
             </Form.Item>
           </Space>
           <Space wrap>
-            <Form.Item name="salaryMin" label="Salary min" rules={[{ required: true }]}>
+            <Form.Item name="salaryMin" label="Salary min" rules={[{ required: true, type: 'number', min: 0 }]}>
               <InputNumber min={0} step={50} />
             </Form.Item>
-            <Form.Item name="salaryMax" label="Salary max" rules={[{ required: true }]}>
+            <Form.Item 
+              name="salaryMax" 
+              label="Salary max" 
+              rules={[
+                { required: true, type: 'number', min: 0 },
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const min = form.getFieldValue('salaryMin');
+                    // D94, D100: Validate max is greater than or equal to min
+                    if (min != null && value < min) {
+                      return Promise.reject(new Error('Salary max must be greater than or equal to salary min'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <InputNumber min={0} step={50} />
             </Form.Item>
             <Form.Item name="quantity" label="Quantity available" rules={[{ required: true }]}>
@@ -299,10 +365,48 @@ export default function NewJobListingPage() {
             <Input.TextArea rows={6} />
           </Form.Item>
           <Space wrap>
-            <Form.Item name="projectStart" label="Project start (optional)">
+            <Form.Item 
+              name="projectStart" 
+              label="Project start (optional)"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // D95: Validate start date is not in the past
+                    const startDate = value.startOf('month');
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (startDate.toDate() < today) {
+                      return Promise.reject(new Error('Project start date cannot be in the past'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <DatePicker picker="month" format="MM/YY" />
             </Form.Item>
-            <Form.Item name="projectEnd" label="Project end (optional)">
+            <Form.Item 
+              name="projectEnd" 
+              label="Project end (optional)"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const endDate = value.startOf('month');
+                    const projectStart = form.getFieldValue('projectStart');
+                    // D95: Validate end date is after start date
+                    if (projectStart) {
+                      const startDate = projectStart.startOf('month');
+                      if (endDate.toDate() <= startDate.toDate()) {
+                        return Promise.reject(new Error('Project end date must be after start date'));
+                      }
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
               <DatePicker picker="month" format="MM/YY" />
             </Form.Item>
           </Space>
