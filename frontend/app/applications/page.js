@@ -191,11 +191,13 @@ export default function MyApplicationsPage(){
     { title: 'Application date', dataIndex: 'createdAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Application status', dataIndex: 'status', render: (s, r) => {
       // D39: Show application status with proper color, and employment status for hired apps
+      // D138: Fix Terminated status in Hired tab - show employment status even if terminated
       const statusLabel = statusText(s);
       const statusColorMap = { 0: 'blue', 1: 'cyan', 2: 'purple', 3: 'gold', 4: 'green', 5: 'red', 6: 'default', 7: 'default' };
       const statusTag = <Tag color={statusColorMap[s]}>{statusLabel}</Tag>;
       
       // For hired applications (status 4), also show employment status if available
+      // D138: Even if employment is terminated (status 4), still show it in Hired tab with terminated status
       if (s === 4 && r.employmentStatus !== undefined) {
         const empStatusLabel = employmentStatusText(r.employmentStatus);
         const empColorMap = { 0: 'blue', 1: 'green', 2: 'orange', 3: 'default', 4: 'red' };
@@ -219,10 +221,12 @@ export default function MyApplicationsPage(){
       return '-';
     }},
     { title: 'Action', key: 'action', render: (_, r) => {
+      // D134: Disable withdraw button for hired status (status 4) - status closure should not be under Hired
       // For hired applications (status 4), check employment status
       // Don't allow withdraw if employment is in CLOSURE (2), COMPLETED (3), or TERMINATED (4)
       const isHiredWithAdvancedEmployment = r.status === 4 && r.employmentStatus >= 2;
-      const canWithdraw = [0,1,2,3,4].includes(r.status) && !isHiredWithAdvancedEmployment;
+      // D134: Disable withdraw for hired status (status 4) regardless of employment status
+      const canWithdraw = [0,1,2,3].includes(r.status) && !isHiredWithAdvancedEmployment;
       const canExtend = r.status === 0 && !r.extendedOnce;
 
       return (

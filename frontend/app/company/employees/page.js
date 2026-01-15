@@ -220,9 +220,17 @@ export default function CompanyEmployeesPage() {
       </Layout.Content>
       <Footer />
 
-      <Modal title="Reject request" open={rejectOpen} onCancel={()=>{ setRejectOpen(false); rejectForm.resetFields(); }} onOk={async()=>{
-        const v = await rejectForm.validateFields();
-        await takeAction(rejectTarget.kind, rejectTarget.id, false, v.remark);
+      {/* D137: Fix Reject status update - ensure load() is called after reject */}
+      <Modal title="Reject request" open={rejectOpen} onCancel={()=>{ setRejectOpen(false); rejectForm.resetFields(); setRejectTarget({ kind:null, id:null }); }} onOk={async()=>{
+        try {
+          const v = await rejectForm.validateFields();
+          await takeAction(rejectTarget.kind, rejectTarget.id, false, v.remark);
+          // D137: Ensure status is refreshed after reject
+          await load();
+        } catch (e) {
+          if (e?.errorFields) return;
+          message.error(e.message || 'Failed to reject');
+        }
       }} okButtonProps={{ danger:true }} okText="Reject">
         <Form form={rejectForm} layout="vertical">
           <Form.Item label="Rejection remark" name="remark" rules={[{ required: true, message: 'Please enter a remark' }]}>

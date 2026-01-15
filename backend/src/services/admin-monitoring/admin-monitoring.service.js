@@ -98,7 +98,18 @@ class AdminMonitoringService {
       }
       const total = await JobModel.countDocuments(criteria);
       const data = await JobModel.find(criteria).sort({ submittedAt: -1 }).skip($skip).limit($limit).lean();
-      return { total, data };
+      // D131: Populate company name for monitoring display
+      const populatedData = await Promise.all(data.map(async (job) => {
+        if (job.companyId) {
+          const company = await CompanyModel.findById(job.companyId).select('name').lean();
+          if (company) {
+            job.company = { name: company.name };
+            job.companyName = company.name;
+          }
+        }
+        return job;
+      }));
+      return { total, data: populatedData };
     }
 
     if (type === 'pending_final_approval') {
@@ -125,7 +136,18 @@ class AdminMonitoringService {
       }
       const total = await JobModel.countDocuments(criteria);
       const data = await JobModel.find(criteria).sort({ submittedAt: -1 }).skip($skip).limit($limit).lean();
-      return { total, data };
+      // D131: Populate company name for monitoring display
+      const populatedData = await Promise.all(data.map(async (job) => {
+        if (job.companyId) {
+          const company = await CompanyModel.findById(job.companyId).select('name').lean();
+          if (company) {
+            job.company = { name: company.name };
+            job.companyName = company.name;
+          }
+        }
+        return job;
+      }));
+      return { total, data: populatedData };
     }
 
     if (type === 'pending_companies') {

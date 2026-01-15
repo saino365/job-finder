@@ -284,7 +284,8 @@ export default function ApplicationDetailPage({ params }) {
                 {/* D107: Show reject button for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, and PENDING_ACCEPTANCE */}
                 {canReject && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
                 {canSendOffer && <Button type="primary" onClick={() => setOfferOpen(true)}>Send Offer</Button>}
-                {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Reject Offered Position</Button>}
+                {/* D126: Change button label from "Reject Offered Position" to "Decline Offer" */}
+                {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Decline Offer</Button>}
                 {isAccepted && <Tag color="green">Offer Accepted - Hired</Tag>}
                 <Button onClick={load}>Refresh</Button>
               </Space>
@@ -473,32 +474,32 @@ export default function ApplicationDetailPage({ params }) {
         </Typography.Paragraph>
       </Modal>
 
-      {/* D125: Fix reject offer button functionality */}
-      <Modal title="Reject Offered Position" open={rejectOfferedOpen} onCancel={()=>setRejectOfferedOpen(false)}
+      {/* D126: Change "Reject" to "Decline Offer" button */}
+      <Modal title="Decline Offer" open={rejectOfferedOpen} onCancel={()=>setRejectOfferedOpen(false)}
         onOk={async ()=>{
           try {
             await new Promise((resolve, reject) => {
               Modal.confirm({ 
-                title: 'Confirm rejection of offered position?', 
-                content: 'Are you sure you want to reject this offer? This action cannot be undone.',
-                okText: 'Reject', 
+                title: 'Confirm declining this offer?', 
+                content: 'Are you sure you want to decline this offer? This action cannot be undone.',
+                okText: 'Decline Offer', 
                 okButtonProps:{ danger:true }, 
                 onOk: resolve, 
                 onCancel: () => reject(new Error('cancel')) 
               });
             });
             await patchAction({ action: 'reject', reason: 'Rejected while pending acceptance' });
-            message.success('Offered position rejected');
+            message.success('Offer declined');
             setRejectOfferedOpen(false); 
             load();
           } catch (e) { 
             if (e.message !== 'cancel') {
-              message.error(e.message || 'Failed to reject offer');
+              message.error(e.message || 'Failed to decline offer');
             }
           }
-        }} okText="Reject" okButtonProps={{ danger: true }}>
+        }} okText="Decline Offer" okButtonProps={{ danger: true }}>
         <Typography.Paragraph>
-          This will reject the application currently pending candidate acceptance.
+          This will decline the offer currently pending candidate acceptance.
         </Typography.Paragraph>
       </Modal>
     </Layout>
