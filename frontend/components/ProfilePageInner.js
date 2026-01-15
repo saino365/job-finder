@@ -1089,6 +1089,22 @@ function ProfilePageContent() {
   }, [getKeyFromUrl, message]);
 
   const onUploadResume = useCallback(async (file) => {
+    // Validate file type before upload (D105)
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/rtf'];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.rtf'];
+    const fileExtension = file.name ? file.name.toLowerCase().substring(file.name.lastIndexOf('.')) : '';
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      message.error('Resume must be a PDF, DOC, DOCX, or RTF file. Image files are not allowed.');
+      return false;
+    }
+    
+    // Check if it's an image file
+    if (file.type && file.type.startsWith('image/')) {
+      message.error('Image files are not allowed for resume. Please upload a PDF, DOC, DOCX, or RTF file.');
+      return false;
+    }
+    
     try {
       const token = localStorage.getItem('jf_token');
       const fd = new FormData();

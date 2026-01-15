@@ -791,6 +791,31 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                           ) : null}
                           <Upload
                             beforeUpload={async (file) => {
+                              // Validate certificate file type (D106)
+                              const invalidExtensions = ['.xsl', '.xlsm', '.xlsb']; // Excel stylesheet and macro files
+                              const fileExtension = file.name ? file.name.toLowerCase().substring(file.name.lastIndexOf('.')) : '';
+                              
+                              if (invalidExtensions.includes(fileExtension)) {
+                                message.error(`Invalid file type: ${fileExtension.toUpperCase()} files are not allowed for certificates. Please upload a PDF, image, Word document, or standard Excel file.`);
+                                return false;
+                              }
+                              
+                              // Check file type
+                              const allowedMimeTypes = [
+                                'application/pdf',
+                                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'application/vnd.ms-excel',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'text/plain'
+                              ];
+                              
+                              if (file.type && !allowedMimeTypes.includes(file.type)) {
+                                message.error(`Invalid file type: ${file.type}. Please upload a PDF, image, Word document, Excel file, or text file.`);
+                                return false;
+                              }
+                              
                               try {
                                 setUploadingCert({ ...uploadingCert, [name]: true });
                                 const token = localStorage.getItem('jf_token');
@@ -803,7 +828,10 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                                   body: fd
                                 });
 
-                                if (!res.ok) throw new Error('Upload failed');
+                                if (!res.ok) {
+                                  const errorData = await res.json().catch(() => ({}));
+                                  throw new Error(errorData.error || errorData.message || 'Upload failed');
+                                }
 
                                 const data = await res.json();
                                 // Use public URL instead of signedUrl (signedUrl expires after 1 hour)
