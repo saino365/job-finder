@@ -13,7 +13,7 @@
 html,
 body {
   max-width: 100vw;
-  overflow-x: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling on mobile (D35) */
 }
 
 body {
@@ -109,9 +109,13 @@ body.ant-scrolling-effect {
     margin: 0;
   }
 
-  /* Prevent horizontal overflow on mobile */
+  /* Prevent horizontal overflow on mobile (D35) */
   body {
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  html {
+    overflow-x: hidden !important;
   }
 
   /* Ensure all containers respect viewport width */

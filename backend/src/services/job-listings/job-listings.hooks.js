@@ -105,6 +105,7 @@ export default (app) => ({
 
           if (Object.keys(startDateQuery).length > 0) {
             // Include jobs that match the date range OR have no start date set (flexible/TBD)
+            // Check project.startDate field (D34: fix internship start date filter)
             const startDateOrConditions = [
               { 'project.startDate': startDateQuery },
               { 'project.startDate': { $exists: false } },
@@ -323,11 +324,17 @@ export default (app) => ({
         // Populate companies for all jobs
         jobs = await Promise.all(jobs.map(populateCompany));
 
-        // Filter by industry if specified
+        // Filter by industry if specified (D33: normalize "Technology" to "Information Technology")
         if (industryFilter && industryFilter.length > 0) {
           console.log('Job Backend: Applying industry filter after population:', { industryFilter });
           const beforeCount = jobs.length;
-          const lowerIndustryFilter = industryFilter.map(ind => ind.toLowerCase());
+          
+          // Normalize filter values: "Technology" -> "Information Technology"
+          const normalizedFilter = industryFilter.map(ind => {
+            const normalized = ind.toLowerCase().trim();
+            return normalized === 'technology' ? 'information technology' : normalized;
+          });
+          const lowerIndustryFilter = normalizedFilter.map(ind => ind.toLowerCase());
 
           jobs = jobs.filter(job => {
             if (!job.company) {
@@ -344,11 +351,19 @@ export default (app) => ({
               return true;
             }
 
-            const matches = lowerIndustryFilter.includes(job.company.industry.toLowerCase());
+            // Normalize company industry: "Technology" -> "Information Technology"
+            let companyIndustry = job.company.industry.toLowerCase().trim();
+            if (companyIndustry === 'technology') {
+              companyIndustry = 'information technology';
+            }
+
+            const matches = lowerIndustryFilter.includes(companyIndustry);
             console.log('Job Backend: Industry match check:', {
               jobId: job._id,
               companyIndustry: job.company.industry,
+              normalizedCompanyIndustry: companyIndustry,
               filterIndustries: industryFilter,
+              normalizedFilter,
               matches
             });
             return matches;

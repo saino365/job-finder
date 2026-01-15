@@ -45,6 +45,7 @@ export default function RecommendedJobs({ user }) {
         const data = await response.json();
         let jobsList = data.data || data || [];
 
+        // Filter by preferred start date (D26, D27)
         if (preferences?.preferredStartDate || preferences?.startDate) {
           const userStartDate = preferences.preferredStartDate || preferences.startDate;
           const userStart = new Date(userStartDate);
@@ -54,29 +55,39 @@ export default function RecommendedJobs({ user }) {
           twoMonthsAfter.setMonth(twoMonthsAfter.getMonth() + 2);
 
           jobsList = jobsList.filter(job => {
-            if (!job.project?.startDate) {
-              return true;
+            // Check both project.startDate and internshipStart
+            const jobStartDate = job.project?.startDate || job.internshipStart;
+            if (!jobStartDate) {
+              return true; // Include jobs without start date
             }
 
-            const jobStartDate = new Date(job.project.startDate);
-            const isWithinRange = jobStartDate >= twoMonthsBefore && jobStartDate <= twoMonthsAfter;
+            const start = new Date(jobStartDate);
+            const isWithinRange = start >= twoMonthsBefore && start <= twoMonthsAfter;
             return isWithinRange;
           });
         }
 
+        // Filter by salary range (D27) - fix for exact matches (min === max)
         if (preferences?.salaryRange) {
           const { min, max } = preferences.salaryRange;
 
           jobsList = jobsList.filter(job => {
-            if (!job.salaryRange || !job.salaryRange.min || !job.salaryRange.max) {
-              return true;
+            if (!job.salaryRange || job.salaryRange.min == null || job.salaryRange.max == null) {
+              return true; // Include jobs without salary range
             }
 
             const jobMin = job.salaryRange.min;
             const jobMax = job.salaryRange.max;
 
+            // Handle exact match case (e.g., RM 2000 - RM 2000)
             if (min != null && max != null) {
-              return jobMax >= min && jobMin <= max;
+              if (min === max) {
+                // Exact match: job range should include this exact value
+                return jobMin <= min && jobMax >= max;
+              } else {
+                // Range overlap: job's max >= filter min AND job's min <= filter max
+                return jobMax >= min && jobMin <= max;
+              }
             } else if (min != null) {
               return jobMax >= min;
             } else if (max != null) {
@@ -87,23 +98,30 @@ export default function RecommendedJobs({ user }) {
           });
         }
 
+        // Filter by preferred duration (D26)
         if (preferences?.preferredDuration) {
-          const preferredDuration = preferences.preferredDuration.toLowerCase();
+          const preferredDuration = String(preferences.preferredDuration).toLowerCase();
 
           jobsList = jobsList.filter(job => {
-            if (!job.project?.startDate || !job.project?.endDate) {
-              return true;
+            // Check both project dates and internship dates
+            const startDate = job.project?.startDate || job.internshipStart;
+            const endDate = job.project?.endDate || job.internshipEnd;
+            
+            if (!startDate || !endDate) {
+              return true; // Include jobs without duration info
             }
 
-            const startDate = new Date(job.project.startDate);
-            const endDate = new Date(job.project.endDate);
-            const durationMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const durationDays = Math.round((end - start) / (1000 * 60 * 60 * 24));
+            const durationMonths = Math.round(durationDays / 30);
 
+            // Extract number from preferred duration (e.g., "3 months", "6 months")
             const match = preferredDuration.match(/(\d+)/);
             if (!match) return true;
 
             const preferredMonths = parseInt(match[1]);
-
+            // Allow ±1 month tolerance for matching
             const matches = Math.abs(durationMonths - preferredMonths) <= 1;
 
             return matches;
