@@ -147,6 +147,14 @@ export default function ApplicationDetailPage({ params }) {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+  
+  // D76, D84: Auto-refresh every 15 seconds to sync status changes (e.g., when student accepts offer)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      load();
+    }, 15000); // Refresh every 15 seconds
+    return () => clearInterval(interval);
+  }, [load]);
 
   // Resolve offer letter signed URL when needed
   useEffect(() => {
@@ -163,10 +171,13 @@ export default function ApplicationDetailPage({ params }) {
     })();
   }, [data, letterUrl]);
 
+  // D78: Fix action button visibility based on status
   const canShortlist = data && data.status === 0; // NEW
-  const canRejectShortlisted = data && data.status === 1; // only when Shortlisted
-  const canSendOffer = data && data.status === 1; // only when Shortlisted
+  const canRejectShortlisted = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
+  const canSendOffer = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
+  const canRejectOffered = data && data.status === 3; // Pending Acceptance
   const isPendingAcceptance = data && data.status === 3;
+  const isAccepted = data && data.status === 4; // Accepted/Hired
 
   async function patchAction(body) {
     const token = localStorage.getItem('jf_token');
@@ -272,7 +283,8 @@ export default function ApplicationDetailPage({ params }) {
                 {canShortlist && <Button onClick={shortlist}>Shortlist</Button>}
                 {canRejectShortlisted && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
                 {canSendOffer && <Button type="primary" onClick={() => setOfferOpen(true)}>Send Offer</Button>}
-                {isPendingAcceptance && <Button danger onClick={() => setRejectOfferedOpen(true)}>Reject Offered Position</Button>}
+                {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Reject Offered Position</Button>}
+                {isAccepted && <Tag color="green">Offer Accepted - Hired</Tag>}
                 <Button onClick={load}>Refresh</Button>
               </Space>
             </div>

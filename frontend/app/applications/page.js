@@ -102,9 +102,12 @@ export default function MyApplicationsPage(){
         throw new Error(errorData.message || `Failed to extend validity: ${res.status}`);
       }
 
-      message.success(`Validity extended by ${days} day${days > 1 ? 's' : ''}`);
+      // D83: Show success notification and update display immediately
+      const updatedApp = await res.json();
+      message.success(`Validity extended by ${days} day${days > 1 ? 's' : ''}. New validity date: ${updatedApp.validityUntil ? new Date(updatedApp.validityUntil).toLocaleDateString() : 'N/A'}`);
       setExtendOpen(false);
-      // Don't reset form - keep the last value for next time
+      extendForm.resetFields();
+      // D84: Refresh list to show updated validity date
       await load();
     } catch (e) {
       if (e?.errorFields) return;
@@ -187,13 +190,23 @@ export default function MyApplicationsPage(){
     },
     { title: 'Application date', dataIndex: 'createdAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Application status', dataIndex: 'status', render: (s, r) => {
-      // For hired applications (status 4), show employment status if available
+      // D39: Show application status with proper color, and employment status for hired apps
+      const statusLabel = statusText(s);
+      const statusColorMap = { 0: 'blue', 1: 'cyan', 2: 'purple', 3: 'gold', 4: 'green', 5: 'red', 6: 'default', 7: 'default' };
+      const statusTag = <Tag color={statusColorMap[s]}>{statusLabel}</Tag>;
+      
+      // For hired applications (status 4), also show employment status if available
       if (s === 4 && r.employmentStatus !== undefined) {
         const empStatusLabel = employmentStatusText(r.employmentStatus);
-        const colorMap = { 0: 'blue', 1: 'green', 2: 'orange', 3: 'default', 4: 'red' };
-        return <Tag color={colorMap[r.employmentStatus]}>{empStatusLabel}</Tag>;
+        const empColorMap = { 0: 'blue', 1: 'green', 2: 'orange', 3: 'default', 4: 'red' };
+        return (
+          <Space direction="vertical" size="small">
+            {statusTag}
+            <Tag color={empColorMap[r.employmentStatus]}>{empStatusLabel}</Tag>
+          </Space>
+        );
       }
-      return <Tag>{statusText(s)}</Tag>;
+      return statusTag;
     } },
     { title: 'Validity', key: 'validity', render: (_, r) => r.validityUntil ? new Date(r.validityUntil).toLocaleDateString() : '-' },
     { title: 'Last Update', key: 'last', render: (_, r) => r.updatedAt ? new Date(r.updatedAt).toLocaleString() : (r.history?.length ? new Date(r.history[r.history.length-1].at).toLocaleString() : '-') },

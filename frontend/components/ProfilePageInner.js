@@ -55,12 +55,14 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
     }
   };
 
-  // Calculate profile completion score
+  // Calculate profile completion score (D80, D81: Include location, interests, events)
   const calculateProfileScore = () => {
     let score = 0;
     const checks = [
       { condition: user?.profile?.firstName && user?.profile?.lastName, points: 10 },
       { condition: user?.profile?.phone, points: 5 },
+      // D80: Include location in completeness check
+      { condition: user?.profile?.location?.city || user?.profile?.location?.state || user?.profile?.location?.country, points: 4 },
       { condition: user?.internProfile?.university, points: 8 },
       { condition: user?.internProfile?.major, points: 8 },
       { condition: user?.internProfile?.gpa, points: 5 },
@@ -71,6 +73,9 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
       { condition: user?.internProfile?.skills?.length > 0, points: 8 },
       { condition: user?.internProfile?.languages?.length > 0, points: 5 },
       { condition: user?.internProfile?.certifications?.length > 0, points: 5 },
+      // D81: Include interests and events in completeness check
+      { condition: user?.internProfile?.interests?.length > 0, points: 4 },
+      { condition: user?.internProfile?.eventExperiences?.length > 0, points: 4 },
       { condition: user?.internProfile?.preferences?.industries?.length > 0, points: 4 },
       { condition: user?.internProfile?.preferences?.locations?.length > 0, points: 4 },
     ];
@@ -124,6 +129,17 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
     }
     if (!user?.internProfile?.preferences?.locations || user.internProfile.preferences.locations.length === 0) {
       actions.push({ label: 'Set Location Preferences', section: 'internship', points: 4 });
+    }
+    // D80: Add location field to pending actions
+    if (!user?.profile?.location?.city && !user?.profile?.location?.state && !user?.profile?.location?.country) {
+      actions.push({ label: 'Add Location', section: 'personal', points: 4 });
+    }
+    // D81: Add interests and events to pending actions
+    if (!user?.internProfile?.interests || user.internProfile.interests.length === 0) {
+      actions.push({ label: 'Add Interests', section: 'interests', points: 4 });
+    }
+    if (!user?.internProfile?.eventExperiences || user.internProfile.eventExperiences.length === 0) {
+      actions.push({ label: 'Add Event Experience', section: 'events', points: 4 });
     }
 
     return actions;
@@ -230,6 +246,17 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <PhoneOutlined />
                   <Text>{user.profile.phone}</Text>
+                </div>
+              )}
+              {/* D80: Display location if available */}
+              {(user?.profile?.location?.city || user?.profile?.location?.state || user?.profile?.location?.country) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <EnvironmentOutlined />
+                  <Text>
+                    {[user.profile.location.city, user.profile.location.state, user.profile.location.country]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
                 </div>
               )}
               {user?.email && (
