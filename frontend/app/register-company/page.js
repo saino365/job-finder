@@ -112,13 +112,33 @@ export default function RegisterCompanyPage() {
               rules={[
                 { required: true },
                 {
-                  validator: (_, value) => {
+                  validator: async (_, value) => {
                     if (!value) return Promise.resolve();
+                    
+                    // If it's an email, skip username validation (email validation will handle it)
+                    if (value.includes('@')) {
+                      return Promise.resolve();
+                    }
+                    
                     // Count alphabetic characters (A-Z, a-z)
                     const alphabeticCount = (value.match(/[A-Za-z]/g) || []).length;
                     if (alphabeticCount < 3) {
                       return Promise.reject(new Error('Username must contain at least 3 alphabetic characters'));
                     }
+                    
+                    // Check if username already exists (D12: async validation)
+                    try {
+                      const checkRes = await fetch(`${API_BASE_URL}/users?username=${encodeURIComponent(value)}&$limit=1`);
+                      if (checkRes.ok) {
+                        const data = await checkRes.json();
+                        if (data.data && data.data.length > 0) {
+                          return Promise.reject(new Error('This username is already registered. Please use a different username.'));
+                        }
+                      }
+                    } catch (e) {
+                      // If check fails, allow submission (backend will catch duplicate)
+                    }
+                    
                     return Promise.resolve();
                   }
                 }
@@ -129,7 +149,33 @@ export default function RegisterCompanyPage() {
           <Form.Item name="password" label="Password" rules={[{ required: true, min: 6 }]}>
             <Input.Password placeholder="Minimum 6 characters" />
           </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Please enter a valid email (required if username is not an email)' }]}>
+          <Form.Item 
+            name="email" 
+            label="Email" 
+            rules={[
+              { required: true, type: 'email', message: 'Please enter a valid email (required if username is not an email)' },
+              {
+                validator: async (_, value) => {
+                  if (!value) return Promise.resolve();
+                  
+                  // Check if email already exists (D12: async validation)
+                  try {
+                    const checkRes = await fetch(`${API_BASE_URL}/users?email=${encodeURIComponent(value)}&$limit=1`);
+                    if (checkRes.ok) {
+                      const data = await checkRes.json();
+                      if (data.data && data.data.length > 0) {
+                        return Promise.reject(new Error('This email address is already registered. Please use a different email address.'));
+                      }
+                    }
+                  } catch (e) {
+                    // If check fails, allow submission (backend will catch duplicate)
+                  }
+                  
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          >
             <Input placeholder="name@company.com" />
           </Form.Item>
           <Form.Item>
