@@ -627,11 +627,12 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                     <FileTextOutlined />
                     <Text strong>{user.internProfile.resumeOriginalName || getFilenameFromUrl(user.internProfile.resume)}</Text>
                   </div>
+                  {/* D145: Pass original filename to download function */}
                   <Button
                     type="primary"
                     icon={<DownloadOutlined />}
                     size="small"
-                    onClick={() => viewFile(user.internProfile.resume)}
+                    onClick={() => viewFile(user.internProfile.resume, user.internProfile.resumeOriginalName)}
                   >
                     Download
                   </Button>
@@ -801,6 +802,7 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                           {cert.issuer}
                         </Text>
                       )}
+                      {/* D151: Certification date display - show only month and year for consistency */}
                       {cert.acquiredDate && (
                         <Text type="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14 }}>
                           Issued {new Date(cert.acquiredDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
@@ -1099,8 +1101,8 @@ function ProfilePageContent() {
     }
   }, []);
 
-  // Download file using backend signed URL
-  const viewFile = useCallback(async (url) => {
+  // D145: Download file using backend signed URL with original filename
+  const viewFile = useCallback(async (url, originalName = null) => {
     try {
       const key = getKeyFromUrl(url);
       if (!key) {
@@ -1111,7 +1113,20 @@ function ProfilePageContent() {
       const r = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(key)}`, { headers: { Authorization: `Bearer ${token}` } });
       const j = await r.json();
       const signedUrl = j.signedUrl || j.publicUrl;
-      if (signedUrl) window.open(signedUrl, '_blank'); else message.error('Failed to resolve file');
+      if (signedUrl) {
+        // D145: Create a download link with original filename
+        const link = document.createElement('a');
+        link.href = signedUrl;
+        if (originalName) {
+          link.download = originalName;
+        }
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        message.error('Failed to resolve file');
+      }
     } catch (e) { message.error(e.message || 'Failed to open file'); }
   }, [getKeyFromUrl, message]);
 

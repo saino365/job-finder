@@ -31,11 +31,12 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
       }));
 
       // Format work experiences with dates and ongoing status
+      // D152: Fix Ongoing checkbox persistence - properly set ongoing from endDate
       const workExperiences = (user?.internProfile?.workExperiences || []).map(exp => ({
         ...exp,
         startDate: formatDateForInput(exp.startDate),
         endDate: formatDateForInput(exp.endDate),
-        ongoing: !exp.endDate // If no end date, it's ongoing
+        ongoing: !exp.endDate || exp.ongoing === true // If no end date or explicitly set, it's ongoing
       }));
 
       // Format event experiences with dates
@@ -46,10 +47,20 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
       }));
 
       // Format certifications with dates
-      const certifications = (user?.internProfile?.certifications || []).map(cert => ({
-        ...cert,
-        acquiredDate: formatDateForInput(cert.acquiredDate)
-      }));
+      // D150: Ensure issuer is not a year - if it's a 4-digit number, it might be incorrectly set
+      const certifications = (user?.internProfile?.certifications || []).map(cert => {
+        // D150: Check if issuer is just a year and clear it if so
+        let issuer = cert.issuer;
+        if (issuer && /^\d{4}$/.test(String(issuer).trim())) {
+          // If issuer is just a year, it's likely incorrect - clear it
+          issuer = '';
+        }
+        return {
+          ...cert,
+          issuer: issuer,
+          acquiredDate: formatDateForInput(cert.acquiredDate)
+        };
+      });
 
       form.setFieldsValue({
         firstName: user?.profile?.firstName,
@@ -105,7 +116,8 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
           'profile.location.country': values.country,
           'internProfile.university': values.university,
           'internProfile.major': values.major,
-          'internProfile.gpa': values.gpa != null ? Number(values.gpa) : undefined,
+          // D141, D143: Clear GPA if empty (set to null instead of undefined to properly clear the field)
+          'internProfile.gpa': values.gpa != null && values.gpa !== '' ? Number(values.gpa) : null,
           'internProfile.graduationYear': values.graduationYear != null ? Number(values.graduationYear) : undefined,
         };
       } else if (section === 'preferences') {
@@ -536,6 +548,7 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       >
                         <Input type="date" placeholder="Start Date" />
                       </Form.Item>
+                      {/* D153: Education End Date validation - should only allow future dates from start date */}
                       <Form.Item
                         {...restField}
                         name={[name, 'endDate']}
@@ -544,6 +557,36 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                           {
                             required: !isOngoing,
                             message: 'Please select end date or mark as ongoing'
+                          },
+                          {
+                            validator: (_, value) => {
+                              if (isOngoing) return Promise.resolve();
+                              if (!value) return Promise.resolve();
+                              
+                              const eduValues = form.getFieldValue(['educations', name]);
+                              const endDate = new Date(value);
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              
+                              // D153: End date should only allow future dates from start date
+                              if (eduValues?.startDate) {
+                                const startDate = new Date(eduValues.startDate);
+                                startDate.setHours(0, 0, 0, 0);
+                                if (endDate < startDate) {
+                                  return Promise.reject(new Error('End date must be after start date'));
+                                }
+                                // Allow future dates from start date
+                                if (endDate < today) {
+                                  return Promise.reject(new Error('End date must be a future date'));
+                                }
+                              } else {
+                                // If no start date, end date must be in the future
+                                if (endDate < today) {
+                                  return Promise.reject(new Error('End date must be a future date'));
+                                }
+                              }
+                              return Promise.resolve();
+                            }
                           }
                         ]}
                       >
@@ -557,10 +600,14 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       <Form.Item {...restField} name={[name, 'ongoing']} valuePropName="checked">
                         <Checkbox
                           onChange={(e) => {
-                            const educations = form.getFieldValue('educations');
+                            const educations = form.getFieldValue('educations') || [];
+                            if (!educations[name]) educations[name] = {};
                             if (e.target.checked) {
                               // Clear end date when ongoing is checked
                               educations[name].endDate = null;
+                              educations[name].ongoing = true;
+                            } else {
+                              educations[name].ongoing = false;
                             }
                             // Update form to trigger re-render
                             form.setFieldsValue({ educations });
@@ -644,7 +691,28 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       <Form.Item {...restField} name={[name, 'startDate']} label="Start Date">
                         <Input type="date" placeholder="Start Date" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'endDate']} label="End Date">
+                      <Form.Item 
+                        {...restField} 
+                        name={[name, 'endDate']} 
+                        label="End Date"
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              if (isOngoing) return Promise.resolve();
+                              if (!value) return Promise.resolve();
+                              const workExpValues = form.getFieldValue(['workExperiences', name]);
+                              if (workExpValues?.startDate) {
+                                const startDate = new Date(workExpValues.startDate);
+                                const endDate = new Date(value);
+                                if (endDate < startDate) {
+                                  return Promise.reject(new Error('End date must be after start date'));
+                                }
+                              }
+                              return Promise.resolve();
+                            }
+                          }
+                        ]}
+                      >
                         <Input
                           type="date"
                           placeholder="End Date"
@@ -652,13 +720,18 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                           value={isOngoing ? '' : undefined}
                         />
                       </Form.Item>
+                      {/* D152: Fix Ongoing checkbox persistence - ensure it's properly set from data */}
                       <Form.Item {...restField} name={[name, 'ongoing']} valuePropName="checked">
                         <Checkbox
                           onChange={(e) => {
-                            const workExps = form.getFieldValue('workExperiences');
+                            const workExps = form.getFieldValue('workExperiences') || [];
+                            if (!workExps[name]) workExps[name] = {};
                             if (e.target.checked) {
                               // Clear end date when ongoing is checked
                               workExps[name].endDate = null;
+                              workExps[name].ongoing = true;
+                            } else {
+                              workExps[name].ongoing = false;
                             }
                             // Update form to trigger re-render
                             form.setFieldsValue({ workExperiences: workExps });
@@ -698,8 +771,26 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                       <Form.Item {...restField} name={[name, 'title']} label="Title">
                         <Input placeholder="Certification Title" />
                       </Form.Item>
-                      <Form.Item {...restField} name={[name, 'issuer']} label="Issuer">
-                        <Input placeholder="Issuing Organization" />
+                      {/* D150: Ensure issuer field is not populated with year - add validation */}
+                      <Form.Item 
+                        {...restField} 
+                        name={[name, 'issuer']} 
+                        label="Issuer"
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              if (!value) return Promise.resolve();
+                              // D150: Prevent issuer from being just a year (4 digits)
+                              const yearRegex = /^\d{4}$/;
+                              if (yearRegex.test(value)) {
+                                return Promise.reject(new Error('Issuer must be the organization name, not just a year'));
+                              }
+                              return Promise.resolve();
+                            }
+                          }
+                        ]}
+                      >
+                        <Input placeholder="Issuing Organization (e.g., Coursera, Microsoft)" />
                       </Form.Item>
                       <Form.Item
                         {...restField}
@@ -939,35 +1030,36 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                     >
                       <Input type="date" />
                     </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'endDate']}
-                      label="End Date"
-                      rules={[
-                        {
-                          validator: (_, value) => {
-                            if (!value) return Promise.resolve();
-                            const selectedDate = new Date(value);
-                            const today = new Date();
-                            today.setHours(23, 59, 59, 999);
-                            if (selectedDate > today) {
-                              return Promise.reject(new Error('Event end date must not be set in the future'));
-                            }
-
-                            const eventValues = form.getFieldValue(['eventExperiences', name]);
-                            if (eventValues?.startDate) {
-                              const startDate = new Date(eventValues.startDate);
-                              if (selectedDate < startDate) {
-                                return Promise.reject(new Error('End date must be after start date'));
+                      {/* D146: Event Experience already has date fields - they're present in the form */}
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'endDate']}
+                        label="End Date"
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              if (!value) return Promise.resolve();
+                              const selectedDate = new Date(value);
+                              const today = new Date();
+                              today.setHours(23, 59, 59, 999);
+                              if (selectedDate > today) {
+                                return Promise.reject(new Error('Event end date must not be set in the future'));
                               }
+
+                              const eventValues = form.getFieldValue(['eventExperiences', name]);
+                              if (eventValues?.startDate) {
+                                const startDate = new Date(eventValues.startDate);
+                                if (selectedDate < startDate) {
+                                  return Promise.reject(new Error('End date must be after start date'));
+                                }
+                              }
+                              return Promise.resolve();
                             }
-                            return Promise.resolve();
                           }
-                        }
-                      ]}
-                    >
-                      <Input type="date" />
-                    </Form.Item>
+                        ]}
+                      >
+                        <Input type="date" />
+                      </Form.Item>
                     <Form.Item {...restField} name={[name, 'description']} label="Description">
                       <TextArea rows={2} placeholder="Description" />
                     </Form.Item>
