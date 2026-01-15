@@ -153,6 +153,11 @@ export default (app) => {
     const user = ctx.params.user;
     if (user.role !== 'student') throw Object.assign(new Error('Only students can apply'), { code: 403 });
 
+    // D118: Check if email is verified before allowing application
+    if (!user.isEmailVerified) {
+      throw Object.assign(new Error('Please verify your email address before applying for jobs'), { code: 403 });
+    }
+
     const jobId = asObjectId(ctx.data.jobListingId);
     const job = await JobModel.findById(jobId).lean();
     if (!job) throw Object.assign(new Error('Job not found'), { code: 404 });

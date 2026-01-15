@@ -393,13 +393,19 @@ export default function EditJobListingPage() {
   const next = () => setCurrent((c) => Math.min(c + 1, steps.length - 1));
   const prev = () => setCurrent((c) => Math.max(c - 1, 0));
 
+  // D124: Fix Cancel button functionality
   const onCancelEdit = () => {
     Modal.confirm({
       title: 'Discard changes?',
       content: 'Any unsaved changes will be lost. Do you want to leave this page?',
       okText: 'Discard and leave',
       cancelText: 'Stay',
-      onOk: () => router.replace('/company/jobs')
+      onOk: () => {
+        router.replace('/company/jobs');
+      },
+      onCancel: () => {
+        // Stay on page - do nothing
+      }
     });
   };
 

@@ -39,6 +39,15 @@ export default function ApplyJobClient({ jobId }) {
           fetch(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
+        // D118: Check if email is verified before allowing application
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (!userData.isEmailVerified) {
+            setError('Please verify your email address before applying for jobs. Check your inbox for the verification email.');
+            return;
+          }
+        }
+
         if (!jobRes.ok) {
           throw new Error('Job not found or no longer available');
         }

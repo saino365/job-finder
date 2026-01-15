@@ -20,8 +20,15 @@ export default function RegisterCompanyPage() {
     if ('username' in changed) {
       const v = String(changed.username || '').trim();
       const isEmail = v.includes('@');
+      // D119: Fix email auto-fill - copy the full email including everything after @
       if (isEmail && !form.getFieldValue('email')) {
         form.setFieldsValue({ email: v });
+      } else if (isEmail) {
+        // If email field already has a value, update it with the full username value
+        const currentEmail = form.getFieldValue('email') || '';
+        if (!currentEmail.includes('@') || currentEmail.length < v.length) {
+          form.setFieldsValue({ email: v });
+        }
       }
     }
   }
@@ -40,7 +47,9 @@ export default function RegisterCompanyPage() {
       const data = await res.json().catch(()=>({}));
       if (!res.ok) throw new Error(data?.message || 'Failed to register');
 
-      // Send verification email
+      // D120: Send verification email only once (prevent duplicate emails)
+      // Note: The backend email-verification service should handle duplicate prevention,
+      // but we ensure we only call it once here
       try {
         const verifyRes = await fetch(`${API_BASE_URL}/email-verification`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })

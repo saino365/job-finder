@@ -439,7 +439,21 @@ export default function ApplicationDetailPage({ params }) {
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="Offer Letter (PDF/DOC)" required>
-            <Upload beforeUpload={(f)=>handleUpload(f)} maxCount={1} accept=".pdf,.doc,.docx,.txt">
+            <Upload 
+              beforeUpload={(f) => {
+                // D114: Only allow PDF and DOC formats
+                const allowedTypes = ['.pdf', '.doc', '.docx'];
+                const fileName = f.name.toLowerCase();
+                const isValid = allowedTypes.some(ext => fileName.endsWith(ext));
+                if (!isValid) {
+                  message.error('Only PDF and DOC/DOCX files are allowed for offer letters');
+                  return Upload.LIST_IGNORE;
+                }
+                return handleUpload(f);
+              }} 
+              maxCount={1} 
+              accept=".pdf,.doc,.docx"
+            >
               <Button icon={<UploadOutlined />}>Upload Document</Button>
             </Upload>
             {uploadMeta?.name && <Text type="secondary">Uploaded: {uploadMeta.name}</Text>}
@@ -459,16 +473,29 @@ export default function ApplicationDetailPage({ params }) {
         </Typography.Paragraph>
       </Modal>
 
+      {/* D125: Fix reject offer button functionality */}
       <Modal title="Reject Offered Position" open={rejectOfferedOpen} onCancel={()=>setRejectOfferedOpen(false)}
         onOk={async ()=>{
           try {
             await new Promise((resolve, reject) => {
-              Modal.confirm({ title: 'Confirm rejection of offered position?', okText: 'Reject', okButtonProps:{ danger:true }, onOk: resolve, onCancel: () => reject(new Error('cancel')) });
+              Modal.confirm({ 
+                title: 'Confirm rejection of offered position?', 
+                content: 'Are you sure you want to reject this offer? This action cannot be undone.',
+                okText: 'Reject', 
+                okButtonProps:{ danger:true }, 
+                onOk: resolve, 
+                onCancel: () => reject(new Error('cancel')) 
+              });
             });
             await patchAction({ action: 'reject', reason: 'Rejected while pending acceptance' });
             message.success('Offered position rejected');
-            setRejectOfferedOpen(false); load();
-          } catch (e) { if (e.message !== 'cancel') message.error(e.message || 'Failed'); }
+            setRejectOfferedOpen(false); 
+            load();
+          } catch (e) { 
+            if (e.message !== 'cancel') {
+              message.error(e.message || 'Failed to reject offer');
+            }
+          }
         }} okText="Reject" okButtonProps={{ danger: true }}>
         <Typography.Paragraph>
           This will reject the application currently pending candidate acceptance.

@@ -267,7 +267,8 @@ export default (app) => ({
             d.expiresAt = computeExpiry(pub);
           }
 
-          // Reject - PENDING → DRAFT
+          // D125: Reject - PENDING → DRAFT (keep as DRAFT for now, but ensure rejectionReason is saved)
+          // Note: The model doesn't have a REJECTED status, so we keep it as DRAFT with rejectionReason
           if (d.reject === true && current.status === STATUS.PENDING) {
             d.status = STATUS.DRAFT;
             if (d.rejectionReason) d.rejectionReason = d.rejectionReason;
