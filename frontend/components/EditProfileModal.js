@@ -337,10 +337,10 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    // Only allow digits and plus sign
-                    const phoneRegex = /^[0-9+]+$/;
+                    // Only allow digits and plus sign at the beginning
+                    const phoneRegex = /^\+?[0-9]+$/;
                     if (!phoneRegex.test(value)) {
-                      return Promise.reject(new Error('Phone number can only contain digits (0-9) and plus sign (+)'));
+                      return Promise.reject(new Error('Phone number can only contain digits (0-9) and optionally a plus sign (+) at the beginning'));
                     }
                     // Plus sign can only be at the beginning
                     if (value.includes('+') && !value.startsWith('+')) {
@@ -350,15 +350,14 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                     if ((value.match(/\+/g) || []).length > 1) {
                       return Promise.reject(new Error('Only one plus sign (+) is allowed'));
                     }
+                    // Must have at least one digit
+                    if (!/[0-9]/.test(value)) {
+                      return Promise.reject(new Error('Phone number must contain at least one digit'));
+                    }
                     return Promise.resolve();
                   }
                 }
               ]}
-              normalize={(value) => {
-                // Remove any characters that are not digits or plus sign
-                if (!value) return value;
-                return value.replace(/[^0-9+]/g, '');
-              }}
             >
               <Input placeholder="e.g., +60123456789" />
             </Form.Item>
