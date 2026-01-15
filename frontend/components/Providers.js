@@ -48,6 +48,8 @@ export default function Providers({ children }) {
                 <CompanyStatusGate />
               </div>
             )}
+            {/* D109: Session management for browser close */}
+            <SessionManager />
             {children}
           </ThemeContext.Provider>
         </QueryClientProvider>

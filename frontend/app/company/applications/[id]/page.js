@@ -171,9 +171,9 @@ export default function ApplicationDetailPage({ params }) {
     })();
   }, [data, letterUrl]);
 
-  // D78: Fix action button visibility based on status
+  // D78, D107: Fix action button visibility based on status
   const canShortlist = data && data.status === 0; // NEW
-  const canRejectShortlisted = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
+  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2 || data.status === 3); // D107: Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, PENDING_ACCEPTANCE
   const canSendOffer = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
   const canRejectOffered = data && data.status === 3; // Pending Acceptance
   const isPendingAcceptance = data && data.status === 3;
@@ -281,7 +281,8 @@ export default function ApplicationDetailPage({ params }) {
               <Title level={3} style={{ margin: 0 }}>Application Details</Title>
               <Space>
                 {canShortlist && <Button onClick={shortlist}>Shortlist</Button>}
-                {canRejectShortlisted && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
+                {/* D107: Show reject button for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, and PENDING_ACCEPTANCE */}
+                {canReject && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
                 {canSendOffer && <Button type="primary" onClick={() => setOfferOpen(true)}>Send Offer</Button>}
                 {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Reject Offered Position</Button>}
                 {isAccepted && <Tag color="green">Offer Accepted - Hired</Tag>}
@@ -417,6 +418,7 @@ export default function ApplicationDetailPage({ params }) {
       </Layout.Content>
       <Footer />
 
+      {/* D107: Reject button modal with reason validation */}
       <Modal title="Reject Application" open={rejectOpen} onCancel={()=>setRejectOpen(false)} onOk={submitReject} okText="Reject" okButtonProps={{ danger: true }}>
         <Form form={rejectForm} layout="vertical">
           <Form.Item label="Reason" name="reason" rules={[{ required: true, message: 'Please provide a rejection reason' }]}>
