@@ -111,6 +111,23 @@ export default function CompanySetupPage() {
     const token = localStorage.getItem('jf_token');
     if (!token) { message.error('Please sign in'); return; }
 
+    // D117: Check if email is verified before allowing company information submission
+    try {
+      const userRes = await fetch(`${API_BASE_URL}/users/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        if (!userData.isEmailVerified) {
+          message.error('Please verify your email address before submitting company information. Check your inbox for the verification email.');
+          return;
+        }
+      }
+    } catch (e) {
+      message.error('Failed to verify email status. Please try again.');
+      return;
+    }
+
     const { name, registrationNumber, phone } = values;
 
     try {

@@ -147,6 +147,14 @@ export default function ApplicationDetailPage({ params }) {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+  
+  // D76, D84: Auto-refresh every 15 seconds to sync status changes (e.g., when student accepts offer)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      load();
+    }, 15000); // Refresh every 15 seconds
+    return () => clearInterval(interval);
+  }, [load]);
 
   // Resolve offer letter signed URL when needed
   useEffect(() => {
@@ -163,10 +171,13 @@ export default function ApplicationDetailPage({ params }) {
     })();
   }, [data, letterUrl]);
 
+  // D78, D107: Fix action button visibility based on status
   const canShortlist = data && data.status === 0; // NEW
-  const canRejectShortlisted = data && data.status === 1; // only when Shortlisted
-  const canSendOffer = data && data.status === 1; // only when Shortlisted
+  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2 || data.status === 3); // D107: Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, PENDING_ACCEPTANCE
+  const canSendOffer = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
+  const canRejectOffered = data && data.status === 3; // Pending Acceptance
   const isPendingAcceptance = data && data.status === 3;
+  const isAccepted = data && data.status === 4; // Accepted/Hired
 
   async function patchAction(body) {
     const token = localStorage.getItem('jf_token');
@@ -270,9 +281,12 @@ export default function ApplicationDetailPage({ params }) {
               <Title level={3} style={{ margin: 0 }}>Application Details</Title>
               <Space>
                 {canShortlist && <Button onClick={shortlist}>Shortlist</Button>}
-                {canRejectShortlisted && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
+                {/* D107: Show reject button for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, and PENDING_ACCEPTANCE */}
+                {canReject && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
                 {canSendOffer && <Button type="primary" onClick={() => setOfferOpen(true)}>Send Offer</Button>}
-                {isPendingAcceptance && <Button danger onClick={() => setRejectOfferedOpen(true)}>Reject Offered Position</Button>}
+                {/* D126: Change button label from "Reject Offered Position" to "Decline Offer" */}
+                {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Decline Offer</Button>}
+                {isAccepted && <Tag color="green">Offer Accepted - Hired</Tag>}
                 <Button onClick={load}>Refresh</Button>
               </Space>
             </div>
@@ -405,6 +419,7 @@ export default function ApplicationDetailPage({ params }) {
       </Layout.Content>
       <Footer />
 
+      {/* D107: Reject button modal with reason validation */}
       <Modal title="Reject Application" open={rejectOpen} onCancel={()=>setRejectOpen(false)} onOk={submitReject} okText="Reject" okButtonProps={{ danger: true }}>
         <Form form={rejectForm} layout="vertical">
           <Form.Item label="Reason" name="reason" rules={[{ required: true, message: 'Please provide a rejection reason' }]}>
@@ -425,7 +440,21 @@ export default function ApplicationDetailPage({ params }) {
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="Offer Letter (PDF/DOC)" required>
-            <Upload beforeUpload={(f)=>handleUpload(f)} maxCount={1} accept=".pdf,.doc,.docx,.txt">
+            <Upload 
+              beforeUpload={(f) => {
+                // D114: Only allow PDF and DOC formats
+                const allowedTypes = ['.pdf', '.doc', '.docx'];
+                const fileName = f.name.toLowerCase();
+                const isValid = allowedTypes.some(ext => fileName.endsWith(ext));
+                if (!isValid) {
+                  message.error('Only PDF and DOC/DOCX files are allowed for offer letters');
+                  return Upload.LIST_IGNORE;
+                }
+                return handleUpload(f);
+              }} 
+              maxCount={1} 
+              accept=".pdf,.doc,.docx"
+            >
               <Button icon={<UploadOutlined />}>Upload Document</Button>
             </Upload>
             {uploadMeta?.name && <Text type="secondary">Uploaded: {uploadMeta.name}</Text>}
@@ -445,19 +474,33 @@ export default function ApplicationDetailPage({ params }) {
         </Typography.Paragraph>
       </Modal>
 
-      <Modal title="Reject Offered Position" open={rejectOfferedOpen} onCancel={()=>setRejectOfferedOpen(false)}
+      {/* D126: Change "Reject" to "Decline Offer" button */}
+      <Modal title="Decline Offer" open={rejectOfferedOpen} onCancel={()=>setRejectOfferedOpen(false)}
         onOk={async ()=>{
           try {
             await new Promise((resolve, reject) => {
-              Modal.confirm({ title: 'Confirm rejection of offered position?', okText: 'Reject', okButtonProps:{ danger:true }, onOk: resolve, onCancel: () => reject(new Error('cancel')) });
+              Modal.confirm({ 
+                title: 'Confirm declining this offer?', 
+                content: 'Are you sure you want to decline this offer? This action cannot be undone.',
+                okText: 'Decline Offer', 
+                okButtonProps:{ danger:true }, 
+                onOk: resolve, 
+                onCancel: () => reject(new Error('cancel')) 
+              });
             });
-            await patchAction({ action: 'reject', reason: 'Rejected while pending acceptance' });
-            message.success('Offered position rejected');
-            setRejectOfferedOpen(false); load();
-          } catch (e) { if (e.message !== 'cancel') message.error(e.message || 'Failed'); }
-        }} okText="Reject" okButtonProps={{ danger: true }}>
+            // D165: Fix Reject button - use declineOffer action instead of reject
+            await patchAction({ action: 'declineOffer', reason: 'Rejected while pending acceptance' });
+            message.success('Offer declined');
+            setRejectOfferedOpen(false); 
+            load();
+          } catch (e) { 
+            if (e.message !== 'cancel') {
+              message.error(e.message || 'Failed to decline offer');
+            }
+          }
+        }} okText="Decline Offer" okButtonProps={{ danger: true }}>
         <Typography.Paragraph>
-          This will reject the application currently pending candidate acceptance.
+          This will decline the offer currently pending candidate acceptance.
         </Typography.Paragraph>
       </Modal>
     </Layout>

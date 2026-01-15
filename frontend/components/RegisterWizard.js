@@ -510,8 +510,30 @@ export default function RegisterWizard({ onStepChange }) {
             >
               <Input />
             </Form.Item>
-            <Form.Item name="icPassportNumber" label="IC / Passport number">
-              <Input />
+            {/* D142: Add validation to IC/Passport number - only allow alphanumeric characters */}
+            <Form.Item 
+              name="icPassportNumber" 
+              label="IC / Passport number"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Only allow alphanumeric characters (letters and numbers)
+                    const icPassportRegex = /^[A-Za-z0-9]+$/;
+                    if (!icPassportRegex.test(value)) {
+                      return Promise.reject(new Error('IC/Passport number can only contain letters (A-Z) and digits (0-9)'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+              normalize={(value) => {
+                // Remove any special characters, only keep alphanumeric
+                if (!value) return value;
+                return value.replace(/[^A-Za-z0-9]/g, '');
+              }}
+            >
+              <Input placeholder="e.g., A12345678 or 123456789012" />
             </Form.Item>
             <Form.Item
               name="phone"

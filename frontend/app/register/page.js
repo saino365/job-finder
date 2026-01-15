@@ -127,7 +127,13 @@ export default function RegisterPage() {
               minHeight: '100vh',
               overflowY: 'auto',
               padding: '24px',
+              '@media (max-width: 768px) and (orientation: landscape)': {
+                padding: '8px',
+                minHeight: 'auto',
+                maxHeight: '100vh'
+              }
             }}
+            className="register-form-container"
           >
             <div
               style={{

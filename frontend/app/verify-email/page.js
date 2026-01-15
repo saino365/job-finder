@@ -138,9 +138,14 @@ function VerifyInner() {
                     }
                   }}
                   href="#"
+                  style={{ cursor: 'pointer' }}
                 >
                   Click here to resend
                 </a>
+                {/* D116: Add link to change email or go back */}
+                {forCompany && (
+                  <span> or <a href="/register-company" style={{ cursor: 'pointer' }}>register with a different email</a></span>
+                )}
               </Typography.Paragraph>
             </Space>
           )}

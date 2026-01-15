@@ -34,9 +34,10 @@ export default function CompanyCard({ company }) {
     loadLogo();
   }, [company.logo, company.logoUrl, company.imageUrl, company.logoKey]);
 
+  {/* D149: Ensure consistent company card height */}
   return (
-    <Link href={`/companies/${company._id}`} style={{ display: 'block' }}>
-      <Card hoverable title={company.name}>
+    <Link href={`/companies/${company._id}`} style={{ display: 'block', height: '100%' }}>
+      <Card hoverable title={company.name} style={{ height: '100%', display: 'flex', flexDirection: 'column' }} styles={{ body: { flex: 1 } }}>
         <Space align="start" style={{ width: '100%' }}>
           <Avatar
             src={logoSignedUrl}

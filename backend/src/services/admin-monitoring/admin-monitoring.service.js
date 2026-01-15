@@ -98,7 +98,18 @@ class AdminMonitoringService {
       }
       const total = await JobModel.countDocuments(criteria);
       const data = await JobModel.find(criteria).sort({ submittedAt: -1 }).skip($skip).limit($limit).lean();
-      return { total, data };
+      // D131: Populate company name for monitoring display
+      const populatedData = await Promise.all(data.map(async (job) => {
+        if (job.companyId) {
+          const company = await CompanyModel.findById(job.companyId).select('name').lean();
+          if (company) {
+            job.company = { name: company.name };
+            job.companyName = company.name;
+          }
+        }
+        return job;
+      }));
+      return { total, data: populatedData };
     }
 
     if (type === 'pending_final_approval') {
@@ -125,15 +136,45 @@ class AdminMonitoringService {
       }
       const total = await JobModel.countDocuments(criteria);
       const data = await JobModel.find(criteria).sort({ submittedAt: -1 }).skip($skip).limit($limit).lean();
-      return { total, data };
+      // D131: Populate company name for monitoring display
+      const populatedData = await Promise.all(data.map(async (job) => {
+        if (job.companyId) {
+          const company = await CompanyModel.findById(job.companyId).select('name').lean();
+          if (company) {
+            job.company = { name: company.name };
+            job.companyName = company.name;
+          }
+        }
+        return job;
+      }));
+      return { total, data: populatedData };
     }
 
     if (type === 'pending_companies') {
       const CompanyModel = this.app.service('companies').Model;
-      const criteria = applyRange({ $or: [ { verifiedStatus: 0 }, { verifiedStatus: 'pending' }, { verifiedStatus: { $exists: false } } ] }, 'createdAt');
+      // D122: Fix pending companies query - include companies with verifiedStatus 0 (pending) or null/undefined
+      // Also check for companies that have submittedAt set (submitted for verification)
+      const criteria = applyRange({ 
+        $and: [
+          {
+            $or: [ 
+              { verifiedStatus: 0 }, 
+              { verifiedStatus: 'pending' }, 
+              { verifiedStatus: { $exists: false } },
+              { verifiedStatus: null }
+            ]
+          },
+          {
+            $or: [
+              { submittedAt: { $exists: true, $ne: null } },
+              { verifiedStatus: 0 }
+            ]
+          }
+        ]
+      }, 'submittedAt');
       if (rx) criteria.name = rx;
       const total = await CompanyModel.countDocuments(criteria);
-      const data = await CompanyModel.find(criteria).sort({ createdAt: -1 }).skip($skip).limit($limit).lean();
+      const data = await CompanyModel.find(criteria).sort({ submittedAt: -1, createdAt: -1 }).skip($skip).limit($limit).lean();
       return { total, data };
     }
 

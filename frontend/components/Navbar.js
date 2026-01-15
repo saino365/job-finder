@@ -18,7 +18,13 @@ export default function Navbar() {
   const [role, setRole] = useState('');
   const [notifs, setNotifs] = useState([]);
   const [notifTab, setNotifTab] = useState('direct');
+  const [mounted, setMounted] = useState(false);
   const unreadCount = Array.isArray(notifs) ? notifs.filter(n => !n.read).length : 0;
+  
+  // Fix hydration error: only render after mount to avoid SSR/client mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
 
   const NotificationsDropdownContent = dynamic(() => import('./NotificationsDropdownContent'), { ssr: false, loading: () => <div style={{ padding: 12 }}>Loading...</div> });
@@ -36,22 +42,41 @@ export default function Navbar() {
     }
   };
 
+  // D154: Fix Mark all as read - ensure notifications are properly marked as read
   const markAllAsRead = async (ids) => {
     try {
       const token = localStorage.getItem('jf_token');
       if (!Array.isArray(notifs)) return;
       const targets = Array.isArray(ids) && ids.length
         ? notifs.filter(n => ids.includes(n._id))
-        : notifs.filter(n => !n.isRead && n._id);
-      await Promise.all(targets.map(n => (
-        fetch(`${API_BASE_URL}/notifications/${n._id}` , {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ isRead: true })
-        })
-      )));
-      fetchNotifs();
-    } catch (_) {}
+        : notifs.filter(n => !n.isRead && !n.read && n._id); // Check both isRead and read
+      
+      if (targets.length === 0) return;
+      
+      // Mark all as read
+      const results = await Promise.all(targets.map(async (n) => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/notifications/${n._id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ isRead: true, read: true }) // Set both fields
+          });
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to mark as read');
+          }
+          return res.json();
+        } catch (e) {
+          console.error(`Failed to mark notification ${n._id} as read:`, e);
+          return null;
+        }
+      }));
+      
+      // Refresh notifications after marking as read
+      await fetchNotifs();
+    } catch (e) {
+      console.error('Mark all as read error:', e);
+    }
   };
 
   // Moved statusTag and heavy dropdown UI into dynamic NotificationsDropdownContent
@@ -184,13 +209,30 @@ export default function Navbar() {
     ]
   };
 
+  // Fix hydration error: return empty header during SSR, render full content after mount
+  if (!mounted) {
+    return (
+      <Layout.Header style={{ background: '#ffffff', borderBottom: '1px solid #e5e7eb', padding: '0 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', marginRight: 24 }}>
+            <Image src={logoSrc} alt="Job Finder" width={128} height={32} priority />
+          </Link>
+          <div style={{ flex: 1 }} /> {/* Placeholder for menu */}
+        </div>
+      </Layout.Header>
+    );
+  }
+
   return (
     <Layout.Header style={{ background: token.colorBgContainer, borderBottom: `1px solid ${token.colorBorder}`, padding: '0 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 1200, margin: '0 auto' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', marginRight: 24 }}>
           <Image src={logoSrc} alt="Job Finder" width={128} height={32} priority />
         </Link>
-        <Menu className="nav-menu" theme={theme === 'dark' ? 'dark' : 'light'} mode="horizontal" selectable={false} style={{ flex: 1, background: 'transparent' }} items={menuItems} />
+        {/* Fix hydration error: suppress hydration warning for Ant Design Menu component */}
+        <div suppressHydrationWarning>
+          <Menu className="nav-menu" theme={theme === 'dark' ? 'dark' : 'light'} mode="horizontal" selectable={false} style={{ flex: 1, background: 'transparent' }} items={menuItems} />
+        </div>
         <Space>
           {authed && (
             <Dropdown

@@ -55,12 +55,14 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
     }
   };
 
-  // Calculate profile completion score
+  // Calculate profile completion score (D80, D81: Include location, interests, events)
   const calculateProfileScore = () => {
     let score = 0;
     const checks = [
       { condition: user?.profile?.firstName && user?.profile?.lastName, points: 10 },
       { condition: user?.profile?.phone, points: 5 },
+      // D80: Include location in completeness check
+      { condition: user?.profile?.location?.city || user?.profile?.location?.state || user?.profile?.location?.country, points: 4 },
       { condition: user?.internProfile?.university, points: 8 },
       { condition: user?.internProfile?.major, points: 8 },
       { condition: user?.internProfile?.gpa, points: 5 },
@@ -71,6 +73,9 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
       { condition: user?.internProfile?.skills?.length > 0, points: 8 },
       { condition: user?.internProfile?.languages?.length > 0, points: 5 },
       { condition: user?.internProfile?.certifications?.length > 0, points: 5 },
+      // D81: Include interests and events in completeness check
+      { condition: user?.internProfile?.interests?.length > 0, points: 4 },
+      { condition: user?.internProfile?.eventExperiences?.length > 0, points: 4 },
       { condition: user?.internProfile?.preferences?.industries?.length > 0, points: 4 },
       { condition: user?.internProfile?.preferences?.locations?.length > 0, points: 4 },
     ];
@@ -124,6 +129,17 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
     }
     if (!user?.internProfile?.preferences?.locations || user.internProfile.preferences.locations.length === 0) {
       actions.push({ label: 'Set Location Preferences', section: 'internship', points: 4 });
+    }
+    // D80: Add location field to pending actions
+    if (!user?.profile?.location?.city && !user?.profile?.location?.state && !user?.profile?.location?.country) {
+      actions.push({ label: 'Add Location', section: 'personal', points: 4 });
+    }
+    // D81: Add interests and events to pending actions
+    if (!user?.internProfile?.interests || user.internProfile.interests.length === 0) {
+      actions.push({ label: 'Add Interests', section: 'interests', points: 4 });
+    }
+    if (!user?.internProfile?.eventExperiences || user.internProfile.eventExperiences.length === 0) {
+      actions.push({ label: 'Add Event Experience', section: 'events', points: 4 });
     }
 
     return actions;
@@ -230,6 +246,17 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <PhoneOutlined />
                   <Text>{user.profile.phone}</Text>
+                </div>
+              )}
+              {/* D80: Display location if available */}
+              {(user?.profile?.location?.city || user?.profile?.location?.state || user?.profile?.location?.country) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <EnvironmentOutlined />
+                  <Text>
+                    {[user.profile.location.city, user.profile.location.state, user.profile.location.country]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
                 </div>
               )}
               {user?.email && (
@@ -600,11 +627,12 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                     <FileTextOutlined />
                     <Text strong>{user.internProfile.resumeOriginalName || getFilenameFromUrl(user.internProfile.resume)}</Text>
                   </div>
+                  {/* D145: Pass original filename to download function */}
                   <Button
                     type="primary"
                     icon={<DownloadOutlined />}
                     size="small"
-                    onClick={() => viewFile(user.internProfile.resume)}
+                    onClick={() => viewFile(user.internProfile.resume, user.internProfile.resumeOriginalName)}
                   >
                     Download
                   </Button>
@@ -774,6 +802,7 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                           {cert.issuer}
                         </Text>
                       )}
+                      {/* D151: Certification date display - show only month and year for consistency */}
                       {cert.acquiredDate && (
                         <Text type="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14 }}>
                           Issued {new Date(cert.acquiredDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
@@ -920,12 +949,17 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                         </div>
                       )}
                     </div>
+                    {/* D162: Fix broken image - add error handling for thumbnail images */}
                     {interest.thumbnailUrl && (
                       <div style={{ flexShrink: 0 }}>
                         <img
                           src={interest.thumbnailUrl}
                           alt={interest.title}
                           style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                          onError={(e) => {
+                            // D162: Hide broken images instead of showing broken image icon
+                            e.target.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}
@@ -1072,8 +1106,8 @@ function ProfilePageContent() {
     }
   }, []);
 
-  // Download file using backend signed URL
-  const viewFile = useCallback(async (url) => {
+  // D145: Download file using backend signed URL with original filename
+  const viewFile = useCallback(async (url, originalName = null) => {
     try {
       const key = getKeyFromUrl(url);
       if (!key) {
@@ -1084,11 +1118,40 @@ function ProfilePageContent() {
       const r = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(key)}`, { headers: { Authorization: `Bearer ${token}` } });
       const j = await r.json();
       const signedUrl = j.signedUrl || j.publicUrl;
-      if (signedUrl) window.open(signedUrl, '_blank'); else message.error('Failed to resolve file');
+      if (signedUrl) {
+        // D145: Create a download link with original filename
+        const link = document.createElement('a');
+        link.href = signedUrl;
+        if (originalName) {
+          link.download = originalName;
+        }
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        message.error('Failed to resolve file');
+      }
     } catch (e) { message.error(e.message || 'Failed to open file'); }
   }, [getKeyFromUrl, message]);
 
   const onUploadResume = useCallback(async (file) => {
+    // Validate file type before upload (D105)
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/rtf'];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.rtf'];
+    const fileExtension = file.name ? file.name.toLowerCase().substring(file.name.lastIndexOf('.')) : '';
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      message.error('Resume must be a PDF, DOC, DOCX, or RTF file. Image files are not allowed.');
+      return false;
+    }
+    
+    // Check if it's an image file
+    if (file.type && file.type.startsWith('image/')) {
+      message.error('Image files are not allowed for resume. Please upload a PDF, DOC, DOCX, or RTF file.');
+      return false;
+    }
+    
     try {
       const token = localStorage.getItem('jf_token');
       const fd = new FormData();
