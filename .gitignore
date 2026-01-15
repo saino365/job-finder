@@ -156,3 +156,52 @@ ehthumbs.db
 
 # Linux files
 *~
+
+# Excel files - keep local only
+*.xlsx
+~*.xlsx
+JobFinder_TestCase.xlsx
+
+# Documentation files - keep local only (all .md and .html files)
+*.md
+*.html
+
+# Analysis and report files - keep local only
+*_analysis*.json
+*_report*.md
+*_summary*.md
+FIX_CHECKLIST.md
+excel_structure_report.md
+image_analysis_detailed.json
+image_analysis_summary.md
+AI_CONTEXT.md
+design-system.md
+FilterSystem.md
+
+# Test reports - keep local only
+jest-one.json
+jest-report.json
+
+# Python scripts - keep local only (except scripts/ directory)
+*.py
+!scripts/**/*.py
+!backend/scripts/**/*.py
+
+# Root level utility scripts - keep local only
+analyze_*.py
+batch_*.py
+create_*.py
+extract_*.py
+get_*.py
+read_*.py
+screenshot_*.py
+show_*.py
+update_*.py
+
+# JavaScript utility files - keep local only (except ecosystem.config.js and mcp.json)
+verify_*.js
+
+# Temporary and dump files - keep local only
+*.stackdump
+dump.rdb
+~$*.xlsx

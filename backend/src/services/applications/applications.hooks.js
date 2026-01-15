@@ -76,7 +76,9 @@ export default (app) => {
     } else if (user.role === 'company') {
       const company = await app.service('companies').Model.findOne({ ownerUserId: user._id }).lean();
       if (!company) { throw new Error('Company profile not found'); }
-      ctx.params.query = { ...q, companyId: company._id, status: { $ne: S.WITHDRAWN } };
+      // D166: Allow companies to see withdrawn applications (status 6)
+      // Remove the filter that excludes withdrawn applications so companies can see all statuses
+      ctx.params.query = { ...q, companyId: company._id };
     } // admin sees all
     return ctx;
   }
@@ -152,6 +154,11 @@ export default (app) => {
   async function onCreate(ctx) {
     const user = ctx.params.user;
     if (user.role !== 'student') throw Object.assign(new Error('Only students can apply'), { code: 403 });
+
+    // D118: Check if email is verified before allowing application
+    if (!user.isEmailVerified) {
+      throw Object.assign(new Error('Please verify your email address before applying for jobs'), { code: 403 });
+    }
 
     const jobId = asObjectId(ctx.data.jobListingId);
     const job = await JobModel.findById(jobId).lean();

@@ -11,6 +11,7 @@ function parseJwt(token) {
 
 const NAG_KEY = 'companyProfileNagLastShown';
 const NAG_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const VERIFICATION_POPUP_KEY = 'companyVerificationPopupShown'; // Session-based key for D75
 
 function CompanyStatusGateInner() {
   const pathname = usePathname();
@@ -111,7 +112,7 @@ function CompanyStatusGateInner() {
         }
 
         // 3) Approved -> check verification status (latest company-verifications doc)
-        // If there is a verifications record still pending, show a non-blocking modal
+        // If there is a verifications record still pending, show a non-blocking modal (D75: only once per session)
         try {
           const vRes = await fetch(`${API_BASE_URL}/company-verifications?companyId=${company._id}&$limit=1&$sort[submittedAt]=-1`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -122,11 +123,21 @@ function CompanyStatusGateInner() {
             const latest = ver[0];
             const status = latest?.status; // 0=pending,1=approved,2=rejected
             if (status === 0) {
-              modal.info({
-                title: 'Company Verification In Progress',
-                content: 'Your documents are undergoing verification. You may continue browsing candidates and features available to approved companies.',
-                okText: 'Got it'
-              });
+              // Check if popup was already shown in this session (D75)
+              const popupShown = sessionStorage.getItem(VERIFICATION_POPUP_KEY);
+              if (!popupShown) {
+                modal.info({
+                  title: 'Company Verification In Progress',
+                  content: 'Your documents are undergoing verification. You may continue browsing candidates and features available to approved companies.',
+                  okText: 'Got it',
+                  onOk: () => {
+                    // Mark as shown for this session
+                    sessionStorage.setItem(VERIFICATION_POPUP_KEY, 'true');
+                  }
+                });
+                // Mark as shown immediately to prevent multiple modals
+                sessionStorage.setItem(VERIFICATION_POPUP_KEY, 'true');
+              }
             }
           }
         } catch {}

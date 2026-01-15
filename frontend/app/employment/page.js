@@ -123,15 +123,25 @@ function EmploymentPageContent() {
     }
   }
 
+  // D167: Fix cancel request function to handle termination requests
   async function cancelRequest(type, id) {
     try {
       const token = localStorage.getItem('jf_token');
-      const endpoint = type === 'resignation' ? 'resignations' : 'early-completions';
-      await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
+      let endpoint;
+      if (type === 'resignation' || type === 'termination') {
+        endpoint = 'internship-terminations';
+      } else {
+        endpoint = 'early-completions';
+      }
+      const res = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: 'cancel' })
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to cancel request');
+      }
       message.success('Request cancelled');
       await load();
     } catch (e) {
@@ -170,6 +180,8 @@ function EmploymentPageContent() {
   const app = detail?.application;
   const company = job?.company;
   const pendingEC = detail?.latestRequests?.earlyCompletion?.status === 0;
+  // D167: Check for pending termination request
+  const pendingTermination = detail?.latestRequests?.resignation?.status === 0 || detail?.termination?.status === 0;
   const onboardingDocs = detail?.onboarding?.docs || [];
 
   const statusMap = { 0: { color: 'gold', text: 'Upcoming' }, 1: { color: 'blue', text: 'Ongoing' }, 2: { color: 'purple', text: 'Closure' }, 3: { color: 'green', text: 'Completed' }, 4: { color: 'red', text: 'Terminated' } };
@@ -258,6 +270,47 @@ function EmploymentPageContent() {
                         onConfirm={() => cancelRequest('early-completion', detail.latestRequests.earlyCompletion._id)}
                       >
                         <Button size="small" danger type="link">Cancel Request</Button>
+                      </Popconfirm>
+                    </div>
+                  </div>
+                }
+              />
+            )}
+            
+            {/* D167: Fix Cancel request for early termination button */}
+            {pendingTermination && (
+              <Alert
+                type="info"
+                showIcon
+                message="Pending Request"
+                description={
+                  <div>
+                    <Text>Termination request pending approval</Text>
+                    <div>
+                      <Popconfirm
+                        title="Cancel this termination request?"
+                        onConfirm={async () => {
+                          try {
+                            const token = localStorage.getItem('jf_token');
+                            const terminationId = detail?.latestRequests?.resignation?._id || detail?.termination?._id;
+                            if (!terminationId) {
+                              message.error('Termination request ID not found');
+                              return;
+                            }
+                            // D167: Fix cancel termination - use correct endpoint
+                            await fetch(`${API_BASE_URL}/internship-terminations/${terminationId}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({ action: 'cancel' })
+                            });
+                            message.success('Termination request cancelled');
+                            await load();
+                          } catch (e) {
+                            message.error(e.message || 'Failed to cancel termination request');
+                          }
+                        }}
+                      >
+                        <Button size="small" danger type="link">Cancel request for early termination</Button>
                       </Popconfirm>
                     </div>
                   </div>

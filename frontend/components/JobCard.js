@@ -55,7 +55,15 @@ export default function JobCard({ job, companyView = false }) {
     return diff;
   })();
 
+  // D157: Fix job click error - handle unauthenticated access by redirecting to login first
   function handleCardClick() {
+    // D157: Check if user is authenticated before allowing job view
+    if (!companyView && !getToken()) {
+      message.info('Please sign in to view job details');
+      router.push(`/login?next=/jobs/${job._id}`);
+      return;
+    }
+    
     if (companyView) {
       router.push(`/company/jobs/${job._id}`);
     } else {
@@ -230,13 +238,18 @@ export default function JobCard({ job, companyView = false }) {
         cursor: 'pointer',
         transition: 'all 0.2s',
         border: `1px solid ${token.colorBorder}`,
-        backgroundColor: token.colorBgContainer
+        backgroundColor: token.colorBgContainer,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
-      styles={{ body: { padding: '24px' } }}
+      styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* D148: Ensure consistent card height with flex layout */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
         {/* Header with logo and actions */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+        {/* D147: Move Like and Save buttons inside the card */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
           <div style={{ display: 'flex', gap: 16, flex: 1 }}>
             {/* Company Logo */}
             {logoSignedUrl && !logoError ? (
@@ -275,9 +288,26 @@ export default function JobCard({ job, companyView = false }) {
 
             {/* Job Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h3 style={{ fontSize: 20, fontWeight: 600, color: token.colorText, margin: '0 0 4px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {job.title}
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 600, color: token.colorText, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                  {job.title}
+                </h3>
+                {/* D147: Like and Save buttons inside card */}
+                <div style={{ display: 'flex', gap: 8, marginLeft: 8, flexShrink: 0 }}>
+                  <Button
+                    type="text"
+                    icon={liked ? <HeartFilled style={{ color: '#ff4d4f', fontSize: 20 }} /> : <HeartOutlined style={{ fontSize: 20 }} />}
+                    onClick={handleLike}
+                    style={{ padding: '4px 8px' }}
+                  />
+                  <Button
+                    type="text"
+                    icon={saved ? <BookFilled style={{ color: '#1890ff', fontSize: 20 }} /> : <BookOutlined style={{ fontSize: 20 }} />}
+                    onClick={handleSave}
+                    style={{ padding: '4px 8px' }}
+                  />
+                </div>
+              </div>
               <p style={{ fontSize: 16, color: token.colorTextSecondary, margin: '0 0 8px 0' }}>{companyName}</p>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 14, color: token.colorTextSecondary }}>
@@ -297,22 +327,6 @@ export default function JobCard({ job, companyView = false }) {
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* Like and Save buttons */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button
-              type="text"
-              icon={liked ? <HeartFilled style={{ color: '#ff4d4f', fontSize: 20 }} /> : <HeartOutlined style={{ fontSize: 20 }} />}
-              onClick={handleLike}
-              style={{ padding: '4px 8px' }}
-            />
-            <Button
-              type="text"
-              icon={saved ? <BookFilled style={{ color: '#1890ff', fontSize: 20 }} /> : <BookOutlined style={{ fontSize: 20 }} />}
-              onClick={handleSave}
-              style={{ padding: '4px 8px' }}
-            />
           </div>
         </div>
 
