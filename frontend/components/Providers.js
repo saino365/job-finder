@@ -4,6 +4,7 @@ import { ConfigProvider, theme as antdTheme, App as AntdApp } from 'antd';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 const CompanyStatusGate = dynamic(() => import('./CompanyStatusGate'), { ssr: false });
+const SessionManager = dynamic(() => import('./SessionManager'), { ssr: false });
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export const ThemeContext = createContext({ theme: 'light', toggle: () => {} });

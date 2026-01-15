@@ -91,11 +91,6 @@ export default function RegisterCompanyPage() {
 
       message.error(errorMsg);
       setLoading(false); // D156: Ensure loading state is cleared on error
-    } catch (e) {
-      // D156: Catch any unexpected errors
-      console.error('Registration error:', e);
-      message.error(e.message || 'An unexpected error occurred. Please try again.');
-      setLoading(false);
     }
   }
 
