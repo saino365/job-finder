@@ -611,7 +611,10 @@ export default function HomeContent({ jobs = [], companies = [] }) {
             <section id="interns" style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>Interns</Typography.Title>
-                <Segmented value={internsView} onChange={setInternsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                {/* Fix hydration error: suppress hydration warning for Segmented component */}
+                <div suppressHydrationWarning>
+                  <Segmented value={internsView} onChange={setInternsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                </div>
               </div>
               {internsQuery.isLoading ? (
                 <Skeleton active />
@@ -718,7 +721,10 @@ export default function HomeContent({ jobs = [], companies = [] }) {
             <section id="jobs" style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>Latest Jobs</Typography.Title>
-                <Segmented value={jobsView} onChange={setJobsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                {/* Fix hydration error: suppress hydration warning for Segmented component */}
+                <div suppressHydrationWarning>
+                  <Segmented value={jobsView} onChange={setJobsView} options={[{label:'List',value:'list'},{label:'Grid',value:'grid'}]} />
+                </div>
               </div>
               {jobsQuery.isLoading ? (
                 <Skeleton active />
