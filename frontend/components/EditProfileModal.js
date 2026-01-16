@@ -451,7 +451,12 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    const num = Number(value);
+                    // D111: Check if value contains non-numeric characters
+                    const strValue = String(value).trim();
+                    if (!/^\d+$/.test(strValue)) {
+                      return Promise.reject(new Error('Please enter only numbers'));
+                    }
+                    const num = Number(strValue);
                     if (isNaN(num)) {
                       return Promise.reject(new Error('Please enter only numbers'));
                     }
@@ -463,6 +468,11 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                   }
                 }
               ]}
+              normalize={(value) => {
+                // D111: Remove non-numeric characters and return for validation
+                if (!value) return value;
+                return String(value).replace(/[^\d]/g, '');
+              }}
             >
               <InputNumber
                 placeholder="e.g., 2025"
@@ -470,6 +480,14 @@ export default function EditProfileModal({ visible, onClose, user, onSuccess, se
                 max={new Date().getFullYear() + 10}
                 style={{ width: '100%' }}
                 controls={false}
+                parser={(value) => {
+                  // D111: Parse only numeric characters
+                  return value.replace(/[^\d]/g, '');
+                }}
+                formatter={(value) => {
+                  // D111: Format to show only numeric characters
+                  return value ? String(value).replace(/[^\d]/g, '') : '';
+                }}
               />
             </Form.Item>
           </Space>
