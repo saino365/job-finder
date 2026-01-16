@@ -63,11 +63,13 @@ export default function CompanyUniversitiesPage(){
   }
 
   async function loadCandidates(){
-    if (!selectedUni || !selectedProgramme) { setCands([]); return; }
+    // D205: Allow candidate filtering even without university selected
+    // Candidate filters (dates, locations, salary) should work independently
+    // Only require university/programme for programme-specific filtering
     try {
       setLoadingCands(true);
       const qs = new URLSearchParams();
-      qs.set('university', selectedUni);
+      if (selectedUni) qs.set('university', selectedUni);
       if (selectedProgramme?.programme) qs.set('programme', selectedProgramme.programme);
       if (selectedProgramme?.faculty) qs.set('faculty', selectedProgramme.faculty);
       if (progLevel) qs.set('level', progLevel);
@@ -162,9 +164,10 @@ export default function CompanyUniversitiesPage(){
             <Col xs={24} md={8}>
               <Card title={selectedUni ? `Programmes at ${selectedUni}` : 'Programmes'} extra={<Button size="small" onClick={()=>loadProgrammes(selectedUni)} disabled={!selectedUni}>Refresh</Button>}>
                 <Space direction="vertical" style={{ width:'100%' }} size="small">
-                  <Select placeholder="Programme level" allowClear value={progLevel} onChange={setProgLevel} options={[{value:'Diploma'},{value:'Degree'},{value:'Master'},{value:'PhD'}]} />
-                  <Input placeholder="Search faculty name" allowClear value={progFacultyQ} onChange={e=>setProgFacultyQ(e.target.value)} />
-                  <Input placeholder="Search programme name" allowClear value={progNameQ} onChange={e=>setProgNameQ(e.target.value)} />
+                  {/* D205: Allow programme filters to work even without university selected */}
+                  <Select placeholder="Programme level" allowClear value={progLevel} onChange={setProgLevel} options={[{value:'Diploma'},{value:'Degree'},{value:'Master'},{value:'PhD'}]} disabled={!selectedUni} />
+                  <Input placeholder="Search faculty name" allowClear value={progFacultyQ} onChange={e=>setProgFacultyQ(e.target.value)} disabled={!selectedUni} />
+                  <Input placeholder="Search programme name" allowClear value={progNameQ} onChange={e=>setProgNameQ(e.target.value)} disabled={!selectedUni} />
                   <List loading={loadingProg} dataSource={filteredProgrammes} rowKey={(p,idx)=>`${p.programme}-${p.faculty}-${idx}`}
                     renderItem={(p)=>(
                       <List.Item onClick={()=>{ setSelectedProgramme(p); }} style={{ cursor:'pointer', background: selectedProgramme&&selectedProgramme.programme===p.programme&&selectedProgramme.faculty===p.faculty?'#fafafa':undefined }}>
@@ -181,6 +184,7 @@ export default function CompanyUniversitiesPage(){
             <Col xs={24} md={8}>
               <Card title="Candidate filters">
                 <Space direction="vertical" style={{ width:'100%' }}>
+                  {/* D205: Allow candidate filters to work even without university selected */}
                   <Space>
                     <DatePicker placeholder="Preferred start on/after" value={startDate} onChange={setStartDate} />
                     <DatePicker placeholder="Preferred end on/before" value={endDate} onChange={setEndDate} />
@@ -195,8 +199,25 @@ export default function CompanyUniversitiesPage(){
                     <InputNumber placeholder="Salary max" value={salaryMax} onChange={setSalaryMax} min={0} />
                   </Space>
                   <Space>
-                    <Button type="primary" onClick={loadCandidates} disabled={!selectedUni}>Search candidates</Button>
-                    <Button onClick={()=>{ setStartDate(null); setEndDate(null); setLoc1(""); setLoc2(""); setLoc3(""); setSalaryMin(); setSalaryMax(); }}>Reset</Button>
+                    <Button type="primary" onClick={loadCandidates}>Search candidates</Button>
+                    <Button onClick={()=>{ 
+                      // D205: Reset all candidate filters
+                      setStartDate(null); 
+                      setEndDate(null); 
+                      setLoc1(""); 
+                      setLoc2(""); 
+                      setLoc3(""); 
+                      setSalaryMin(); 
+                      setSalaryMax();
+                      // Also reset programme filters
+                      setProgLevel(null);
+                      setProgFacultyQ("");
+                      setProgNameQ("");
+                      setSelectedProgramme(null);
+                      // Clear candidates list
+                      setCands([]);
+                      setSelectedRowKeys([]);
+                    }}>Reset</Button>
                   </Space>
                 </Space>
               </Card>
