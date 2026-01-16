@@ -304,7 +304,10 @@ export default function Navbar() {
               placement="bottomRight"
             >
               <Badge count={unreadCount} size="small">
-                <Button type="text" icon={<BellOutlined />} />
+                {/* D192: Add "Notifications" text label on mobile */}
+                <Button type="text" icon={<BellOutlined />}>
+                  {isMobile && <span style={{ marginLeft: 4 }}>Notifications</span>}
+                </Button>
               </Badge>
             </Dropdown>
           )}

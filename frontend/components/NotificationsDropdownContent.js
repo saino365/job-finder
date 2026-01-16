@@ -1,5 +1,6 @@
 "use client";
 import { Button, Tabs, List, Tag, Typography, Space } from 'antd';
+import { useState, useEffect } from 'react';
 
 export default function NotificationsDropdownContent({
   notifs = [],
@@ -10,6 +11,16 @@ export default function NotificationsDropdownContent({
   onItemClick,
   tokenColors,
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // D192: Detect mobile/tab device
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const safeNotifs = Array.isArray(notifs) ? notifs : [];
   const directNotifs = safeNotifs.filter(n => (n.channel || n.type || 'direct') !== 'watching');
   const watchingNotifs = safeNotifs.filter(n => (n.channel || n.type) === 'watching');
@@ -32,11 +43,12 @@ export default function NotificationsDropdownContent({
   };
 
   return (
-    <div style={{ width: 420, background: tokenColors.bg, borderRadius: tokenColors.radius, boxShadow: tokenColors.shadow, boxSizing: 'border-box' }}>
+    <div style={{ width: isMobile ? '100vw' : 420, maxWidth: isMobile ? '100vw' : 420, background: tokenColors.bg, borderRadius: tokenColors.radius, boxShadow: tokenColors.shadow, boxSizing: 'border-box' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding: '8px 12px', fontWeight: 600, borderBottom: `1px solid ${tokenColors.border}` }}>
         <span>Notifications</span>
         <Button type="link" size="small" onClick={onMarkAll}>Mark all as read</Button>
       </div>
+      {/* D192: Ensure Direct and Watching tabs are visible on mobile */}
       <Tabs size="small" activeKey={notifTab} onChange={setNotifTab} items={[
         { key: 'direct', label: 'Direct', children: (
           <div style={{ maxHeight: 420, overflowY: 'auto', padding: '8px 8px' }}>

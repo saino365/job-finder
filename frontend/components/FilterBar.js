@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Dropdown, Card, Space, Typography, Checkbox, DatePicker, InputNumber, message, theme as antdTheme } from 'antd';
 
 const FilterBar = ({
@@ -18,6 +18,15 @@ const FilterBar = ({
 }) => {
   const { token } = antdTheme.useToken();
   const [openFilter, setOpenFilter] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // D191: Detect mobile/tab device
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Check if any filters are active
   const hasActiveFilters = Object.values(selectedFilters).some(filter => 
@@ -148,6 +157,9 @@ const FilterBar = ({
     const selectedValues = selectedFilters[key] || [];
     const isActive = Array.isArray(selectedValues) ? selectedValues.length > 0 : selectedValues;
     const count = Array.isArray(selectedValues) ? selectedValues.length : (selectedValues ? 1 : 0);
+    // D191: Use responsive width for mobile
+    const buttonWidth = isMobile ? 'auto' : width;
+    const minButtonWidth = isMobile ? '80px' : width;
 
     return (
       <Dropdown
@@ -165,16 +177,17 @@ const FilterBar = ({
             border: isActive ? `1px solid ${theme.activeColor}` : `1px solid ${token.colorBorder}`,
             fontWeight: '500',
             transition: 'all 0.3s ease',
-            width: width,
-            minWidth: width,
-            maxWidth: width,
+            width: buttonWidth,
+            minWidth: minButtonWidth,
+            maxWidth: isMobile ? '100%' : width,
             textAlign: 'center',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flexShrink: 0,
-            flexGrow: 0,
-            overflow: 'hidden'
+            flexShrink: isMobile ? 1 : 0,
+            flexGrow: isMobile ? 1 : 0,
+            overflow: 'hidden',
+            padding: isMobile ? '4px 8px' : undefined
           }}
         >
           <span style={{
@@ -189,7 +202,8 @@ const FilterBar = ({
             <span style={{
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              flexShrink: 1
+              flexShrink: 1,
+              fontSize: isMobile ? '12px' : undefined
             }}>
               {label}
             </span>
@@ -206,7 +220,7 @@ const FilterBar = ({
                 {count}
               </span>
             )}
-            <span style={{ flexShrink: 0 }}>▼</span>
+            <span style={{ flexShrink: 0, fontSize: isMobile ? '10px' : undefined }}>▼</span>
           </span>
         </Button>
       </Dropdown>
@@ -216,13 +230,13 @@ const FilterBar = ({
   return (
     <div style={{
       background: token.colorBgContainer,
-      padding: '20px',
+      padding: isMobile ? '12px' : '20px',
       borderRadius: '12px',
       marginBottom: '24px',
       border: `1px solid ${token.colorBorder}`,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
     }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? '8px' : '12px', alignItems: 'center' }}>
         {/* Render filter buttons */}
         {filterConfig.map(filter => renderFilterButton(filter))}
 
