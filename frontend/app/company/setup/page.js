@@ -180,7 +180,27 @@ export default function CompanySetupPage() {
       } catch (_) {}
 
       // 2) Upload SSM Superform (required)
+      // D171: Validate file type - only PDF allowed, reject images
       if (!uploadFile) { message.error('Please upload your SSM Superform'); setLoading(false); return; }
+      
+      // D171: Check file type - must be PDF, not image
+      const fileName = uploadFile.name || '';
+      const fileType = uploadFile.type || '';
+      const isImage = fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileName);
+      const isPdf = fileType === 'application/pdf' || /\.pdf$/i.test(fileName);
+      
+      if (isImage) {
+        message.error('Image files are not allowed. Please upload a PDF file (SSM Superform).');
+        setLoading(false);
+        return;
+      }
+      
+      if (!isPdf) {
+        message.error('Only PDF files are allowed for SSM Superform. Please upload a PDF file.');
+        setLoading(false);
+        return;
+      }
+      
       const fd = new FormData();
       fd.append('document', uploadFile);
       const up = await fetch(`${API_BASE_URL}/upload`, {
@@ -302,10 +322,40 @@ export default function CompanySetupPage() {
               showCount
             />
           </Form.Item>
-          <Form.Item label="SSM Superform (PDF)">
-            <Upload beforeUpload={() => false} maxCount={1} accept=".pdf" onChange={(info)=>{ setUploadFile(info.fileList?.[0]?.originFileObj || null); }}>
-              <Button icon={<UploadOutlined />}>Select file</Button>
+          {/* D171: Add file type validation to prevent image uploads */}
+          <Form.Item label="SSM Superform (PDF)" required>
+            <Upload 
+              beforeUpload={(file) => {
+                // D171: Validate file type before allowing selection
+                const fileName = file.name || '';
+                const fileType = file.type || '';
+                const isImage = fileType.startsWith('image/') || /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileName);
+                const isPdf = fileType === 'application/pdf' || /\.pdf$/i.test(fileName);
+                
+                if (isImage) {
+                  message.error('Image files are not allowed. Please select a PDF file.');
+                  return Upload.LIST_IGNORE;
+                }
+                
+                if (!isPdf) {
+                  message.error('Only PDF files are allowed. Please select a PDF file.');
+                  return Upload.LIST_IGNORE;
+                }
+                
+                return false; // Prevent automatic upload
+              }} 
+              maxCount={1} 
+              accept=".pdf,application/pdf"
+              onChange={(info) => {
+                const file = info.fileList?.[0]?.originFileObj || null;
+                setUploadFile(file);
+              }}
+            >
+              <Button icon={<UploadOutlined />}>Select PDF file</Button>
             </Upload>
+            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+              Only PDF files are accepted. Image files will be rejected.
+            </Typography.Text>
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block>Submit for approval</Button>
