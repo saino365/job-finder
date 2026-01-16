@@ -22,8 +22,18 @@ export default function NotificationsDropdownContent({
   }, []);
 
   const safeNotifs = Array.isArray(notifs) ? notifs : [];
-  const directNotifs = safeNotifs.filter(n => (n.channel || n.type || 'direct') !== 'watching');
-  const watchingNotifs = safeNotifs.filter(n => (n.channel || n.type) === 'watching');
+  // D202: Fix watching notifications filter - check both channel and type fields, and also check for job-related notifications
+  const directNotifs = safeNotifs.filter(n => {
+    const channel = n.channel || '';
+    const type = n.type || '';
+    return channel !== 'watching' && type !== 'watching' && !type.includes('job');
+  });
+  const watchingNotifs = safeNotifs.filter(n => {
+    const channel = n.channel || '';
+    const type = n.type || '';
+    // D202: Include job-related notifications in watching section (job_expiring, job_expired, job_renewal, etc.)
+    return channel === 'watching' || type === 'watching' || (type && (type.includes('job') || type.includes('track')));
+  });
   // D154: Check both isRead and read fields for unread status
   const unreadTag = (n) => (!n.isRead && !n.read ? <Tag color="blue">Unread</Tag> : null);
   const statusTag = (n) => {
@@ -110,7 +120,8 @@ export default function NotificationsDropdownContent({
         ) },
       ]} />
       <div style={{ position:'sticky', bottom: 0, background: tokenColors.bg, borderTop: `1px solid ${tokenColors.border}`, padding: 8, textAlign: 'center' }}>
-        <a href="/notifications">View all</a>
+        {/* D203: Redirect to watching page when clicking from watching tab */}
+        <a href={notifTab === 'watching' ? '/notifications?tab=watching' : '/notifications'}>View all</a>
       </div>
     </div>
   );

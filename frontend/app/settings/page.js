@@ -48,6 +48,13 @@ export default function SettingsPage() {
           if (user?.profile?.hidePhoneForCompanies !== undefined) {
             setHidePhoneForCompanies(user.profile.hidePhoneForCompanies);
           }
+          // D204: Load notification preferences from user profile
+          if (user?.profile?.notificationPreferences) {
+            setNotifications(prev => ({
+              ...prev,
+              ...user.profile.notificationPreferences
+            }));
+          }
           // D195: Load timesheet cadence from company profile if user is company
           if (user?.role === 'company') {
             const companyRes = await fetch(`${API_BASE_URL}/companies?ownerUserId=${user._id}`, {
@@ -69,12 +76,38 @@ export default function SettingsPage() {
     loadPreferences();
   }, []);
 
-  const handleNotificationChange = (key, value) => {
-    setNotifications(prev => ({
-      ...prev,
+  const handleNotificationChange = async (key, value) => {
+    const newNotifications = {
+      ...notifications,
       [key]: value
-    }));
-    message.success('Notification preferences updated');
+    };
+    setNotifications(newNotifications);
+    
+    // D204: Save notification preferences to backend
+    try {
+      const token = getToken();
+      if (!token) { message.warning('Please sign in to save preferences'); return; }
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ 'profile.notificationPreferences': newNotifications })
+      });
+      if (res.ok) {
+        message.success('Notification preferences saved');
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (e) {
+      message.error('Failed to save notification preferences');
+      // Revert on error
+      setNotifications(prev => ({
+        ...prev,
+        [key]: !value
+      }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLanguageChange = async (value) => {
