@@ -204,15 +204,62 @@ class AdminMonitoringService {
 
     if (type === 'expiring_jobs') {
       const JobModel = this.app.service('job-listings').Model;
-      let criteria = { status: 2 };
-      if (start && end) criteria = applyRange(criteria, 'expiresAt');
-      else {
-        const now = new Date(); const threshold = new Date(now.getTime()); threshold.setDate(threshold.getDate() + 7);
-        criteria.expiresAt = { $lte: threshold, $gte: now };
+      const CompanyModel = this.app.service('companies').Model;
+      // D172: Include active jobs expiring within 7 days AND recently expired/closed jobs
+      const now = new Date();
+      const threshold = new Date(now.getTime());
+      threshold.setDate(threshold.getDate() + 7); // 7 days from now
+      
+      let criteria = {
+        $or: [
+          // Active jobs expiring within 7 days
+          { status: 2, expiresAt: { $lte: threshold, $gte: now } },
+          // Recently expired/closed jobs (within last 30 days)
+          { 
+            status: { $in: [2, 3] }, // ACTIVE or CLOSED
+            expiresAt: { $lte: now, $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } // Last 30 days
+          }
+        ]
+      };
+      
+      if (start && end) {
+        // If date range is provided, use it for expiresAt
+        criteria = {
+          $or: [
+            { status: 2, expiresAt: { $gte: start, $lte: end } },
+            { status: 3, expiresAt: { $gte: start, $lte: end } }
+          ]
+        };
       }
+      
+      if (rx) {
+        const companyIds = (await CompanyModel.find({ name: rx }, { _id: 1 }).lean()).map(c => c._id);
+        if (criteria.$or) {
+          criteria.$or.forEach(cond => {
+            if (!cond.$or) cond.$or = [];
+            cond.$or.push({ title: rx }, { companyId: { $in: companyIds } });
+          });
+        } else {
+          criteria.$or = [{ title: rx }, { companyId: { $in: companyIds } }];
+        }
+      }
+      
       const total = await JobModel.countDocuments(criteria);
       const data = await JobModel.find(criteria).sort({ expiresAt: 1 }).skip($skip).limit($limit).lean();
-      return { total, data };
+      
+      // D131: Populate company name for expiring jobs
+      const populatedData = await Promise.all(data.map(async (job) => {
+        if (job.companyId) {
+          const company = await CompanyModel.findById(job.companyId).select('name').lean();
+          if (company) {
+            job.company = { name: company.name };
+            job.companyName = company.name;
+          }
+        }
+        return job;
+      }));
+      
+      return { total, data: populatedData };
     }
 
     return { total: 0, data: [] };
