@@ -56,11 +56,25 @@ export default (app) => ({
         // D173: Filter out expired jobs, but include jobs without expiresAt or with null expiresAt
         // This ensures expired jobs are hidden immediately, but jobs without expiry date are still shown
         const now = new Date();
-        ctx.params.query.$or = [
-          { expiresAt: { $gt: now } }, // Not expired
-          { expiresAt: { $exists: false } }, // No expiry date set
-          { expiresAt: null } // Null expiry date
-        ];
+        const expiresAtCondition = {
+          $or: [
+            { expiresAt: { $gt: now } }, // Not expired
+            { expiresAt: { $exists: false } }, // No expiry date set
+            { expiresAt: null } // Null expiry date
+          ]
+        };
+        
+        // If there are already $and conditions, add to them; otherwise create $and
+        if (ctx.params.query.$and) {
+          ctx.params.query.$and.push(expiresAtCondition);
+        } else if (ctx.params.query.$or) {
+          // If $or already exists (e.g., from location filter), wrap both in $and
+          const existingOr = ctx.params.query.$or;
+          delete ctx.params.query.$or;
+          ctx.params.query.$and = [existingOr, expiresAtCondition];
+        } else {
+          ctx.params.query.$or = expiresAtCondition.$or;
+        }
 
         // Handle custom filters that need backend processing
         const q = { ...(ctx.params.query || {}) };
