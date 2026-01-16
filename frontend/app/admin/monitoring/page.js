@@ -161,13 +161,36 @@ function MonitoringClient() {
     }
   }
 
+  // D180: Ensure company name is displayed properly
   const baseCols = [
     { title: 'Title', dataIndex: 'title', key: 'title' },
-    { title: 'Company', key: 'company', render: (_, r) => r.company?.name || r.companyName || '-' },
+    { 
+      title: 'Company', 
+      key: 'company', 
+      render: (_, r) => {
+        // D180: Check multiple possible field names for company name
+        const companyName = r.company?.name || r.companyName || (r.companyId && typeof r.companyId === 'object' ? r.companyId.name : null) || '-';
+        return companyName;
+      }
+    },
   ];
 
   const expiringColumns = [
     ...baseCols,
+    // D180: Add internship period column
+    { 
+      title: 'Internship Period', 
+      key: 'internshipPeriod', 
+      render: (_, r) => {
+        // Check multiple possible field names for internship dates
+        const start = r.internshipStart || r.internshipDates?.start || r.project?.startDate;
+        const end = r.internshipEnd || r.internshipDates?.end || r.project?.endDate;
+        if (start && end) {
+          return `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+        }
+        return '-';
+      }
+    },
     { title: 'Expires', dataIndex: 'expiresAt', key: 'expiresAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => {
       if (s === 0) return <Tag>Draft</Tag>;
@@ -182,6 +205,19 @@ function MonitoringClient() {
 
   const pendingPreApprovalColumns = [
     ...baseCols,
+    // D180: Add internship period column
+    { 
+      title: 'Internship Period', 
+      key: 'internshipPeriod', 
+      render: (_, r) => {
+        const start = r.internshipStart || r.internshipDates?.start || r.project?.startDate;
+        const end = r.internshipEnd || r.internshipDates?.end || r.project?.endDate;
+        if (start && end) {
+          return `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+        }
+        return '-';
+      }
+    },
     { title: 'Submitted', dataIndex: 'submittedAt', key: 'submittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Actions', key: 'actions', render: (_, record) => {
       // Show status for processed items
@@ -216,7 +252,29 @@ function MonitoringClient() {
 
   const pendingFinalApprovalColumns = [
     ...baseCols,
-    { title: 'Submitted', dataIndex: 'finalSubmittedAt', key: 'finalSubmittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
+    // D180: Add internship period column
+    { 
+      title: 'Internship Period', 
+      key: 'internshipPeriod', 
+      render: (_, r) => {
+        const start = r.internshipStart || r.internshipDates?.start || r.project?.startDate;
+        const end = r.internshipEnd || r.internshipDates?.end || r.project?.endDate;
+        if (start && end) {
+          return `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+        }
+        return '-';
+      }
+    },
+    // D189: Ensure Company, Submitted, Pre-Approved columns are visible
+    { 
+      title: 'Company', 
+      key: 'company', 
+      render: (_, r) => {
+        const companyName = r.company?.name || r.companyName || (r.companyId && typeof r.companyId === 'object' ? r.companyId.name : null) || '-';
+        return companyName;
+      }
+    },
+    { title: 'Submitted', dataIndex: 'submittedAt', key: 'submittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Pre-Approved', dataIndex: 'preApprovedAt', key: 'preApprovedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Actions', key: 'actions', render: (_, record) => {
       // Show status for processed items

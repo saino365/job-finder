@@ -20,6 +20,15 @@ export default function CompanyJobsPage() {
   const [searchText, setSearchText] = useState('');
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
   const [viewingJob, setViewingJob] = useState(null);
+  // D181: Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     loadJobs();
@@ -235,12 +244,30 @@ export default function CompanyJobsPage() {
   return (
     <Layout>
       <Navbar />
-      <Layout.Content style={{ maxWidth: 1400, margin: '24px auto', padding: '0 16px' }}>
+      {/* D181: Mobile-responsive layout */}
+      <Layout.Content style={{ 
+        maxWidth: 1400, 
+        margin: '24px auto', 
+        padding: isMobile ? '0 8px' : '0 16px' 
+      }}>
         <Card>
           <div style={{ marginBottom: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Title level={2} style={{ margin: 0 }}>Job Management</Title>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/company/jobs/new')}>
+            {/* D181: Mobile-responsive header */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: isMobile ? 'flex-start' : 'center', 
+              marginBottom: 16,
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? 12 : 0
+            }}>
+              <Title level={2} style={{ margin: 0, fontSize: isMobile ? '20px' : '24px' }}>Job Management</Title>
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={() => router.push('/company/jobs/new')}
+                style={{ width: isMobile ? '100%' : 'auto' }}
+              >
                 Create New Job
               </Button>
             </div>
@@ -289,6 +316,7 @@ export default function CompanyJobsPage() {
         </Card>
 
         {/* View Job Drawer */}
+        {/* D181: Make drawer responsive for mobile */}
         <Drawer
           title="Job Details"
           open={viewDrawerOpen}
@@ -296,13 +324,15 @@ export default function CompanyJobsPage() {
             setViewDrawerOpen(false);
             setViewingJob(null);
           }}
-          width={600}
+          width={isMobile ? '100%' : 600}
+          placement={isMobile ? 'bottom' : 'right'}
+          height={isMobile ? '90vh' : undefined}
         >
           {viewingJob && (
             <Space direction="vertical" style={{ width: '100%' }} size="large">
               <div>
                 <Text strong>Title:</Text>
-                <div>{viewingJob.title}</div>
+                <div>{viewingJob.title || '-'}</div>
               </div>
               <div>
                 <Text strong>Status:</Text>
@@ -316,6 +346,15 @@ export default function CompanyJobsPage() {
                   </div>
                 </div>
               )}
+              {/* D182: Add all missing fields */}
+              <div>
+                <Text strong>Internship Period:</Text>
+                <div>
+                  {viewingJob.internshipStart && viewingJob.internshipEnd
+                    ? `${new Date(viewingJob.internshipStart).toLocaleDateString()} - ${new Date(viewingJob.internshipEnd).toLocaleDateString()}`
+                    : '-'}
+                </div>
+              </div>
               <div>
                 <Text strong>Position:</Text>
                 <div>{viewingJob.position || '-'}</div>
@@ -326,24 +365,107 @@ export default function CompanyJobsPage() {
               </div>
               <div>
                 <Text strong>Description:</Text>
-                <div>{viewingJob.description || '-'}</div>
+                <div style={{ whiteSpace: 'pre-wrap' }}>{viewingJob.description || '-'}</div>
+              </div>
+              <div>
+                <Text strong>Quantity Available:</Text>
+                <div>{viewingJob.quantityAvailable || viewingJob.quantity || '-'}</div>
               </div>
               <div>
                 <Text strong>Location:</Text>
                 <div>
                   {viewingJob.location?.city && viewingJob.location?.state
                     ? `${viewingJob.location.city}, ${viewingJob.location.state}`
-                    : '-'}
+                    : viewingJob.location?.city || viewingJob.location?.state || '-'}
                 </div>
               </div>
               <div>
                 <Text strong>Salary Range:</Text>
                 <div>
-                  {viewingJob.salaryRange?.min && viewingJob.salaryRange?.max
+                  {viewingJob.salaryRange?.min !== undefined && viewingJob.salaryRange?.max !== undefined
                     ? `RM ${viewingJob.salaryRange.min} - RM ${viewingJob.salaryRange.max}`
                     : '-'}
                 </div>
               </div>
+              {/* Project Details */}
+              {viewingJob.project && (
+                <>
+                  <div>
+                    <Text strong>Project Title:</Text>
+                    <div>{viewingJob.project.title || '-'}</div>
+                  </div>
+                  <div>
+                    <Text strong>Project Description:</Text>
+                    <div style={{ whiteSpace: 'pre-wrap' }}>{viewingJob.project.description || '-'}</div>
+                  </div>
+                  <div>
+                    <Text strong>Project Period:</Text>
+                    <div>
+                      {viewingJob.project.startDate && viewingJob.project.endDate
+                        ? `${new Date(viewingJob.project.startDate).toLocaleDateString()} - ${new Date(viewingJob.project.endDate).toLocaleDateString()}`
+                        : viewingJob.project.startDate
+                        ? `From ${new Date(viewingJob.project.startDate).toLocaleDateString()}`
+                        : '-'}
+                    </div>
+                  </div>
+                  {viewingJob.project.locations && viewingJob.project.locations.length > 0 && (
+                    <div>
+                      <Text strong>Project Locations:</Text>
+                      <div>{viewingJob.project.locations.join(', ')}</div>
+                    </div>
+                  )}
+                  <div>
+                    <Text strong>Role Description:</Text>
+                    <div style={{ whiteSpace: 'pre-wrap' }}>{viewingJob.project.roleDescription || '-'}</div>
+                  </div>
+                  {viewingJob.project.areasOfInterest && viewingJob.project.areasOfInterest.length > 0 && (
+                    <div>
+                      <Text strong>Areas of Interest:</Text>
+                      <div>{viewingJob.project.areasOfInterest.join(', ')}</div>
+                    </div>
+                  )}
+                </>
+              )}
+              {/* PIC Details */}
+              {viewingJob.pic && (
+                <>
+                  <div>
+                    <Text strong>Person in Charge:</Text>
+                    <div>{viewingJob.pic.name || '-'}</div>
+                  </div>
+                  {viewingJob.pic.contact && (
+                    <div>
+                      <Text strong>PIC Contact:</Text>
+                      <div>{viewingJob.pic.contact}</div>
+                    </div>
+                  )}
+                  {viewingJob.pic.email && (
+                    <div>
+                      <Text strong>PIC Email:</Text>
+                      <div>{viewingJob.pic.email}</div>
+                    </div>
+                  )}
+                  {viewingJob.pic.phone && (
+                    <div>
+                      <Text strong>PIC Phone:</Text>
+                      <div>{viewingJob.pic.phone}</div>
+                    </div>
+                  )}
+                </>
+              )}
+              {/* Onboarding Materials */}
+              {viewingJob.onboardingMaterials && viewingJob.onboardingMaterials.length > 0 && (
+                <div>
+                  <Text strong>Onboarding Materials:</Text>
+                  <div>
+                    {viewingJob.onboardingMaterials.map((doc, idx) => (
+                      <div key={idx} style={{ marginTop: 4 }}>
+                        {doc.label || doc.type || 'Document'} {doc.fileKey ? '(Uploaded)' : ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Space>
           )}
         </Drawer>

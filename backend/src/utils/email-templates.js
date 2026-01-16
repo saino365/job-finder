@@ -19,7 +19,7 @@ function verifyEmailTemplate({ brandName = 'JobFinder', code, verifyLink }) {
 </html>`;
 }
 
-function companyVerifyEmailTemplate({ brandName = 'JobFinder', verifyLink }) {
+function companyVerifyEmailTemplate({ brandName = 'JobFinder', code, verifyLink }) {
   const styles = 'font-family: Arial, Helvetica, sans-serif; color:#111;';
   const btn = `display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;`;
   return `
@@ -30,7 +30,13 @@ function companyVerifyEmailTemplate({ brandName = 'JobFinder', verifyLink }) {
       <h2 style="margin:0 0 16px 0;">Welcome to ${brandName} - Verify Your Company Account</h2>
       <p>Thank you for registering your company with ${brandName}! To complete your registration and access the company setup page, please verify your email address.</p>
 
+      ${code ? `
+      <p style="margin:24px 0;">Use the 6-digit code below to verify your email. It expires in 24 hours:</p>
+      <div style="font-size:28px;letter-spacing:4px;font-weight:bold;margin:16px 0;text-align:center;background:#f5f5f5;padding:16px;border-radius:8px;">${code}</div>
+      <p style="margin:24px 0;">Or click the button below:</p>
+      ` : `
       <p style="margin:24px 0;">Click the button below to verify your email and proceed to company setup:</p>
+      `}
 
       <p style="text-align:center;margin:32px 0;">
         <a href="${verifyLink}" style="${btn}">Verify Email & Setup Company</a>
@@ -45,7 +51,7 @@ function companyVerifyEmailTemplate({ brandName = 'JobFinder', verifyLink }) {
       </ul>
 
       <hr style="margin:24px 0;border:none;border-top:1px solid #eee" />
-      <p style="color:#666;font-size:12px;">This verification link expires in 24 hours for security. If you did not create this account, you can safely ignore this email.</p>
+      <p style="color:#666;font-size:12px;">This verification code and link expire in 24 hours for security. If you did not create this account, you can safely ignore this email.</p>
     </div>
   </body>
 </html>`;

@@ -181,9 +181,25 @@ class ProgrammeCandidatesService {
     const user = params.user;
     if (!user || user.role !== 'company') throw Object.assign(new Error('Only companies can send invites'), { code: 403 });
 
+    // D169: Handle bulk PATCH request (no ID) - accept userIds array from body
+    // If id is null/undefined and data has userIds array, treat as bulk operation
+    if ((id === null || id === undefined || id === 'null') && Array.isArray(data?.userIds)) {
+      const userIds = data.userIds;
+      const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
+      if (!uniqueUserIds.length) throw Object.assign(new Error('No userIds provided'), { code: 400 });
+
+      const type = data?.type || 'profile_access';
+      const message = data?.message;
+
+      // Delegate to invites.create (array) which performs dedupe and notifications
+      const payload = uniqueUserIds.map(uid => ({ userId: uid, type, message }));
+      const created = await this.app.service('invites').create(payload, params);
+      return { created: Array.isArray(created) ? created : [created] };
+    }
+
     // Accept either a single userId via URL or payload list
     const userIds = [];
-    if (id && id !== null) userIds.push(id);
+    if (id && id !== null && id !== 'null') userIds.push(id);
     if (Array.isArray(data?.userIds)) userIds.push(...data.userIds);
     if (data?.userId) userIds.push(data.userId);
 
@@ -204,6 +220,27 @@ class ProgrammeCandidatesService {
 
 export default function (app) {
   app.use('/programme-candidates', new ProgrammeCandidatesService(app));
-  app.service('programme-candidates').hooks({ before: { all: [ authenticate('jwt') ] } });
+  const service = app.service('programme-candidates');
+  service.hooks({ before: { all: [ authenticate('jwt') ] } });
+  
+  // D169: Add custom method to handle bulk invitations without requiring ID
+  service.patch(null, async (data, params) => {
+    // This will be called for PATCH /programme-candidates (no ID)
+    const user = params.user;
+    if (!user || user.role !== 'company') throw Object.assign(new Error('Only companies can send invites'), { code: 403 });
+    
+    if (!Array.isArray(data?.userIds) || data.userIds.length === 0) {
+      throw Object.assign(new Error('No userIds provided'), { code: 400 });
+    }
+    
+    const uniqueUserIds = [...new Set(data.userIds.filter(Boolean))];
+    const type = data?.type || 'profile_access';
+    const message = data?.message;
+    
+    // Delegate to invites.create (array) which performs dedupe and notifications
+    const payload = uniqueUserIds.map(uid => ({ userId: uid, type, message }));
+    const created = await app.service('invites').create(payload, params);
+    return { created: Array.isArray(created) ? created : [created] };
+  });
 }
 

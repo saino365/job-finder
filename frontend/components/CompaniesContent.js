@@ -36,11 +36,17 @@ export default function CompaniesContent() {
     // Add filter parameters (using job-search filter structure)
     const { industry, location, salary, startDate } = filters;
 
+    // D175: Send all selected industries, not just the first one
     if (industry?.length > 0) {
-      params.set("industry", industry[0]); // Take first industry
+      industry.forEach((ind, index) => {
+        params.append("industry", ind); // Append all industries
+      });
     }
+    // D175: Send all selected locations, not just the first one
     if (location?.length > 0) {
-      params.set("city", location[0]); // Take first location
+      location.forEach((loc, index) => {
+        params.append("city", loc); // Append all locations
+      });
     }
     // Note: salary and startDate filters are not applicable for company search
     // but we keep the structure consistent with job-search filters

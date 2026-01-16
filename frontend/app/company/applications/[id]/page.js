@@ -302,7 +302,8 @@ export default function ApplicationDetailPage({ params }) {
                   </Descriptions>
 
                   <Descriptions title="Job Details" bordered column={1} size="small">
-                    <Descriptions.Item label="Title">{data.job?.title || data.jobTitle || '-'}</Descriptions.Item>
+                    {/* D198: Ensure Job title is displayed with proper label */}
+                    <Descriptions.Item label="Job">{data.job?.title || data.jobTitle || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Company PIC">{data.job?.picName || data.job?.pic?.name || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Location">
                       {data.job?.location?.city && data.job?.location?.state 
@@ -358,7 +359,8 @@ export default function ApplicationDetailPage({ params }) {
                         <span>-</span>
                       )}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Candidate">{data.candidate?.fullName || data.candidateName || '-'}</Descriptions.Item>
+                    {/* D198: Ensure Candidate name is displayed with proper label */}
+                    <Descriptions.Item label="Candidate">{data.candidate?.fullName || data.candidate?.name || data.candidateName || data.user?.profile?.firstName && data.user?.profile?.lastName ? `${data.user.profile.firstName} ${data.user.profile.lastName}` : data.user?.email || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Candidate Statement">{data.candidateStatement || data.statement || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Application Validity">{data.validityUntil ? new Date(data.validityUntil).toLocaleDateString() : '-'}</Descriptions.Item>
                     <Descriptions.Item label="Personal Information"><SectionKV data={data.form?.personalInfo || data.personalInfo} /></Descriptions.Item>

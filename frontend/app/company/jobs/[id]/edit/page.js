@@ -18,6 +18,8 @@ export default function EditJobListingPage() {
   const [company, setCompany] = useState(null);
   const [current, setCurrent] = useState(0);
   const [initial, setInitial] = useState(null);
+  // D188: Track if job is a draft to conditionally apply required rules
+  const [isDraft, setIsDraft] = useState(false);
 
   const [generalDocs, setGeneralDocs] = useState([]);
   const [jobDocs, setJobDocs] = useState([]);
@@ -45,6 +47,8 @@ export default function EditJobListingPage() {
       if (!lr.ok) throw new Error("Failed to load listing");
       const l = await lr.json();
       setInitial(l);
+      // D188: Check if job is a draft (status 0 = DRAFT)
+      setIsDraft(l.status === 0);
       // Pre-fill forms
       form1.setFieldsValue({
         internshipStart: l.internshipStart ? dayjs(l.internshipStart) : null,
@@ -231,8 +235,9 @@ export default function EditJobListingPage() {
       <Form form={form1} layout="vertical">
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <Space wrap>
-            <Form.Item name="internshipStart" label="Internship start" rules={[{ required: true }]}><DatePicker picker="month" format="MM/YY" /></Form.Item>
-            <Form.Item name="internshipEnd" label="Internship end" rules={[{ required: true }]}><DatePicker picker="month" format="MM/YY" /></Form.Item>
+            {/* D188: Make fields optional for drafts */}
+            <Form.Item name="internshipStart" label="Internship start" rules={isDraft ? [] : [{ required: true }]}><DatePicker picker="month" format="MM/YY" /></Form.Item>
+            <Form.Item name="internshipEnd" label="Internship end" rules={isDraft ? [] : [{ required: true }]}><DatePicker picker="month" format="MM/YY" /></Form.Item>
           </Space>
           <Space wrap>
             <Form.Item name="position" label="Position" initialValue="intern"><Select options={[{label:'Intern',value:'intern'},{label:'Contract',value:'contract'}]} style={{ width: 200 }} /></Form.Item>
@@ -303,11 +308,12 @@ export default function EditJobListingPage() {
           <Form.Item name="projectDescription" label="Project description" rules={[{ required: true }]}><Input.TextArea rows={6} /></Form.Item>
           <Space wrap>
             {/* D95, D96, D98: Date validation and logic */}
+            {/* D188: Make project dates optional for drafts */}
             <Form.Item 
               name="projectStart" 
               label="Project start" 
               rules={[
-                { required: true },
+                ...(isDraft ? [] : [{ required: true }]),
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
@@ -329,7 +335,7 @@ export default function EditJobListingPage() {
               name="projectEnd" 
               label="Project end" 
               rules={[
-                { required: true },
+                ...(isDraft ? [] : [{ required: true }]),
                 {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
