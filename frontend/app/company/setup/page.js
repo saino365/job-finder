@@ -1,9 +1,29 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Layout, Typography, Form, Input, Button, Upload, message, Modal } from 'antd';
+import { Layout, Typography, Form, Input, Button, Upload, message, Modal, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import Footer from '../../../components/Footer';
 import { API_BASE_URL } from '../../../config';
+
+const { TextArea } = Input;
+
+// D170: Industry options for company registration
+const INDUSTRY_OPTIONS = [
+  'Information Technology',
+  'Finance',
+  'Healthcare',
+  'Education',
+  'Manufacturing',
+  'Retail',
+  'Consulting',
+  'Media',
+  'Government',
+  'Non-profit',
+  'Automotive',
+  'Real Estate',
+  'Hospitality',
+  'Transportation'
+];
 
 export default function CompanySetupPage() {
   const [form] = Form.useForm();
@@ -128,7 +148,8 @@ export default function CompanySetupPage() {
       return;
     }
 
-    const { name, registrationNumber, phone } = values;
+    // D170: Extract industry, website, and description from form values
+    const { name, registrationNumber, phone, industry, website, description } = values;
 
     try {
       setLoading(true);
@@ -172,10 +193,16 @@ export default function CompanySetupPage() {
       if (!fileKey) throw new Error('Could not determine uploaded file key');
 
       // 3) Create company (server also re-checks uniqueness and returns 409 if exists)
-      console.log('🔍 Creating company with data:', { name, registrationNumber, phone });
+      // D170: Include industry, website, and description in company creation
+      console.log('🔍 Creating company with data:', { name, registrationNumber, phone, industry, website, description });
+      const companyData = { name, registrationNumber, phone };
+      if (industry) companyData.industry = industry;
+      if (website) companyData.website = website;
+      if (description) companyData.description = description;
+      
       const cRes = await fetch(`${API_BASE_URL}/companies`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, registrationNumber, phone })
+        body: JSON.stringify(companyData)
       });
       console.log('🔍 Company creation response status:', cRes.status);
       if (cRes.status === 409) {
@@ -246,6 +273,34 @@ export default function CompanySetupPage() {
           </Form.Item>
           <Form.Item name="phone" label="Company contact number" rules={[{ required: true }]}>
             <Input placeholder="e.g. +603-1234 5678" />
+          </Form.Item>
+          {/* D170: Add Industry, Website, and Description fields during registration */}
+          <Form.Item name="industry" label="Industry">
+            <Select 
+              placeholder="Select your company industry" 
+              allowClear
+              options={INDUSTRY_OPTIONS.map(opt => ({ label: opt, value: opt }))}
+            />
+          </Form.Item>
+          <Form.Item 
+            name="website" 
+            label="Website"
+            rules={[
+              {
+                type: 'url',
+                message: 'Please enter a valid website URL (e.g., https://example.com)'
+              }
+            ]}
+          >
+            <Input placeholder="e.g., https://www.example.com" />
+          </Form.Item>
+          <Form.Item name="description" label="Company Description">
+            <TextArea 
+              rows={4} 
+              placeholder="Describe your company, its mission, and what makes it unique..."
+              maxLength={1000}
+              showCount
+            />
           </Form.Item>
           <Form.Item label="SSM Superform (PDF)">
             <Upload beforeUpload={() => false} maxCount={1} accept=".pdf" onChange={(info)=>{ setUploadFile(info.fileList?.[0]?.originFileObj || null); }}>
