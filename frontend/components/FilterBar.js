@@ -158,8 +158,9 @@ const FilterBar = ({
     const isActive = Array.isArray(selectedValues) ? selectedValues.length > 0 : selectedValues;
     const count = Array.isArray(selectedValues) ? selectedValues.length : (selectedValues ? 1 : 0);
     // D191: Use responsive width for mobile
+    // D193: Increase min width for longer labels like "Work Experience Industry" and "Preferred Work Location"
     const buttonWidth = isMobile ? 'auto' : width;
-    const minButtonWidth = isMobile ? '80px' : width;
+    const minButtonWidth = isMobile ? (label.length > 15 ? '140px' : '100px') : width;
 
     return (
       <Dropdown

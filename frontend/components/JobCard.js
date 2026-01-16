@@ -11,6 +11,15 @@ const { Text } = Typography;
 
 export default function JobCard({ job, companyView = false }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // D194: Detect mobile device for responsive job title
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const { message } = App.useApp();
   const { token } = antdTheme.useToken();
   const [saved, setSaved] = useState(false);
@@ -289,7 +298,22 @@ export default function JobCard({ job, companyView = false }) {
             {/* Job Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 600, color: token.colorText, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                {/* D194: Allow job title to wrap on mobile instead of truncating */}
+                <h3 style={{ 
+                  fontSize: isMobile ? 18 : 20, 
+                  fontWeight: 600, 
+                  color: token.colorText, 
+                  margin: 0, 
+                  overflow: 'hidden', 
+                  textOverflow: isMobile ? 'clip' : 'ellipsis', 
+                  whiteSpace: isMobile ? 'normal' : 'nowrap',
+                  wordBreak: isMobile ? 'break-word' : 'normal',
+                  flex: 1,
+                  lineHeight: 1.3,
+                  display: '-webkit-box',
+                  WebkitLineClamp: isMobile ? 2 : 1,
+                  WebkitBoxOrient: 'vertical'
+                }}>
                   {job.title}
                 </h3>
                 {/* D147: Like and Save buttons inside card */}
