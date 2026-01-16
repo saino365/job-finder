@@ -60,6 +60,34 @@ export default function configureScheduler(app) {
         }
       }
 
+      // D186: Activate jobs with publishAt in the past (approved but scheduled for future publication)
+      try {
+        const now2 = new Date();
+        // Find jobs that are PENDING with publishAt in the past (approved but waiting for publishAt)
+        const toPublish = await JobListings.find({ 
+          status: 1, // PENDING
+          publishAt: { $lte: now2 },
+          approvedAt: { $exists: true } // Only jobs that have been approved
+        }).limit(200).lean();
+        for (const job of toPublish) {
+          try {
+            await JobListings.updateOne({ _id: job._id }, { $set: { status: 2 } }); // Set to ACTIVE
+            const company = await Companies.findById(job.companyId).lean();
+            const ownerUserId = company?.ownerUserId;
+            if (ownerUserId && app.service) {
+              await app.service('notifications').create({
+                recipientUserId: ownerUserId,
+                recipientRole: 'company',
+                type: 'job_published',
+                title: 'Job listing published',
+                body: `Your job "${job.title}" has been published and is now active.`,
+                data: { jobId: job._id, publishAt: job.publishAt }
+              }, { provider: 'scheduler' });
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
+
       // Auto-close expired ACTIVE listings and notify company owners
       try {
         const now2 = new Date();

@@ -296,12 +296,26 @@ export default (app) => ({
           }
 
           // Final approval: PENDING (1) → ACTIVE (2)
+          // D186: Respect publishAt date - if set to future, keep as PENDING until publishAt arrives
           if (d.approve === true && current.status === STATUS.PENDING) {
-            d.status = STATUS.ACTIVE;
             d.approvedAt = new Date();
-            if (!current.publishAt) d.publishAt = new Date();
             const pub = d.publishAt || current.publishAt || new Date();
-            d.expiresAt = computeExpiry(pub);
+            const now = new Date();
+            
+            // D186: If publishAt is in the future, keep status as PENDING (approved but not yet published)
+            // The scheduler will activate it when publishAt arrives
+            if (new Date(pub) > now) {
+              // Approved but scheduled for future publication - keep as PENDING
+              // Status will be changed to ACTIVE by scheduler when publishAt arrives
+              d.publishAt = pub;
+              d.expiresAt = computeExpiry(pub);
+              // Don't change status to ACTIVE yet - it will be activated by scheduler
+            } else {
+              // Publish immediately
+              d.status = STATUS.ACTIVE;
+              if (!current.publishAt) d.publishAt = now;
+              d.expiresAt = computeExpiry(d.publishAt);
+            }
           }
 
           // D125: Reject - PENDING → DRAFT (keep as DRAFT for now, but ensure rejectionReason is saved)
