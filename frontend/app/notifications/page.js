@@ -150,3 +150,20 @@ function NotificationsPageContent() {
   );
 }
 
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={
+      <Layout>
+        <Navbar />
+        <Layout.Content style={{ maxWidth: 1200, margin: '24px auto', padding: '0 16px' }}>
+          <Card>
+            <Skeleton active />
+          </Card>
+        </Layout.Content>
+        <Footer />
+      </Layout>
+    }>
+      <NotificationsPageContent />
+    </Suspense>
+  );
+}
