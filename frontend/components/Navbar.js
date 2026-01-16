@@ -236,40 +236,20 @@ export default function Navbar() {
   }
 
   return (
-    <Layout.Header style={{ background: token.colorBgContainer, borderBottom: `1px solid ${token.colorBorder}`, padding: '0 24px', height: 64, lineHeight: '64px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 1200, margin: '0 auto' }}>
-        {/* Left: Logo */}
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', marginRight: 24, flexShrink: 0 }}>
+    <Layout.Header suppressHydrationWarning style={{ background: token.colorBgContainer, borderBottom: `1px solid ${token.colorBorder}`, padding: '0 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', marginRight: 24 }}>
           <Image src={logoSrc} alt="Job Finder" width={128} height={32} priority />
         </Link>
-        
-        {/* Center: Desktop Menu */}
         {!isMobile && (
-          <div suppressHydrationWarning style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <Menu 
-              className="nav-menu" 
-              theme={theme === 'dark' ? 'dark' : 'light'} 
-              mode="horizontal" 
-              selectable={false} 
-              style={{ background: 'transparent', border: 'none', minWidth: 200 }} 
-              items={menuItems} 
-            />
+          <div suppressHydrationWarning style={{ flex: 1 }}>
+            <Menu className="nav-menu" theme={theme === 'dark' ? 'dark' : 'light'} mode="horizontal" selectable={false} style={{ flex: 1, background: 'transparent' }} items={menuItems} />
           </div>
         )}
-        
-        {/* Right: Notifications, User Menu, and Mobile Menu Button */}
-        <Space size="middle" style={{ marginLeft: 'auto', flexShrink: 0 }}>
-          {/* Mobile Menu Button */}
+        <Space>
           {isMobile && (
-            <Button
-              type="text"
-              icon={<MenuOutlined />}
-              onClick={() => setMobileMenuOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            />
+            <Button type="text" icon={<MenuOutlined />} onClick={() => setMobileMenuOpen(true)} />
           )}
-          
-          {/* Notifications */}
           {authed && (
             <Dropdown
               popupRender={() => (
@@ -298,63 +278,37 @@ export default function Navbar() {
               </Badge>
             </Dropdown>
           )}
-          
-          {/* User Menu */}
           {authed ? (
             <Dropdown menu={userMenu} placement="bottomRight">
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s' }}>
-                <Avatar size={32} src={avatarSignedUrl || avatarUrl || undefined} style={{ backgroundColor: token.colorPrimary, flexShrink: 0 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar size={28} src={avatarSignedUrl || avatarUrl || undefined} style={{ backgroundColor: token.colorPrimary }}>
                   {(displayName || 'U').charAt(0).toUpperCase()}
                 </Avatar>
-                {!isMobile && (
-                  <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, minWidth: 0 }}>
-                    <Typography.Text strong style={{ margin: 0, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>
-                      {displayName || 'Account'}
-                    </Typography.Text>
-                    <Typography.Text type="secondary" style={{ fontSize: 12, margin: 0 }}>
-                      {role ? role.charAt(0).toUpperCase() + role.slice(1) : ''}
-                    </Typography.Text>
-                  </div>
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+                  <Typography.Text style={{ margin: 0 }}>
+                    {displayName || 'Account'}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ fontSize: 12, margin: 0 }}>
+                    {role ? role.charAt(0).toUpperCase() + role.slice(1) : ''}
+                  </Typography.Text>
+                </div>
               </div>
             </Dropdown>
           ) : (
             <>
               <Link href="/login" prefetch={false}><Button type="text" className="nav-text-btn">Sign in</Button></Link>
-              {!isMobile && (
-                <>
-                  <Link href="/register" prefetch={false}><Button type="text" className="nav-text-btn">Register</Button></Link>
-                  <Link href="/register-company" prefetch={false}><Button className="nav-outline-btn">Employer Register</Button></Link>
-                </>
-              )}
+              <Link href="/register" prefetch={false}><Button type="text" className="nav-text-btn">Register</Button></Link>
+              <Link href="/register-company" prefetch={false}><Button className="nav-outline-btn">Employer Register</Button></Link>
             </>
           )}
         </Space>
-        
-        {/* Mobile Menu Drawer */}
         {isMobile && (
-          <Drawer
-            title="Menu"
-            placement="right"
-            onClose={() => setMobileMenuOpen(false)}
-            open={mobileMenuOpen}
-            width={280}
-          >
-            <Menu
-              mode="vertical"
-              items={menuItems}
-              style={{ border: 'none' }}
-              onClick={() => setMobileMenuOpen(false)}
-            />
+          <Drawer title="Menu" placement="right" onClose={() => setMobileMenuOpen(false)} open={mobileMenuOpen} width={280}>
+            <Menu mode="vertical" items={menuItems} style={{ border: 'none' }} onClick={() => setMobileMenuOpen(false)} />
             {authed && (
               <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
                 <Typography.Text strong>Account</Typography.Text>
-                <Menu
-                  mode="vertical"
-                  items={userMenu.items}
-                  style={{ border: 'none', marginTop: 8 }}
-                  onClick={() => setMobileMenuOpen(false)}
-                />
+                <Menu mode="vertical" items={userMenu.items} style={{ border: 'none', marginTop: 8 }} onClick={() => setMobileMenuOpen(false)} />
               </div>
             )}
           </Drawer>
