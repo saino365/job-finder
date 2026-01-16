@@ -182,8 +182,8 @@ export default (app) => ({
         d.companyId = companyId;
         d.createdBy = user._id;
 
-        // Simple approval workflow:
-        // submitForApproval → PENDING (for admin approval)
+        // D113: Two-stage approval workflow:
+        // submitForApproval → PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5) → PENDING (1) → ACTIVE (2)
         // otherwise → DRAFT
         const submitForApproval = !!d.submitForApproval;
         delete d.submitForApproval;
@@ -193,7 +193,8 @@ export default (app) => ({
           if (!d.title || !d.title.trim()) {
             throw new Error('Title is required for submission');
           }
-          d.status = STATUS.PENDING;
+          // D113: Initial submission goes to PENDING_PRE_APPROVAL (status 4)
+          d.status = STATUS.PENDING_PRE_APPROVAL;
           d.submittedAt = new Date();
         } else {
           d.status = STATUS.DRAFT;
@@ -258,10 +259,13 @@ export default (app) => ({
 
         // Admin actions
         if (user.role === 'admin') {
-          // Pre-approval stage: PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5)
+          // D113: Pre-approval stage: PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5) → PENDING (1) for final approval
           if ((d.approvePreApproval === true || d.approve === true) && current.status === STATUS.PENDING_PRE_APPROVAL) {
             d.status = STATUS.PRE_APPROVED;
             d.preApprovedAt = new Date();
+            // D113: Automatically move to PENDING (1) for final approval after pre-approval
+            d.status = STATUS.PENDING;
+            d.finalSubmittedAt = new Date();
           }
 
           // Pre-approval rejected: PENDING_PRE_APPROVAL (4) → DRAFT (0)
