@@ -41,12 +41,22 @@ function ResetPasswordInner() {
         body: JSON.stringify({ token, email, password: values.password })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || 'Failed to reset password');
+      if (!res.ok) {
+        // D178: Ensure error message is displayed when password is the same
+        const errorMsg = data?.message || 'Failed to reset password';
+        setError(errorMsg); // Store error for Alert display
+        message.error(errorMsg, 5); // Show for 5 seconds
+        throw new Error(errorMsg);
+      }
+      setError(''); // Clear error on success
       setDone(true);
       message.success('Password updated. You can sign in now.');
       setTimeout(() => { window.location.href = '/login'; }, 1000);
     } catch (e) {
-      message.error(e.message);
+      // D178: Display error message prominently
+      const errorMsg = e.message || 'Failed to reset password';
+      setError(errorMsg);
+      message.error(errorMsg, 5);
     } finally {
       setLoading(false);
     }
@@ -68,6 +78,10 @@ function ResetPasswordInner() {
         )}
         {done && (
           <Alert type="success" showIcon style={{ marginBottom: 16 }} message="Password updated" />
+        )}
+        {/* D178: Display error message when password is the same */}
+        {error && (
+          <Alert type="error" showIcon style={{ marginBottom: 16 }} message="Password Reset Failed" description={error} closable onClose={() => setError('')} />
         )}
         <Form layout="vertical" onFinish={onFinish} disabled={loading || done || !hasParams || expired}>
           <Form.Item label="Email">

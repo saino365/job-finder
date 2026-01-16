@@ -12,7 +12,7 @@ import InternCard from "./InternCard";
 import FilterBar from "./FilterBar";
 import { getFilterConfig } from "./filterConfigs";
 import { useFilters } from "../hooks/useFilters";
-import { Layout, Row, Col, Typography, Skeleton, Empty, Space, Select, Button, message, Segmented, InputNumber } from "antd";
+import { Layout, Row, Col, Typography, Skeleton, Empty, Space, Select, Button, message, Segmented, InputNumber, Alert } from "antd";
 import { API_BASE_URL } from "../config";
 import { apiAuth, getToken } from "../lib/api";
 
@@ -59,6 +59,9 @@ export default function HomeContent({ jobs = [], companies = [] }) {
   const [companiesView, setCompaniesView] = useState('list');
   // Role detection (student/company/admin)
   const [role, setRole] = useState('');
+  const [user, setUser] = useState(null);
+  const [showIncompleteProfileAlert, setShowIncompleteProfileAlert] = useState(false);
+  
   useEffect(() => {
     const token = getToken();
     if (!token) return;
@@ -68,10 +71,65 @@ export default function HomeContent({ jobs = [], companies = [] }) {
         if (r.ok) {
           const me = await r.json();
           setRole(String(me?.role || '').toLowerCase());
+          setUser(me);
+          
+          // D168: Check if profile is incomplete for students
+          if (me?.role === 'student') {
+            const profileScore = calculateProfileScore(me);
+            const pendingActions = getPendingActions(me);
+            // Show alert if profile score is less than 100% or there are pending actions
+            if (profileScore < 100 || pendingActions.length > 0) {
+              // Check if user has dismissed the alert (once per session)
+              const dismissed = sessionStorage.getItem('incomplete_profile_alert_dismissed');
+              if (!dismissed) {
+                setShowIncompleteProfileAlert(true);
+              }
+            }
+          }
         }
       } catch (_) {}
     })();
   }, []);
+  
+  // D168: Calculate profile score (same logic as ProfilePageInner)
+  const calculateProfileScore = (userData) => {
+    let score = 0;
+    const checks = [
+      { condition: userData?.profile?.firstName && userData?.profile?.lastName, points: 10 },
+      { condition: userData?.profile?.phone, points: 5 },
+      { condition: userData?.profile?.location?.city || userData?.profile?.location?.state || userData?.profile?.location?.country, points: 4 },
+      { condition: userData?.internProfile?.university, points: 8 },
+      { condition: userData?.internProfile?.major, points: 8 },
+      { condition: userData?.internProfile?.gpa, points: 5 },
+      { condition: userData?.internProfile?.graduationYear, points: 5 },
+      { condition: userData?.internProfile?.resume, points: 15 },
+      { condition: userData?.internProfile?.educations?.length > 0, points: 10 },
+      { condition: userData?.internProfile?.workExperiences?.length > 0, points: 8 },
+      { condition: userData?.internProfile?.skills?.length > 0, points: 8 },
+      { condition: userData?.internProfile?.languages?.length > 0, points: 5 },
+      { condition: userData?.internProfile?.certifications?.length > 0, points: 5 },
+      { condition: userData?.internProfile?.interests?.length > 0, points: 4 },
+      { condition: userData?.internProfile?.eventExperiences?.length > 0, points: 4 },
+      { condition: userData?.internProfile?.preferences?.industries?.length > 0, points: 4 },
+      { condition: userData?.internProfile?.preferences?.locations?.length > 0, points: 4 },
+    ];
+    checks.forEach(check => {
+      if (check.condition) score += check.points;
+    });
+    return score;
+  };
+  
+  // D168: Get pending actions (same logic as ProfilePageInner)
+  const getPendingActions = (userData) => {
+    const actions = [];
+    if (!userData?.internProfile?.resume) actions.push('Upload Resume');
+    if (!userData?.internProfile?.educations || userData.internProfile.educations.length === 0) actions.push('Add Education');
+    if (!userData?.internProfile?.skills || userData.internProfile.skills.length === 0) actions.push('Add Skills');
+    if (!userData?.internProfile?.workExperiences || userData.internProfile.workExperiences.length === 0) actions.push('Add Work Experience');
+    if (!userData?.internProfile?.university) actions.push('Add University');
+    if (!userData?.internProfile?.major) actions.push('Add Major');
+    return actions;
+  };
 
   // Only FilterBar is used for filtering - no legacy filters
   const [internsView, setInternsView] = useState('list');

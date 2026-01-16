@@ -27,11 +27,24 @@ export default function RecommendedJobs({ user }) {
         });
 
         const preferences = user?.internProfile?.preferences;
+        const major = user?.internProfile?.major;
+        const skills = user?.internProfile?.skills || [];
 
         if (preferences?.industries && preferences.industries.length > 0) {
           preferences.industries.forEach((industry, index) => {
             queryParams.append('industry', industry);
           });
+        }
+
+        // D112: Add keyword search based on user's major and skills for better alignment
+        const keywordParts = [];
+        if (major) keywordParts.push(major);
+        if (skills.length > 0) {
+          // Add top 3 skills to keyword search
+          keywordParts.push(...skills.slice(0, 3));
+        }
+        if (keywordParts.length > 0) {
+          queryParams.append('keyword', keywordParts.join(' '));
         }
 
         const fetchUrl = `${API_BASE_URL}/job-listings?${queryParams}`;
@@ -44,6 +57,40 @@ export default function RecommendedJobs({ user }) {
 
         const data = await response.json();
         let jobsList = data.data || data || [];
+
+        // D112: Additional client-side filtering to improve alignment with user profile
+        // Score jobs based on how well they match the user's profile
+        if (major || skills.length > 0) {
+          jobsList = jobsList.map(job => {
+            let score = 0;
+            const jobTitle = (job.title || '').toLowerCase();
+            const jobDescription = (job.description || '').toLowerCase();
+            const jobProfession = (job.profession || '').toLowerCase();
+            const majorLower = (major || '').toLowerCase();
+            
+            // Check if job title/description/profession matches user's major
+            if (major && (jobTitle.includes(majorLower) || jobDescription.includes(majorLower) || jobProfession.includes(majorLower))) {
+              score += 10;
+            }
+            
+            // Check if job matches user's skills
+            if (skills.length > 0) {
+              const jobText = `${jobTitle} ${jobDescription} ${jobProfession}`;
+              const matchedSkills = skills.filter(skill => 
+                jobText.includes(skill.toLowerCase())
+              );
+              score += matchedSkills.length * 5;
+            }
+            
+            return { ...job, _matchScore: score };
+          }).sort((a, b) => {
+            // Sort by match score (highest first), then by creation date
+            if (b._matchScore !== a._matchScore) {
+              return b._matchScore - a._matchScore;
+            }
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }).map(({ _matchScore, ...job }) => job); // Remove score from final result
+        }
 
         // Filter by preferred start date (D26, D27)
         if (preferences?.preferredStartDate || preferences?.startDate) {

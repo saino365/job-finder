@@ -16,6 +16,15 @@ export default function SavedJobsClient() {
     async function load() {
       setLoading(true);
       try {
+        // D201: Check if user is authenticated before loading
+        const token = typeof window !== 'undefined' ? localStorage.getItem('jf_token') : null;
+        if (!token) {
+          if (mounted) {
+            setItems([]);
+            setLoading(false);
+          }
+          return;
+        }
         // 1) Load saved job records for current user
         const savedRaw = await apiAuth('/saved-jobs', { method: 'GET' });
         const savedList = Array.isArray(savedRaw?.data) ? savedRaw.data : (Array.isArray(savedRaw) ? savedRaw : []);
@@ -27,7 +36,15 @@ export default function SavedJobsClient() {
         if (!mounted) return;
         setItems(jobs.filter(Boolean));
       } catch (e) {
-        if (mounted) message.error('Failed to load saved jobs.');
+        // D201: Handle authentication errors gracefully (e.g., after logout)
+        if (mounted) {
+          if (e.message?.includes('Not signed in') || e.message?.includes('401') || e.message?.includes('403')) {
+            setItems([]);
+            // Don't show error message if user is not authenticated (they might have logged out)
+          } else {
+            message.error('Failed to load saved jobs.');
+          }
+        }
       } finally {
         if (mounted) setLoading(false);
       }

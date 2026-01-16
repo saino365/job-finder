@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Space, Switch, Dropdown, theme as antdTheme, Avatar, Typography, Badge } from 'antd';
+import { Layout, Menu, Button, Space, Switch, Dropdown, theme as antdTheme, Avatar, Typography, Badge, Drawer } from 'antd';
 import Link from 'next/link';
-import { BellOutlined } from '@ant-design/icons';
+import { BellOutlined, MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useTheme } from './Providers';
@@ -168,7 +168,19 @@ export default function Navbar() {
   }, []);
 
   const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // D179: Mobile menu drawer state
+  const [isMobile, setIsMobile] = useState(false); // D179: Mobile detection
   const logoSrc = theme === 'dark' ? '/logo_rect_dark.svg' : '/logo_rect_light.svg';
+  
+  // D179: Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Dynamic menu items based on user role
   const menuItems = role === 'company' ? [
@@ -229,10 +241,47 @@ export default function Navbar() {
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', marginRight: 24 }}>
           <Image src={logoSrc} alt="Job Finder" width={128} height={32} priority />
         </Link>
-        {/* Fix hydration error: suppress hydration warning for Ant Design Menu component */}
-        <div suppressHydrationWarning>
-          <Menu className="nav-menu" theme={theme === 'dark' ? 'dark' : 'light'} mode="horizontal" selectable={false} style={{ flex: 1, background: 'transparent' }} items={menuItems} />
-        </div>
+        {/* D179: Mobile menu - hamburger button */}
+        {isMobile ? (
+          <>
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileMenuOpen(true)}
+              style={{ marginLeft: 'auto', marginRight: 8 }}
+            />
+            <Drawer
+              title="Menu"
+              placement="right"
+              onClose={() => setMobileMenuOpen(false)}
+              open={mobileMenuOpen}
+              width={280}
+            >
+              <Menu
+                mode="vertical"
+                items={menuItems}
+                style={{ border: 'none' }}
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              {authed && (
+                <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
+                  <Typography.Text strong>Account</Typography.Text>
+                  <Menu
+                    mode="vertical"
+                    items={userMenu.items}
+                    style={{ border: 'none', marginTop: 8 }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  />
+                </div>
+              )}
+            </Drawer>
+          </>
+        ) : (
+          /* Desktop menu - horizontal */
+          <div suppressHydrationWarning>
+            <Menu className="nav-menu" theme={theme === 'dark' ? 'dark' : 'light'} mode="horizontal" selectable={false} style={{ flex: 1, background: 'transparent' }} items={menuItems} />
+          </div>
+        )}
         <Space>
           {authed && (
             <Dropdown
@@ -255,7 +304,10 @@ export default function Navbar() {
               placement="bottomRight"
             >
               <Badge count={unreadCount} size="small">
-                <Button type="text" icon={<BellOutlined />} />
+                {/* D192: Add "Notifications" text label on mobile */}
+                <Button type="text" icon={<BellOutlined />}>
+                  {isMobile && <span style={{ marginLeft: 4 }}>Notifications</span>}
+                </Button>
               </Badge>
             </Dropdown>
           )}

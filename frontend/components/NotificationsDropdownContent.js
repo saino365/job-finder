@@ -1,5 +1,6 @@
 "use client";
 import { Button, Tabs, List, Tag, Typography, Space } from 'antd';
+import { useState, useEffect } from 'react';
 
 export default function NotificationsDropdownContent({
   notifs = [],
@@ -10,9 +11,29 @@ export default function NotificationsDropdownContent({
   onItemClick,
   tokenColors,
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // D192: Detect mobile/tab device
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const safeNotifs = Array.isArray(notifs) ? notifs : [];
-  const directNotifs = safeNotifs.filter(n => (n.channel || n.type || 'direct') !== 'watching');
-  const watchingNotifs = safeNotifs.filter(n => (n.channel || n.type) === 'watching');
+  // D202: Fix watching notifications filter - check both channel and type fields, and also check for job-related notifications
+  const directNotifs = safeNotifs.filter(n => {
+    const channel = n.channel || '';
+    const type = n.type || '';
+    return channel !== 'watching' && type !== 'watching' && !type.includes('job');
+  });
+  const watchingNotifs = safeNotifs.filter(n => {
+    const channel = n.channel || '';
+    const type = n.type || '';
+    // D202: Include job-related notifications in watching section (job_expiring, job_expired, job_renewal, etc.)
+    return channel === 'watching' || type === 'watching' || (type && (type.includes('job') || type.includes('track')));
+  });
   // D154: Check both isRead and read fields for unread status
   const unreadTag = (n) => (!n.isRead && !n.read ? <Tag color="blue">Unread</Tag> : null);
   const statusTag = (n) => {
@@ -32,11 +53,12 @@ export default function NotificationsDropdownContent({
   };
 
   return (
-    <div style={{ width: 420, background: tokenColors.bg, borderRadius: tokenColors.radius, boxShadow: tokenColors.shadow, boxSizing: 'border-box' }}>
+    <div style={{ width: isMobile ? '100vw' : 420, maxWidth: isMobile ? '100vw' : 420, background: tokenColors.bg, borderRadius: tokenColors.radius, boxShadow: tokenColors.shadow, boxSizing: 'border-box' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding: '8px 12px', fontWeight: 600, borderBottom: `1px solid ${tokenColors.border}` }}>
         <span>Notifications</span>
         <Button type="link" size="small" onClick={onMarkAll}>Mark all as read</Button>
       </div>
+      {/* D192: Ensure Direct and Watching tabs are visible on mobile */}
       <Tabs size="small" activeKey={notifTab} onChange={setNotifTab} items={[
         { key: 'direct', label: 'Direct', children: (
           <div style={{ maxHeight: 420, overflowY: 'auto', padding: '8px 8px' }}>
@@ -98,7 +120,8 @@ export default function NotificationsDropdownContent({
         ) },
       ]} />
       <div style={{ position:'sticky', bottom: 0, background: tokenColors.bg, borderTop: `1px solid ${tokenColors.border}`, padding: 8, textAlign: 'center' }}>
-        <a href="/notifications">View all</a>
+        {/* D203: Redirect to watching page when clicking from watching tab */}
+        <a href={notifTab === 'watching' ? '/notifications?tab=watching' : '/notifications'}>View all</a>
       </div>
     </div>
   );

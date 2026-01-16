@@ -15,6 +15,15 @@ export default function NewJobListingPage() {
   const [loading, setLoading] = useState(false);
   const [company, setCompany] = useState(null);
   const [current, setCurrent] = useState(0);
+  // D181: Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Single form instance for all steps
   const [form] = Form.useForm();
@@ -431,7 +440,8 @@ export default function NewJobListingPage() {
       ),
     },
     {
-      title: "Onboarding materials",
+      // D184: Fix word alignment - ensure proper spacing
+      title: "Onboarding Materials",
       content: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <div>
@@ -496,7 +506,12 @@ export default function NewJobListingPage() {
   return (
     <Layout>
       <Navbar />
-      <Layout.Content style={{ maxWidth: 1200, margin: '24px auto', padding: '0 16px' }}>
+      {/* D181: Mobile-responsive layout */}
+      <Layout.Content style={{ 
+        maxWidth: 1200, 
+        margin: '24px auto', 
+        padding: isMobile ? '0 8px' : '0 16px' 
+      }}>
         <Card>
           <Title level={3} style={{ marginBottom: 16 }}>Create Job Listing</Title>
 
@@ -511,7 +526,14 @@ export default function NewJobListingPage() {
             />
           )}
 
-          <Steps current={current} items={steps.map(s=>({ title: s.title }))} style={{ marginBottom: 24 }} />
+          {/* D181: Mobile-responsive steps */}
+          <Steps 
+            current={current} 
+            items={steps.map(s=>({ title: s.title }))} 
+            style={{ marginBottom: 24 }}
+            responsive={isMobile}
+            size={isMobile ? 'small' : 'default'}
+          />
           <Form form={form} layout="vertical" style={{ paddingTop: 8 }}>
             {steps.map((s, idx) => (
               <div key={idx} style={{ display: idx === current ? 'block' : 'none' }}>
@@ -520,16 +542,47 @@ export default function NewJobListingPage() {
             ))}
           </Form>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-            <Button disabled={current===0} onClick={prev}>Previous</Button>
+          {/* D181: Mobile-responsive buttons */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            marginTop: 24,
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 12 : 0
+          }}>
+            <Button 
+              disabled={current===0} 
+              onClick={prev}
+              style={{ width: isMobile ? '100%' : 'auto' }}
+            >
+              Previous
+            </Button>
 
             {current === steps.length - 1 ? (
-              <Space>
-                <Button onClick={saveDraft} loading={loading}>Save as Draft</Button>
-                <Button type="primary" onClick={submitJob} loading={loading}>Submit</Button>
+              <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : 'auto' }}>
+                <Button 
+                  onClick={saveDraft} 
+                  loading={loading}
+                  style={{ width: isMobile ? '100%' : 'auto' }}
+                >
+                  Save as Draft
+                </Button>
+                <Button 
+                  type="primary" 
+                  onClick={submitJob} 
+                  loading={loading}
+                  style={{ width: isMobile ? '100%' : 'auto' }}
+                >
+                  Submit
+                </Button>
               </Space>
             ) : (
-              <Button onClick={next}>Next</Button>
+              <Button 
+                onClick={next}
+                style={{ width: isMobile ? '100%' : 'auto' }}
+              >
+                Next
+              </Button>
             )}
           </div>
         </Card>

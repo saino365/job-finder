@@ -28,16 +28,13 @@ const InviteStatusLabel = Object.freeze({
 });
 
 // Job listing status (integer enum)
-// Default simplified workflow uses 0-3:
-// DRAFT → PENDING → ACTIVE → CLOSED
-// Values 4 and 5 are kept for backward compatibility with pre-approval workflow
-// PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5) → PENDING (1) → ACTIVE (2)
+// Two-stage approval workflow:
+// DRAFT → PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5) → PENDING (1) → ACTIVE (2) → CLOSED (3)
 const JobListingStatus = Object.freeze({
   DRAFT: 0,
   PENDING: 1,
   ACTIVE: 2,
   CLOSED: 3,
-  // Back-compat (pre-approval)
   PENDING_PRE_APPROVAL: 4,
   PRE_APPROVED: 5,
 });

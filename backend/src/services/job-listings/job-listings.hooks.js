@@ -53,9 +53,28 @@ export default (app) => ({
         if (!user || user.role === 'student') {
         ctx.params.query.status = STATUS.ACTIVE;
 
-        // Also filter out expired jobs (expiresAt has passed)
-        // This ensures expired jobs are hidden immediately, not just after scheduler runs
-        ctx.params.query.expiresAt = { $gt: new Date() };
+        // D173: Filter out expired jobs, but include jobs without expiresAt or with null expiresAt
+        // This ensures expired jobs are hidden immediately, but jobs without expiry date are still shown
+        const now = new Date();
+        const expiresAtCondition = {
+          $or: [
+            { expiresAt: { $gt: now } }, // Not expired
+            { expiresAt: { $exists: false } }, // No expiry date set
+            { expiresAt: null } // Null expiry date
+          ]
+        };
+        
+        // If there are already $and conditions, add to them; otherwise create $and
+        if (ctx.params.query.$and) {
+          ctx.params.query.$and.push(expiresAtCondition);
+        } else if (ctx.params.query.$or) {
+          // If $or already exists (e.g., from location filter), wrap both in $and
+          const existingOr = ctx.params.query.$or;
+          delete ctx.params.query.$or;
+          ctx.params.query.$and = [existingOr, expiresAtCondition];
+        } else {
+          ctx.params.query.$or = expiresAtCondition.$or;
+        }
 
         // Handle custom filters that need backend processing
         const q = { ...(ctx.params.query || {}) };
@@ -182,8 +201,8 @@ export default (app) => ({
         d.companyId = companyId;
         d.createdBy = user._id;
 
-        // Simple approval workflow:
-        // submitForApproval → PENDING (for admin approval)
+        // D113: Two-stage approval workflow:
+        // submitForApproval → PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5) → PENDING (1) → ACTIVE (2)
         // otherwise → DRAFT
         const submitForApproval = !!d.submitForApproval;
         delete d.submitForApproval;
@@ -193,7 +212,8 @@ export default (app) => ({
           if (!d.title || !d.title.trim()) {
             throw new Error('Title is required for submission');
           }
-          d.status = STATUS.PENDING;
+          // D113: Initial submission goes to PENDING_PRE_APPROVAL (status 4)
+          d.status = STATUS.PENDING_PRE_APPROVAL;
           d.submittedAt = new Date();
         } else {
           d.status = STATUS.DRAFT;
@@ -258,10 +278,13 @@ export default (app) => ({
 
         // Admin actions
         if (user.role === 'admin') {
-          // Pre-approval stage: PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5)
+          // D113: Pre-approval stage: PENDING_PRE_APPROVAL (4) → PRE_APPROVED (5) → PENDING (1) for final approval
           if ((d.approvePreApproval === true || d.approve === true) && current.status === STATUS.PENDING_PRE_APPROVAL) {
             d.status = STATUS.PRE_APPROVED;
             d.preApprovedAt = new Date();
+            // D113: Automatically move to PENDING (1) for final approval after pre-approval
+            d.status = STATUS.PENDING;
+            d.finalSubmittedAt = new Date();
           }
 
           // Pre-approval rejected: PENDING_PRE_APPROVAL (4) → DRAFT (0)
@@ -273,12 +296,26 @@ export default (app) => ({
           }
 
           // Final approval: PENDING (1) → ACTIVE (2)
+          // D186: Respect publishAt date - if set to future, keep as PENDING until publishAt arrives
           if (d.approve === true && current.status === STATUS.PENDING) {
-            d.status = STATUS.ACTIVE;
             d.approvedAt = new Date();
-            if (!current.publishAt) d.publishAt = new Date();
             const pub = d.publishAt || current.publishAt || new Date();
-            d.expiresAt = computeExpiry(pub);
+            const now = new Date();
+            
+            // D186: If publishAt is in the future, keep status as PENDING (approved but not yet published)
+            // The scheduler will activate it when publishAt arrives
+            if (new Date(pub) > now) {
+              // Approved but scheduled for future publication - keep as PENDING
+              // Status will be changed to ACTIVE by scheduler when publishAt arrives
+              d.publishAt = pub;
+              d.expiresAt = computeExpiry(pub);
+              // Don't change status to ACTIVE yet - it will be activated by scheduler
+            } else {
+              // Publish immediately
+              d.status = STATUS.ACTIVE;
+              if (!current.publishAt) d.publishAt = now;
+              d.expiresAt = computeExpiry(d.publishAt);
+            }
           }
 
           // D125: Reject - PENDING → DRAFT (keep as DRAFT for now, but ensure rejectionReason is saved)
@@ -387,7 +424,7 @@ export default (app) => ({
           console.log('Job Backend: Industry filter results:', { beforeCount, afterCount: jobs.length });
         }
 
-        // Filter by keyword across title, description, and company name
+        // D187: Filter by keyword across title, description, company name, position, and profession
         if (keywordFilter) {
           console.log('Job Backend: Applying comprehensive keyword filter after population:', { keywordFilter });
           const beforeCount = jobs.length;
@@ -397,6 +434,9 @@ export default (app) => ({
             if (job.title && job.title.toLowerCase().includes(keyword)) return true;
             if (job.description && job.description.toLowerCase().includes(keyword)) return true;
             if (job.company && job.company.name && job.company.name.toLowerCase().includes(keyword)) return true;
+            // D187: Include position and profession in keyword search
+            if (job.position && job.position.toLowerCase().includes(keyword)) return true;
+            if (job.profession && job.profession.toLowerCase().includes(keyword)) return true;
             return false;
           });
 
