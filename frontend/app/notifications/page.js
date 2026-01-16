@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { Layout, Card, List, Typography, Tag, Space, Button, Pagination, Skeleton, Empty, Tabs } from "antd";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -8,7 +8,7 @@ import { API_BASE_URL } from "../../components/../config";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function NotificationsPage() {
+function NotificationsPageContent() {
   const searchParams = useSearchParams();
   const activeTab = searchParams?.get('tab') || 'direct';
   const [items, setItems] = React.useState([]);
