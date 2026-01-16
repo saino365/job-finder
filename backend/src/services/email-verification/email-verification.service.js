@@ -55,9 +55,10 @@ class EmailVerificationService {
 
     let subject, text, html;
     if (isCompany) {
+      // D177: Include verification code in company email
       subject = 'Welcome to JobFinder - Verify Your Company Account';
-      text = `Welcome to JobFinder! Click to verify your email and setup your company: ${verifyLink}\n\n(This link expires in 24 hours.)`;
-      html = companyVerifyEmailTemplate({ brandName: 'JobFinder', verifyLink });
+      text = `Welcome to JobFinder! Use this code to verify your email: ${code}\n\nOr click this link: ${verifyLink}\n\n(This code and link expire in 24 hours.)`;
+      html = companyVerifyEmailTemplate({ brandName: 'JobFinder', code, verifyLink });
     } else {
       subject = 'Verify your email';
       text = `Click to verify: ${verifyLink}\n\n(This link expires in 24 hours.)`;
