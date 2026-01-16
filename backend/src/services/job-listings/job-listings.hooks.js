@@ -53,9 +53,14 @@ export default (app) => ({
         if (!user || user.role === 'student') {
         ctx.params.query.status = STATUS.ACTIVE;
 
-        // Also filter out expired jobs (expiresAt has passed)
-        // This ensures expired jobs are hidden immediately, not just after scheduler runs
-        ctx.params.query.expiresAt = { $gt: new Date() };
+        // D173: Filter out expired jobs, but include jobs without expiresAt or with null expiresAt
+        // This ensures expired jobs are hidden immediately, but jobs without expiry date are still shown
+        const now = new Date();
+        ctx.params.query.$or = [
+          { expiresAt: { $gt: now } }, // Not expired
+          { expiresAt: { $exists: false } }, // No expiry date set
+          { expiresAt: null } // Null expiry date
+        ];
 
         // Handle custom filters that need backend processing
         const q = { ...(ctx.params.query || {}) };
