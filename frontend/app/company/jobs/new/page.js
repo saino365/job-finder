@@ -440,7 +440,8 @@ export default function NewJobListingPage() {
       ),
     },
     {
-      title: "Onboarding materials",
+      // D184: Fix word alignment - ensure proper spacing
+      title: "Onboarding Materials",
       content: (
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <div>

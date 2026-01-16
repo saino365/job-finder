@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Layout, Card, Typography, Switch, Space, Divider, Button, message, Select } from 'antd';
-import { MoonOutlined, SunOutlined, BellOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
+import { MoonOutlined, SunOutlined, BellOutlined, GlobalOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useTheme } from '../../components/Providers';
@@ -22,6 +22,7 @@ export default function SettingsPage() {
   });
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState('Asia/Kuala_Lumpur');
+  const [hidePhoneForCompanies, setHidePhoneForCompanies] = useState(false); // D185: Hide phone from companies
   const [loading, setLoading] = useState(false);
 
   // Load user preferences on mount
@@ -39,6 +40,10 @@ export default function SettingsPage() {
           // Load language and timezone from user profile if available
           if (user?.profile?.language) setLanguage(user.profile.language);
           if (user?.profile?.timezone) setTimezone(user.profile.timezone);
+          // D185: Load hidePhoneForCompanies setting
+          if (user?.profile?.hidePhoneForCompanies !== undefined) {
+            setHidePhoneForCompanies(user.profile.hidePhoneForCompanies);
+          }
         }
       } catch (e) {
         console.warn('Failed to load preferences:', e);
@@ -104,6 +109,35 @@ export default function SettingsPage() {
       }
     } catch (e) {
       message.error('Failed to save timezone preference');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // D185: Handle hide phone from companies setting
+  const handleHidePhoneChange = async (checked) => {
+    setHidePhoneForCompanies(checked);
+    const token = getToken();
+    if (!token) {
+      message.warning('Please sign in to save preferences');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ 'profile.hidePhoneForCompanies': checked })
+      });
+      if (res.ok) {
+        message.success(checked ? 'Phone number hidden from companies' : 'Phone number visible to companies');
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (e) {
+      message.error('Failed to save privacy preference');
+      setHidePhoneForCompanies(!checked); // Revert on error
     } finally {
       setLoading(false);
     }
@@ -265,6 +299,29 @@ export default function SettingsPage() {
                   { value: 'Asia/Jakarta', label: 'Jakarta (GMT+7)' },
                   { value: 'Asia/Bangkok', label: 'Bangkok (GMT+7)' }
                 ]}
+              />
+            </div>
+          </Space>
+        </Card>
+
+        {/* D185: Privacy Settings */}
+        <Card style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ marginBottom: 16 }}>
+            <LockOutlined style={{ marginRight: 8 }} />
+            Privacy
+          </Title>
+          
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <Text strong>Hide Phone from Companies</Text>
+                <br />
+                <Text type="secondary">When enabled, your phone number will not be visible to companies viewing your profile</Text>
+              </div>
+              <Switch 
+                checked={hidePhoneForCompanies} 
+                onChange={handleHidePhoneChange}
+                disabled={loading}
               />
             </div>
           </Space>
