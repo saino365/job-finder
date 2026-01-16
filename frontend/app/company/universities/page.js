@@ -115,15 +115,24 @@ export default function CompanyUniversitiesPage(){
       if (!selectedRowKeys.length) { message.info('Select candidates first'); return; }
       const v = await inviteForm.validateFields();
       const token = localStorage.getItem('jf_token');
-      const res = await fetch(`${API_BASE_URL}/programme-candidates`, {
+      // D169: Fix send invitation - use null ID for bulk PATCH operation
+      const res = await fetch(`${API_BASE_URL}/programme-candidates/null`, {
         method: 'PATCH',
         headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userIds: selectedRowKeys, type: 'profile_access', message: v.message || undefined })
       });
-      if (!res.ok) throw new Error('Failed to send invites');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to send invites');
+      }
       message.success('Invitations sent');
       setInviteOpen(false); inviteForm.resetFields(); setSelectedRowKeys([]);
-    } catch (e) { if (e?.errorFields) return; message.error(e.message || 'Failed'); }
+      // Reload candidates to reflect invitation status
+      loadCandidates();
+    } catch (e) { 
+      if (e?.errorFields) return; 
+      message.error(e.message || 'Failed to send invitations'); 
+    }
   }
 
   return (
