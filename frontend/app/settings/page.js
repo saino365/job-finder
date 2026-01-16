@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Layout, Card, Typography, Switch, Space, Divider, Button, message, Select } from 'antd';
-import { MoonOutlined, SunOutlined, BellOutlined, GlobalOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
+import { MoonOutlined, SunOutlined, BellOutlined, GlobalOutlined, UserOutlined, LockOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useTheme } from '../../components/Providers';
@@ -23,6 +23,8 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState('Asia/Kuala_Lumpur');
   const [hidePhoneForCompanies, setHidePhoneForCompanies] = useState(false); // D185: Hide phone from companies
+  const [timesheetCadence, setTimesheetCadence] = useState('weekly'); // D195: Timesheet cadence
+  const [userRole, setUserRole] = useState(null); // D195: Track user role
   const [loading, setLoading] = useState(false);
 
   // Load user preferences on mount
@@ -37,12 +39,27 @@ export default function SettingsPage() {
         });
         if (res.ok) {
           const user = await res.json();
+          // D195: Set user role
+          setUserRole(user?.role);
           // Load language and timezone from user profile if available
           if (user?.profile?.language) setLanguage(user.profile.language);
           if (user?.profile?.timezone) setTimezone(user.profile.timezone);
           // D185: Load hidePhoneForCompanies setting
           if (user?.profile?.hidePhoneForCompanies !== undefined) {
             setHidePhoneForCompanies(user.profile.hidePhoneForCompanies);
+          }
+          // D195: Load timesheet cadence from company profile if user is company
+          if (user?.role === 'company') {
+            const companyRes = await fetch(`${API_BASE_URL}/companies?ownerUserId=${user._id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (companyRes.ok) {
+              const companyData = await companyRes.json();
+              const company = Array.isArray(companyData?.data) ? companyData.data[0] : companyData;
+              if (company?.timesheetCadence) {
+                setTimesheetCadence(company.timesheetCadence);
+              }
+            }
           }
         }
       } catch (e) {
@@ -326,6 +343,70 @@ export default function SettingsPage() {
             </div>
           </Space>
         </Card>
+
+        {/* D195: Timesheet Cadence Settings (Company only) */}
+        {userRole === 'company' && (
+          <Card style={{ marginBottom: 24 }}>
+            <Title level={4} style={{ marginBottom: 16 }}>
+              <ClockCircleOutlined style={{ marginRight: 8 }} />
+              Timesheet Settings
+            </Title>
+            <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <Text strong>Timesheet Cadence</Text>
+                  <br />
+                  <Text type="secondary">Default timesheet submission frequency for new employees</Text>
+                </div>
+                <Select
+                  value={timesheetCadence}
+                  onChange={async (value) => {
+                    setTimesheetCadence(value);
+                    const token = getToken();
+                    if (!token) { message.warning('Please sign in to save preferences'); return; }
+                    try {
+                      setLoading(true);
+                      // Get company ID
+                      const userRes = await fetch(`${API_BASE_URL}/users/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      if (!userRes.ok) throw new Error('Failed to get user');
+                      const user = await userRes.json();
+                      const companyRes = await fetch(`${API_BASE_URL}/companies?ownerUserId=${user._id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      if (!companyRes.ok) throw new Error('Failed to get company');
+                      const companyData = await companyRes.json();
+                      const company = Array.isArray(companyData?.data) ? companyData.data[0] : companyData;
+                      if (!company?._id) throw new Error('Company not found');
+                      // Update company with timesheet cadence
+                      const updateRes = await fetch(`${API_BASE_URL}/companies/${company._id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ timesheetCadence: value })
+                      });
+                      if (updateRes.ok) {
+                        message.success('Timesheet cadence saved');
+                      } else {
+                        throw new Error('Failed to save');
+                      }
+                    } catch (e) {
+                      message.error('Failed to save timesheet cadence');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  style={{ width: 200 }}
+                  options={[
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'biweekly', label: 'Bi-weekly' },
+                    { value: 'monthly', label: 'Monthly' }
+                  ]}
+                />
+              </div>
+            </Space>
+          </Card>
+        )}
 
         {/* Account Settings */}
         <Card>
