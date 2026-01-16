@@ -59,24 +59,39 @@ export default (app) => ({
         const query = {};
 
         // Handle industry filtering - support both legacy 'nature' and direct 'industry' filters
+        // D174: Normalize industry values and use case-insensitive matching
+        const normalizeIndustry = (ind) => {
+          if (!ind) return ind;
+          const normalized = String(ind).trim();
+          // Normalize common variations
+          if (normalized.toLowerCase() === 'technology') return 'Information Technology';
+          if (normalized.toLowerCase() === 'it') return 'Information Technology';
+          return normalized;
+        };
+        
         if (industryFilter) {
-          // For student search, use exact matching (FeathersJS doesn't allow $regex in query params)
-          if (typeof industryFilter === 'string') {
-            query.industry = industryFilter; // Exact match
-            console.log('🏢 Backend: Applied industry exact filter:', { industryFilter, query: query.industry });
-          } else if (Array.isArray(industryFilter)) {
-            // Multiple industries - use $in with exact match
-            query.industry = { $in: industryFilter };
-            console.log('🏢 Backend: Applied industry array filter:', { industryFilter, query: query.industry });
+          // D174: Normalize and use case-insensitive regex matching for industry
+          const normalizedFilter = typeof industryFilter === 'string' 
+            ? normalizeIndustry(industryFilter)
+            : (Array.isArray(industryFilter) ? industryFilter.map(normalizeIndustry) : industryFilter);
+          
+          if (typeof normalizedFilter === 'string') {
+            // Use case-insensitive regex for matching
+            query.industry = { $regex: new RegExp(`^${normalizedFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+            console.log('🏢 Backend: Applied industry case-insensitive filter:', { industryFilter, normalizedFilter, query: query.industry });
+          } else if (Array.isArray(normalizedFilter)) {
+            // Multiple industries - use $in with case-insensitive regex
+            query.industry = { $in: normalizedFilter.map(ind => new RegExp(`^${ind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')) };
+            console.log('🏢 Backend: Applied industry array filter (case-insensitive):', { industryFilter, normalizedFilter, query: query.industry });
           } else {
-            // Fallback for other cases
-            query.industry = industryFilter;
-            console.log('🏢 Backend: Applied industry direct filter:', { industryFilter, query: query.industry });
+            query.industry = normalizedFilter;
+            console.log('🏢 Backend: Applied industry direct filter:', { industryFilter, normalizedFilter, query: query.industry });
           }
         } else if (nature) {
-          // Legacy nature filter (exact match to avoid FeathersJS validation issues)
-          query.industry = nature;
-          console.log('🏢 Backend: Applied nature filter:', { nature, query: query.industry });
+          // Legacy nature filter - normalize and use case-insensitive matching
+          const normalizedNature = normalizeIndustry(nature);
+          query.industry = { $regex: new RegExp(`^${normalizedNature.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+          console.log('🏢 Backend: Applied nature filter (case-insensitive):', { nature, normalizedNature, query: query.industry });
         }
 
         // Store city for filtering in after hook (avoid FeathersJS validation issues)
