@@ -264,7 +264,16 @@ function MonitoringClient() {
         return '-';
       }
     },
-    { title: 'Submitted', dataIndex: 'finalSubmittedAt', key: 'finalSubmittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
+    // D189: Ensure Company, Submitted, Pre-Approved columns are visible
+    { 
+      title: 'Company', 
+      key: 'company', 
+      render: (_, r) => {
+        const companyName = r.company?.name || r.companyName || (r.companyId && typeof r.companyId === 'object' ? r.companyId.name : null) || '-';
+        return companyName;
+      }
+    },
+    { title: 'Submitted', dataIndex: 'submittedAt', key: 'submittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Pre-Approved', dataIndex: 'preApprovedAt', key: 'preApprovedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Actions', key: 'actions', render: (_, record) => {
       // Show status for processed items

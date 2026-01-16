@@ -43,7 +43,8 @@ class AdminMonitoringService {
       countOrZero(() => CompanyModel.countDocuments({})),
 
       countOrZero(() => UserModel.countDocuments({ role: 'student' })),
-      countOrZero(() => UserModel.countDocuments({ role: 'company' })),
+      // D190: Count only approved companies, not all company users
+      countOrZero(() => CompanyModel.countDocuments({ $or: [ { verifiedStatus: 1 }, { verifiedStatus: 'approved' } ] })),
       countOrZero(() => UserModel.countDocuments({ role: 'admin' })),
 
       (async () => {
@@ -122,7 +123,18 @@ class AdminMonitoringService {
       }
       const total = await JobModel.countDocuments(criteria);
       const data = await JobModel.find(criteria).sort({ finalSubmittedAt: -1 }).skip($skip).limit($limit).lean();
-      return { total, data };
+      // D189: Populate company name for monitoring display
+      const populatedData = await Promise.all(data.map(async (job) => {
+        if (job.companyId) {
+          const company = await CompanyModel.findById(job.companyId).select('name').lean();
+          if (company) {
+            job.company = { name: company.name };
+            job.companyName = company.name;
+          }
+        }
+        return job;
+      }));
+      return { total, data: populatedData };
     }
 
     // Legacy support for 'pending_jobs' - defaults to pending_pre_approval
