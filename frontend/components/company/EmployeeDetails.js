@@ -165,6 +165,13 @@ export default function EmployeeDetails({ record }) {
             {pendingTerm && (
               <div>
                 Termination request pending
+                {/* D199: Display Additional Remark for termination request */}
+                {detail.termination?.remark && (
+                  <div style={{ marginTop: 8, marginBottom: 8, padding: 8, background: '#f5f5f5', borderRadius: 4 }}>
+                    <Text strong>Additional Remark: </Text>
+                    <Text>{detail.termination.remark}</Text>
+                  </div>
+                )}
                 <div>
                   <Space>
                     <Button size="small" type="primary" onClick={()=>decideTermination(detail.termination._id, true)}>Approve</Button>

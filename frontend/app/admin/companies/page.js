@@ -72,7 +72,9 @@ export default function AdminCompaniesPage() {
     if (!res.ok) throw new Error('Failed to find verification');
     const data = await res.json();
     const verifications = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
-    return verifications.find(v => v.companyId === companyId);
+    // D200: Fix company ID comparison - handle both string and ObjectId formats
+    const companyIdStr = String(companyId);
+    return verifications.find(v => String(v.companyId) === companyIdStr || String(v.companyId?._id || v.companyId) === companyIdStr);
   }
 
   async function approveCompany(companyId) {
