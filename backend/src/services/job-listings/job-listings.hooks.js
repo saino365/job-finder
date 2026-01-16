@@ -424,7 +424,7 @@ export default (app) => ({
           console.log('Job Backend: Industry filter results:', { beforeCount, afterCount: jobs.length });
         }
 
-        // Filter by keyword across title, description, and company name
+        // D187: Filter by keyword across title, description, company name, position, and profession
         if (keywordFilter) {
           console.log('Job Backend: Applying comprehensive keyword filter after population:', { keywordFilter });
           const beforeCount = jobs.length;
@@ -434,6 +434,9 @@ export default (app) => ({
             if (job.title && job.title.toLowerCase().includes(keyword)) return true;
             if (job.description && job.description.toLowerCase().includes(keyword)) return true;
             if (job.company && job.company.name && job.company.name.toLowerCase().includes(keyword)) return true;
+            // D187: Include position and profession in keyword search
+            if (job.position && job.position.toLowerCase().includes(keyword)) return true;
+            if (job.profession && job.profession.toLowerCase().includes(keyword)) return true;
             return false;
           });
 
