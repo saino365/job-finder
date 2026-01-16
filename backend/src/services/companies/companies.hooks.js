@@ -282,14 +282,15 @@ export default (app) => ({
               if (!keywordMatch) matches = false;
             }
 
-            // Apply city filter
+            // D176: Apply location filter (city and state)
             if (cityFilter && matches) {
-              const city = cityFilter.toLowerCase();
-              const cityMatch = (
-                (company.address?.city && company.address.city.toLowerCase().includes(city)) ||
-                (company.address?.fullAddress && company.address.fullAddress.toLowerCase().includes(city))
+              const location = cityFilter.toLowerCase();
+              const locationMatch = (
+                (company.address?.city && company.address.city.toLowerCase().includes(location)) ||
+                (company.address?.state && company.address.state.toLowerCase().includes(location)) ||
+                (company.address?.fullAddress && company.address.fullAddress.toLowerCase().includes(location))
               );
-              if (!cityMatch) matches = false;
+              if (!locationMatch) matches = false;
             }
 
             return matches;
