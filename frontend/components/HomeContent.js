@@ -141,7 +141,8 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     updateFilter: handleFilterChange,
     clearAllFilters: handleClearAllFilters,
     hasActiveFilters,
-    toURLSearchParams
+    toURLSearchParams,
+    setMultipleFilters: setCompanyFilters
   } = useFilters({
     fieldOfStudy: [],
     educationLevel: [],
@@ -167,7 +168,8 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     filters: studentFilters,
     updateFilter: handleStudentFilterChange,
     clearAllFilters: handleClearStudentFilters,
-    hasActiveFilters: hasActiveStudentFilters
+    hasActiveFilters: hasActiveStudentFilters,
+    setMultipleFilters: setStudentFilters
   } = useFilters({
     industry: [],
     jobType: [],
@@ -323,6 +325,45 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     }
   }
 
+  // Company intern search profile
+  const [companyPrefApplied, setCompanyPrefApplied] = useState(false);
+  const companySearchProfileQuery = useQuery({
+    queryKey: ['company-search-profile-intern', role],
+    queryFn: async () => {
+      const token = getToken();
+      if (!token) return null;
+      const res = await fetch(`${API_BASE_URL}/search-profiles?kind=intern`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const items = data?.items || data?.data || [];
+      return items[0] || null;
+    },
+    enabled: role === 'company',
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (role !== 'company') return;
+    if (companyPrefApplied) return;
+    const filters = companySearchProfileQuery.data?.filters;
+    if (!filters) return;
+
+    console.log('📥 Loading saved company search profile:', filters);
+
+    const newCompanyFilters = {
+      fieldOfStudy: filters.fieldOfStudy || [],
+      educationLevel: filters.educationLevel || [],
+      university: filters.university || [],
+      workExperience: filters.workExperience || [],
+      skills: filters.skills || [],
+      preferredLocations: filters.preferredLocations || [],
+    };
+
+    console.log('📥 Applying company filters:', newCompanyFilters);
+    setCompanyFilters(newCompanyFilters);
+    setCompanyPrefApplied(true);
+  }, [role, companyPrefApplied, companySearchProfileQuery.data]);
+
   async function handleSaveStudentSearchProfile() {
     try {
       const {
@@ -333,24 +374,23 @@ export default function HomeContent({ jobs = [], companies = [] }) {
         salary
       } = studentFilters;
 
+      const payload = {
+        kind: 'company',
+        filters: {
+          industry: industry?.length > 0 ? industry : undefined,
+          jobType: jobType?.length > 0 ? jobType : undefined,
+          experience: experience?.length > 0 ? experience : undefined,
+          location: location?.length > 0 ? location : undefined,
+          salary: salary?.length > 0 ? salary : undefined,
+          filterSelections: studentFilters
+        }
+      };
       await apiAuth('/search-profiles', {
         method: 'POST',
-        body: {
-          kind: 'company',
-          filters: {
-            // Save student's search preferences for jobs and companies
-            industry: industry?.length > 0 ? industry : undefined,
-            jobType: jobType?.length > 0 ? jobType : undefined,
-            experience: experience?.length > 0 ? experience : undefined,
-            location: location?.length > 0 ? location : undefined,
-            salary: salary?.length > 0 ? salary : undefined,
-
-            // Save complete filter selections
-            filterSelections: studentFilters
-          }
-        }
+        body: payload
       });
       message.success('Search preferences saved');
+      studentSearchProfileQuery.refetch();
     } catch (e) {
       message.error(e.message || 'Failed to save search preferences');
     }
@@ -378,9 +418,23 @@ export default function HomeContent({ jobs = [], companies = [] }) {
     if (studentPrefApplied) return;
     const filters = studentSearchProfileQuery.data?.filters;
     if (!filters) return;
+
+    console.log('📥 Loading saved student search profile:', filters);
+
+    const newStudentFilters = {
+      industry: filters.industry || [],
+      jobType: filters.jobType || [],
+      experience: filters.experience || [],
+      location: filters.location || [],
+      salary: filters.salary || [],
+    };
+
+    console.log('📥 Applying filters:', newStudentFilters);
+    setStudentFilters(newStudentFilters);
+
     if (filters.keyword != null) setQ(filters.keyword);
     if (filters.nature != null) setNature(filters.nature);
-    if (filters.location != null) setCompanyCity(filters.location);
+    if (filters.location != null && filters.location.length > 0) setCompanyCity(filters.location[0]);
     if (filters.salaryRange) {
       setSalaryMin(filters.salaryRange.min ?? 0);
       setSalaryMax(filters.salaryRange.max ?? 5000);
@@ -580,24 +634,30 @@ export default function HomeContent({ jobs = [], companies = [] }) {
 
   async function handleSaveCompanySearchProfile() {
     try {
+      const payload = {
+        kind: 'intern-search',
+        filters: {
+          keyword: q || undefined,
+          industry: selectedFilters.industry || undefined,
+          location: selectedFilters.location || undefined,
+          fieldOfStudy: selectedFilters.fieldOfStudy || undefined,
+          educationLevel: selectedFilters.educationLevel || undefined,
+          university: selectedFilters.university || undefined,
+          workExperience: selectedFilters.workExperience || undefined,
+          skills: selectedFilters.skills || undefined,
+          preferredLocations: selectedFilters.preferredLocations || undefined,
+        },
+      };
       await apiAuth('/search-profiles', {
         method: 'POST',
-        body: {
-          kind: 'intern-search',
-          filters: {
-            keyword: q || undefined,
-            industry: selectedFilters.industry || undefined,
-            location: selectedFilters.location || undefined,
-            // keep structure similar for future backend extensions
-          },
-        },
+        body: payload,
       });
       message.success('Company search profile saved');
     } catch (e) {
       if (e.message?.includes('Not authenticated')) {
         message.warning('Sign in to save your company search profile');
       } else {
-        message.error('Failed to save company search profile');
+        message.error('Failed to save company search profile: ' + e.message);
       }
     }
   }

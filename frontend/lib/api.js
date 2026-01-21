@@ -33,7 +33,9 @@ export async function apiAuth(path, { method = 'POST', body } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    throw new Error(`${method} ${path} failed: ${res.status}`);
+    const errorText = await res.text();
+    console.error(`API Error: ${method} ${path}`, { status: res.status, body: errorText });
+    throw new Error(errorText || `${method} ${path} failed: ${res.status}`);
   }
   return res.json();
 }
