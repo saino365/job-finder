@@ -179,11 +179,11 @@ export default function CompaniesContent() {
             ))}
           </div>
         ) : companies.length > 0 ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "500px" }}>
-            <div style={{ flex: 1, minHeight: "450px" }}>
-              <Row gutter={[16, 16]} style={{ minHeight: "450px" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "500px", width: "100%" }}>
+            <div style={{ flex: 1, minHeight: "450px", width: "100%" }}>
+              <Row gutter={[16, 16]} style={{ minHeight: "450px", width: "100%" }}>
                 {companies.map((company) => (
-                  <Col xs={24} sm={12} md={8} lg={6} key={company._id}>
+                  <Col xs={24} sm={12} md={12} lg={8} key={company._id}>
                     <CompanyCard company={company} />
                   </Col>
                 ))}

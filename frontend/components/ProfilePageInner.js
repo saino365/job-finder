@@ -802,10 +802,10 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
                           {cert.issuer}
                         </Text>
                       )}
-                      {/* D151: Certification date display - show only month and year for consistency */}
+                      {/* D151: Certification date display - show full date including day */}
                       {cert.acquiredDate && (
                         <Text type="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14 }}>
-                          Issued {new Date(cert.acquiredDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                          Issued {new Date(cert.acquiredDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </Text>
                       )}
                       {cert.description && (
