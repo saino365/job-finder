@@ -337,8 +337,8 @@ export default (app) => {
         try {
           const Employment = app.service('employment-records')?.Model;
           const job = await JobModel.findById(doc.jobListingId).lean();
-          const startDate = job?.project?.startDate ? new Date(job.project.startDate) : undefined;
-          const endDate = job?.project?.endDate ? new Date(job.project.endDate) : undefined;
+          const startDate = job?.internshipStart ? new Date(job.internshipStart) : undefined;
+          const endDate = job?.internshipEnd ? new Date(job.internshipEnd) : undefined;
           const requiredDocs = ['contract','nda'];
           if (Employment) {
             const nowTs = now.getTime();
