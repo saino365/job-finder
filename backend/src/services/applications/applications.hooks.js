@@ -276,7 +276,8 @@ export default (app) => {
         ctx.params._email = { kind: 'status_email', to: 'student', template: 'offer' };
         return;
       }
-      if (action === 'reject' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE].includes(doc.status)) {
+      // D126: Reject action should NOT be allowed for PENDING_ACCEPTANCE - use declineOffer instead
+      if (action === 'reject' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED].includes(doc.status)) {
         const reason = String(ctx.data.reason || '').trim();
         if (!reason) { throw new BadRequest('Rejection reason is required'); }
         set({ status: S.REJECTED, rejectedAt: now, rejection: { by: 'company', reason } });
