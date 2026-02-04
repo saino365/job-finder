@@ -173,7 +173,8 @@ export default function ApplicationDetailPage({ params }) {
 
   // D78, D107: Fix action button visibility based on status
   const canShortlist = data && data.status === 0; // NEW
-  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2 || data.status === 3); // D107: Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, PENDING_ACCEPTANCE
+  // D126: Don't show Reject button when status is PENDING_ACCEPTANCE (3) - only show Decline Offer
+  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2); // Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED only
   const canSendOffer = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
   const canRejectOffered = data && data.status === 3; // Pending Acceptance
   const isPendingAcceptance = data && data.status === 3;

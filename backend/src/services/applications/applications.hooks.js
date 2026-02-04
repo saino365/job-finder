@@ -289,6 +289,14 @@ export default (app) => {
         ctx.params._notify = { type: 'interview_noshow', toUserId: doc.userId, toRole: 'student' };
         return;
       }
+      // D126: Add declineOffer action for company to decline offers pending acceptance
+      if (action === 'declineOffer' && doc.status === S.PENDING_ACCEPTANCE) {
+        const reason = String(ctx.data.reason || 'Offer declined by company').trim();
+        set({ status: S.REJECTED, rejectedAt: now, rejection: { by: 'company', reason } });
+        ctx.params._notify = { type: 'offer_declined_by_company', toUserId: doc.userId, toRole: 'student' };
+        ctx.params._email = { kind: 'status_email', to: 'student', template: 'rejected' };
+        return;
+      }
       throw Object.assign(new Error('Invalid action for current state'), { code: 400 });
     }
 

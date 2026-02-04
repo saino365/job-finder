@@ -110,5 +110,41 @@ describe('Applications service', () => {
     expect(afterResp.body.rejection?.by).toBe('company');
   });
 
+  test('company can decline offer when status is PENDING_ACCEPTANCE', async () => {
+    const { companyOwnerToken, companyId, jobId, studentId } = await bootstrap();
+    const AppModel = app.service('applications').Model;
+
+    // Create application and move it to PENDING_ACCEPTANCE status
+    const createdDoc = await AppModel.create({
+      userId: studentId,
+      companyId,
+      jobListingId: jobId,
+      status: S.SHORTLISTED,
+      submittedAt: new Date(),
+      validityUntil: new Date(Date.now() + 86400000)
+    });
+    const id = createdDoc._id.toString();
+
+    const cAuthz = { Authorization: `Bearer ${companyOwnerToken}` };
+
+    // Send offer to move to PENDING_ACCEPTANCE
+    const offered = await request(app).patch(`/applications/${id}`).set(cAuthz).send({
+      action: 'sendOffer',
+      title: 'Intern Offer',
+      letterKey: 'offers/test.pdf'
+    }).expect(200);
+    expect(offered.body.status).toBe(S.PENDING_ACCEPTANCE);
+
+    // Decline the offer
+    const declined = await request(app).patch(`/applications/${id}`).set(cAuthz).send({
+      action: 'declineOffer',
+      reason: 'Position no longer available'
+    }).expect(200);
+
+    expect(declined.body.status).toBe(S.REJECTED);
+    expect(declined.body.rejection?.by).toBe('company');
+    expect(declined.body.rejection?.reason).toBe('Position no longer available');
+  });
+
 });
 
