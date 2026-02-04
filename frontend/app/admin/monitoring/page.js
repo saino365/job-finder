@@ -71,7 +71,7 @@ function MonitoringClient() {
         body: JSON.stringify({ approve: true })
       });
       if (!res.ok) throw new Error('Failed to approve job listing');
-      message.success('Job listing approved and activated');
+      message.success('Pre-approved. Waiting for final submission.');
       load();
     } catch (e) {
       message.error(e.message || 'Failed to approve');
@@ -229,16 +229,17 @@ function MonitoringClient() {
           </Space>
         );
       }
-      if (record.status === 0 && record.rejectionReason) { // DRAFT with rejection reason
+      if (record.status === 0 && (record.rejectionReason || record.preApprovalRejectionReason)) { // DRAFT with rejection reason
+        const reason = record.rejectionReason || record.preApprovalRejectionReason;
         return (
           <Space>
             <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
             <Tag color="red">Rejected</Tag>
-            <span style={{ fontSize: '12px', color: '#666' }}>({record.rejectionReason})</span>
+            <span style={{ fontSize: '12px', color: '#666' }}>({reason})</span>
           </Space>
         );
       }
-      // Show buttons for pending items (status === 1)
+      // Show buttons for pending items (status === 4)
       return (
         <Space>
           <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
@@ -305,6 +306,40 @@ function MonitoringClient() {
     }}
   ];
 
+  const pendingCombinedColumns = [
+    ...baseCols,
+    { title: 'Submitted', dataIndex: 'submittedAt', key: 'submittedAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
+    { title: 'Actions', key: 'actions', render: (_, record) => {
+      // Show status for processed items
+      if (record.status === 2) {
+        return (
+          <Space>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+            <Tag color="green">Approved</Tag>
+          </Space>
+        );
+      }
+      if (record.status === 0 && (record.rejectionReason || record.preApprovalRejectionReason)) {
+        const reason = record.rejectionReason || record.preApprovalRejectionReason;
+        return (
+          <Space>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+            <Tag color="red">Rejected</Tag>
+            <span style={{ fontSize: '12px', color: '#666' }}>({reason})</span>
+          </Space>
+        );
+      }
+      const isPre = record.status === 4;
+      return (
+        <Space>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => (isPre ? approvePreApproval(record._id) : approveFinalApproval(record._id))}>Approve</Button>
+          <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, isPre)}>Reject</Button>
+        </Space>
+      );
+    }}
+  ];
+
   const pendingCompanyColumns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Registration No.', dataIndex: 'registrationNumber', key: 'registrationNumber' },
@@ -321,6 +356,7 @@ function MonitoringClient() {
     ];
     if (type === 'pending_pre_approval') return pendingPreApprovalColumns;
     if (type === 'pending_final_approval') return pendingFinalApprovalColumns;
+    if (type === 'pending_jobs') return pendingCombinedColumns;
     return pendingPreApprovalColumns; // default
   }, [type]);
 

@@ -1,6 +1,7 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { message } from "antd";
 import { Row, Col, Input, Typography, Pagination, Card, Skeleton, Empty, Space, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import Image from "next/image";
@@ -8,6 +9,7 @@ import JobCard from "./JobCard";
 import FilterBar from "./FilterBar";
 import { getFilterConfig } from "./filterConfigs";
 import { API_BASE_URL } from "../config";
+import { apiAuth, getToken } from "../lib/api";
 
 const { Title, Text } = Typography;
 
@@ -17,6 +19,7 @@ export default function JobsContent() {
   const [filters, setFilters] = useState({});
   const [page, setPage] = useState(1);
   const [savedProfiles, setSavedProfiles] = useState([]);
+  const [prefApplied, setPrefApplied] = useState(false);
 
   // Build query URL for jobs (using FeathersJS query syntax like JobsExplorer)
   const jobsUrl = useMemo(() => {
@@ -74,6 +77,44 @@ export default function JobsContent() {
     return `${API_BASE_URL}/job-listings?${params.toString()}`;
   }, [keyword, filters, page]);
 
+  // Load saved search profile
+  const jobSearchProfileQuery = useQuery({
+    queryKey: ['job-search-profile'],
+    queryFn: async () => {
+      const token = getToken();
+      if (!token) return null;
+      const res = await fetch(`${API_BASE_URL}/search-profiles?kind=job-search`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const items = data?.items || data?.data || [];
+      return items[0] || null;
+    },
+    enabled: typeof window !== 'undefined',
+    staleTime: 60_000,
+  });
+
+  // Apply saved preferences once
+  useEffect(() => {
+    if (prefApplied) return;
+    const savedFilters = jobSearchProfileQuery.data?.filters;
+    if (!savedFilters) return;
+
+    console.log('📥 Loading saved job search profile:', savedFilters);
+
+    const newFilters = {
+      industry: savedFilters.industry || [],
+      location: savedFilters.location || [],
+      salary: savedFilters.salary || [],
+      startDate: savedFilters.startDate || undefined,
+    };
+
+    setFilters(newFilters);
+    if (savedFilters.keyword) setKeyword(savedFilters.keyword);
+    setPrefApplied(true);
+  }, [prefApplied, jobSearchProfileQuery.data]);
+
   // D155: Fix job search loading - ensure proper error handling and response parsing
   const jobsQuery = useQuery({
     queryKey: ["jobs", jobsUrl],
@@ -123,24 +164,31 @@ export default function JobsContent() {
   };
 
   // Handle save search profile
-  const handleSaveSearchProfile = () => {
-    const profile = {
-      id: Date.now().toString(),
-      name: `Job Search ${new Date().toLocaleDateString()}`,
-      keyword,
-      filters,
-      createdAt: new Date().toISOString()
-    };
-    
-    const newProfiles = [...savedProfiles, profile];
-    setSavedProfiles(newProfiles);
-    
-    // Save to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('jobSearchProfiles', JSON.stringify(newProfiles));
+  const handleSaveSearchProfile = async () => {
+    try {
+      const { industry, location, salary, startDate } = filters;
+
+      await apiAuth('/search-profiles', {
+        method: 'POST',
+        body: {
+          kind: 'job-search',
+          filters: {
+            industry: industry?.length > 0 ? industry : undefined,
+            location: location?.length > 0 ? location : undefined,
+            salary: salary?.length > 0 ? salary : undefined,
+            startDate: startDate || undefined,
+            keyword: keyword || undefined
+          }
+        }
+      });
+      message.success('Job search preferences saved');
+    } catch (e) {
+      if (e.message?.includes('Not authenticated')) {
+        message.warning('Sign in to save your search preferences');
+      } else {
+        message.error('Failed to save search preferences');
+      }
     }
-    
-    console.log("🔍 Frontend: Saved search profile:", profile);
   };
 
   const jobs = jobsQuery.data?.data || [];
@@ -206,9 +254,9 @@ export default function JobsContent() {
             ))}
           </div>
         ) : jobs.length > 0 ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "500px" }}>
-            <div style={{ flex: 1 }}>
-              <Row gutter={[16, 16]}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "500px", width: "100%" }}>
+            <div style={{ flex: 1, width: "100%" }}>
+              <Row gutter={[16, 16]} style={{ width: "100%" }}>
                 {jobs.map((job) => (
                   <Col xs={24} key={job._id}>
                     <JobCard job={job} />

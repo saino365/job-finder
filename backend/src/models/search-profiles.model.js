@@ -35,8 +35,8 @@ const filtersSchema = new mongoose.Schema({
 
 const searchProfileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  kind: { type: String, enum: ['intern', 'company'], required: true, index: true },
-  name: { type: String }, // optional label if we ever allow multiple
+  kind: { type: String, enum: ['intern', 'company', 'job-search', 'intern-search'], required: true, index: true },
+  name: { type: String },
   filters: { type: filtersSchema, default: {} }
 }, { timestamps: true });
 
