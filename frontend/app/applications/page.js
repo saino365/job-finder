@@ -171,7 +171,20 @@ export default function MyApplicationsPage(){
       setDeclining(true);
       const v = await declineForm.validateFields();
       const token = localStorage.getItem('jf_token');
-      await fetch(`${API_BASE_URL}/applications/${offerRecord._id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'declineOffer', reason: v.reason || '' }) });
+      const res = await fetch(`${API_BASE_URL}/applications/${offerRecord._id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'declineOffer', reason: v.reason || '' }) });
+
+      if (!res.ok) {
+        let errorMessage = 'Failed to decline offer';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          const errorText = await res.text();
+          if (errorText) errorMessage = errorText;
+        }
+        throw new Error(errorMessage);
+      }
+
       message.success('Offer declined');
       setDeclineOpen(false);
       setOfferOpen(false);
