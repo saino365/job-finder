@@ -187,7 +187,14 @@ export default function ApplicationDetailPage({ params }) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`Action failed (${res.status})`);
+    if (!res.ok) {
+      let errorMsg = `Action failed (${res.status})`;
+      try {
+        const errorData = await res.json();
+        if (errorData.message) errorMsg = errorData.message;
+      } catch {}
+      throw new Error(errorMsg);
+    }
     return res.json();
   }
 
@@ -205,7 +212,7 @@ export default function ApplicationDetailPage({ params }) {
       await new Promise((resolve, reject) => {
         Modal.confirm({
           title: 'Confirm rejection',
-          content: 'Are you sure you want to reject this shortlisted application?',
+          content: 'Are you sure you want to reject this application?',
           okText: 'Reject', okButtonProps: { danger: true },
           onOk: resolve, onCancel: () => reject(new Error('cancel'))
         });
@@ -213,7 +220,13 @@ export default function ApplicationDetailPage({ params }) {
       await patchAction({ action: 'reject', reason: v.reason });
       message.success('Application rejected');
       setRejectOpen(false); rejectForm.resetFields(); load();
-    } catch (e) { if (e?.errorFields || e.message === 'cancel') return; message.error(e.message); }
+    } catch (e) {
+      // If user cancelled or validation failed, just return
+      if (e?.errorFields || e.message === 'cancel') return;
+      // Otherwise show the error
+      console.error('Reject error:', e);
+      message.error(e.message || 'Failed to reject application');
+    }
   }
 
   async function handleUpload(file) {
