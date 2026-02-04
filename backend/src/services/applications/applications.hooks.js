@@ -166,8 +166,23 @@ export default (app) => {
 
     const ACTIVE_STATUSES = [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE];
     const existingApp = await Applications.findOne({ userId: user._id, jobListingId: jobId });
+
+    // D201: Debug logging for reapplication after withdrawal
+    if (existingApp) {
+      console.log(`🔍 DEBUG: Found existing application for user ${user._id} and job ${jobId}`);
+      console.log(`   Existing app ID: ${existingApp._id}`);
+      console.log(`   Existing app status: ${existingApp.status}`);
+      console.log(`   ACTIVE_STATUSES: ${JSON.stringify(ACTIVE_STATUSES)}`);
+      console.log(`   Is status in ACTIVE_STATUSES? ${ACTIVE_STATUSES.includes(existingApp.status)}`);
+    }
+
     if (existingApp && ACTIVE_STATUSES.includes(existingApp.status)) {
+      console.log(`❌ DEBUG: Blocking reapplication - existing app is ACTIVE`);
       throw Object.assign(new Error('You have already applied for this position'), { code: 409 });
+    }
+
+    if (existingApp) {
+      console.log(`✅ DEBUG: Allowing reapplication - existing app status ${existingApp.status} is NOT active`);
     }
 
     const now = new Date();
