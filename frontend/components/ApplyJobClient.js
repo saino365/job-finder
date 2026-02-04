@@ -40,8 +40,10 @@ export default function ApplyJobClient({ jobId }) {
         ]);
 
         // D118: Check if email is verified before allowing application
+        // FIX: Read userRes.json() only ONCE and store it to avoid "body stream already read" error
+        let userData = null;
         if (userRes.ok) {
-          const userData = await userRes.json();
+          userData = await userRes.json(); // Read once and store
           if (!userData.isEmailVerified) {
             setError('Please verify your email address before applying for jobs. Check your inbox for the verification email.');
             return;
@@ -78,9 +80,8 @@ export default function ApplyJobClient({ jobId }) {
           return;
         }
 
-        // Get email from root user object
-        if (userRes.ok) {
-          const userData = await userRes.json();
+        // Get email from root user object - reuse the stored userData
+        if (userData) {
           setUserEmail(userData.email || '');
         }
 
