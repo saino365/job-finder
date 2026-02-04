@@ -41,6 +41,10 @@ const jobListingSchema = new mongoose.Schema({
   pic: picSchema,
   picUpdatedAt: Date,
 
+  // Internship duration fields
+  internshipStart: Date,
+  internshipEnd: Date,
+
   project: projectSchema,
   onboardingMaterials: [onboardingDocSchema],
 
