@@ -477,6 +477,69 @@ export default (app) => {
     return ctx;
   }
 
+  // Populate user/candidate information for applications
+  async function populateUser(ctx) {
+    try {
+      const Users = app.service('users')?.Model;
+      if (!Users) return ctx;
+
+      const populateOne = async (appDoc) => {
+        if (!appDoc || !appDoc.userId) return appDoc;
+
+        // Convert to plain object if it's a Mongoose document
+        const app = appDoc.toObject ? appDoc.toObject() : { ...appDoc };
+
+        try {
+          const user = await Users.findById(app.userId).lean();
+          if (user) {
+            // Build candidate name from profile
+            const firstName = user.profile?.firstName || '';
+            const lastName = user.profile?.lastName || '';
+            const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+
+            // Populate candidate information
+            app.candidate = {
+              _id: user._id,
+              email: user.email,
+              fullName: fullName || user.email,
+              name: fullName || user.email,
+              avatar: user.profile?.avatar || null,
+              phone: user.profile?.phone || null
+            };
+
+            // Also set candidateName for backward compatibility
+            app.candidateName = fullName || user.email;
+
+            // Populate full user object for detailed views
+            app.user = {
+              _id: user._id,
+              email: user.email,
+              profile: user.profile || {},
+              internProfile: user.internProfile || {}
+            };
+          }
+        } catch (e) {
+          // User not found or error - return app without user data
+        }
+        return app;
+      };
+
+      // Handle both single result (get) and array result (find)
+      if (Array.isArray(ctx.result)) {
+        ctx.result = await Promise.all(ctx.result.map(populateOne));
+      } else if (ctx.result?.data && Array.isArray(ctx.result.data)) {
+        // Paginated result
+        ctx.result.data = await Promise.all(ctx.result.data.map(populateOne));
+      } else if (ctx.result) {
+        // Single result
+        ctx.result = await populateOne(ctx.result);
+      }
+    } catch (e) {
+      // Silent fail - don't break the request if population fails
+    }
+    return ctx;
+  }
+
   return {
     before: {
       all: [ authenticate('jwt') ],
@@ -486,7 +549,7 @@ export default (app) => {
       patch: [ applyTransition ]
     },
     after: {
-      all: [ populateCompany ],
+      all: [ populateCompany, populateUser ],
       create: [ async (ctx) => {
         // 1) Generate and upload nicer PDF
         try {
