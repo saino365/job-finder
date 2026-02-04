@@ -5,7 +5,9 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
-# Yarn (keep yarn.lock for consistency)
+# Yarn
+yarn.lock
+**/yarn.lock
 .yarn/
 .pnp.*
 
