@@ -59,7 +59,7 @@ export default function NotificationsDropdownContent({
         <Button type="link" size="small" onClick={onMarkAll}>Mark all as read</Button>
       </div>
       {/* D192: Ensure Direct and Watching tabs are visible on mobile */}
-      <Tabs size="small" activeKey={notifTab} onChange={setNotifTab} items={[
+      <Tabs size="small" activeKey={notifTab} onChange={setNotifTab} style={{ padding: '0 12px' }} items={[
         { key: 'direct', label: 'Direct', children: (
           <div style={{ maxHeight: 420, overflowY: 'auto', padding: '8px 8px' }}>
             <List size="small" split={false} dataSource={directNotifs} renderItem={(n) => (
