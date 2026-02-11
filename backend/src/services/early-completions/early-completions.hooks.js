@@ -22,11 +22,23 @@ export default (app) => {
 
   async function onCreate(ctx) {
     const user = ctx.params.user; const body = ctx.data || {};
-    if (user.role !== 'student') throw Object.assign(new Error('Only students can request early completion'), { code: 403 });
+    
+    // Allow both students and companies to create early completion requests
+    if (user.role !== 'student' && user.role !== 'company') {
+      throw Object.assign(new Error('Only students and companies can request early completion'), { code: 403 });
+    }
+    
     const Employment = app.service('employment-records')?.Model;
     const emp = await Employment.findById(body.employmentId).lean();
     if (!emp) throw Object.assign(new Error('Employment not found'), { code: 404 });
-    if (String(emp.userId) !== String(user._id)) throw Object.assign(new Error('Forbidden'), { code: 403 });
+    
+    // Access check based on role
+    if (user.role === 'student') {
+      if (String(emp.userId) !== String(user._id)) throw Object.assign(new Error('Forbidden'), { code: 403 });
+    } else if (user.role === 'company') {
+      const company = await app.service('companies').Model.findOne({ ownerUserId: user._id }).lean();
+      if (!company || String(emp.companyId) !== String(company._id)) throw Object.assign(new Error('Forbidden'), { code: 403 });
+    }
 
     // Check employment status - only allow early completion requests for ONGOING (status === 1)
     if (emp.status !== ES.ONGOING) {
@@ -35,13 +47,38 @@ export default (app) => {
       throw Object.assign(new Error(`Cannot request early completion. Employment status is ${currentStatus}. Early completion requests are only allowed for ongoing employments.`), { code: 400 });
     }
 
-    ctx.data = { employmentId: emp._id, initiatedBy: 'student', reason: body.reason, proposedCompletionDate: body.proposedCompletionDate ? new Date(body.proposedCompletionDate) : null, status: RS.PENDING };
+    const initiatedBy = user.role === 'student' ? 'student' : 'company';
+    ctx.data = { 
+      employmentId: emp._id, 
+      initiatedBy, 
+      reason: body.reason, 
+      proposedCompletionDate: body.proposedCompletionDate ? new Date(body.proposedCompletionDate) : null, 
+      status: RS.PENDING 
+    };
 
-    // Notify company owner
+    // Notify the other party
     try {
-      const company = await app.service('companies').Model.findById(emp.companyId).lean();
-      if (company?.ownerUserId) {
-        await app.service('notifications').create({ recipientUserId: company.ownerUserId, recipientRole: 'company', type: 'early_completion_requested', title: 'Early completion requested', data: { employmentId: emp._id } });
+      if (user.role === 'student') {
+        // Student initiated - notify company
+        const company = await app.service('companies').Model.findById(emp.companyId).lean();
+        if (company?.ownerUserId) {
+          await app.service('notifications').create({ 
+            recipientUserId: company.ownerUserId, 
+            recipientRole: 'company', 
+            type: 'early_completion_requested', 
+            title: 'Early completion requested', 
+            data: { employmentId: emp._id } 
+          });
+        }
+      } else if (user.role === 'company') {
+        // Company initiated - notify student
+        await app.service('notifications').create({ 
+          recipientUserId: emp.userId, 
+          recipientRole: 'student', 
+          type: 'early_completion_requested', 
+          title: 'Early completion requested by company', 
+          data: { employmentId: emp._id } 
+        });
       }
     } catch (_) {}
   }

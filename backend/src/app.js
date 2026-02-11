@@ -71,7 +71,8 @@ app.post('/upload',
     { name: 'avatar', maxCount: 1 },
     { name: 'logo', maxCount: 1 },
     { name: 'portfolio', maxCount: 5 },
-    { name: 'document', maxCount: 10 }
+    { name: 'document', maxCount: 10 },
+    { name: 'signedOfferLetter', maxCount: 1 }
   ]),
   async (req, res) => {
     // Ensure CORS headers are set
@@ -162,14 +163,20 @@ app.get('/signed-url', async (req, res) => {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
 
-    // Extract the key from the URL
-    // URL format: https://endpoint/bucket/key
-    const urlParts = url.split(`${process.env.S3_BUCKET}/`);
-    if (urlParts.length < 2) {
-      return res.status(400).json({ error: 'Invalid URL format' });
+    let key;
+    
+    // Check if it's already just a key (doesn't start with http)
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      key = url;
+    } else {
+      // Extract the key from the full URL
+      // URL format: https://endpoint/bucket/key
+      const urlParts = url.split(`${process.env.S3_BUCKET}/`);
+      if (urlParts.length < 2) {
+        return res.status(400).json({ error: 'Invalid URL format' });
+      }
+      key = urlParts[1].split('?')[0]; // Remove query params if any
     }
-
-    const key = urlParts[1].split('?')[0]; // Remove query params if any
 
     // Generate signed URL
     const signedUrl = await storageUtils.getSignedUrl(key, 3600); // 1 hour expiry

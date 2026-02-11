@@ -164,7 +164,7 @@ export default (app) => {
     const job = await JobModel.findById(jobId).lean();
     if (!job) throw Object.assign(new Error('Job not found'), { code: 404 });
 
-    const ACTIVE_STATUSES = [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE];
+    const ACTIVE_STATUSES = [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE, S.ACCEPTED_PENDING_REVIEW, S.ACCEPTED];
     const existingApp = await Applications.findOne({ userId: user._id, jobListingId: jobId });
 
     // D201: Debug logging for reapplication after withdrawal
@@ -178,7 +178,16 @@ export default (app) => {
 
     if (existingApp && ACTIVE_STATUSES.includes(existingApp.status)) {
       console.log(`❌ DEBUG: Blocking reapplication - existing app is ACTIVE`);
-      throw Object.assign(new Error('You have already applied for this position'), { code: 409 });
+      const statusLabels = {
+        [S.NEW]: 'Applied',
+        [S.SHORTLISTED]: 'Shortlisted',
+        [S.INTERVIEW_SCHEDULED]: 'Interview Scheduled',
+        [S.PENDING_ACCEPTANCE]: 'Pending Acceptance',
+        [S.ACCEPTED_PENDING_REVIEW]: 'Accepted - Pending Review',
+        [S.ACCEPTED]: 'Hired'
+      };
+      const currentStatus = statusLabels[existingApp.status] || 'Active';
+      throw Object.assign(new Error(`You already have an active application for this position (Status: ${currentStatus}). You cannot apply again while your application is still active.`), { code: 409 });
     }
 
     if (existingApp) {
@@ -286,13 +295,27 @@ export default (app) => {
       if (action === 'sendOffer' && (doc.status === S.INTERVIEW_SCHEDULED || doc.status === S.SHORTLISTED)) {
         const defaultOfferDays = Number(process.env.OFFER_VALIDITY_DAYS || 7);
         const validUntil = ctx.data.validUntil ? new Date(ctx.data.validUntil) : new Date(now.getTime() + defaultOfferDays * 86400000);
-        set({ status: S.PENDING_ACCEPTANCE, offer: { sentAt: now, validUntil, title: ctx.data.title, notes: ctx.data.notes, letterKey: ctx.data.letterKey } });
+        const startDate = ctx.data.startDate ? new Date(ctx.data.startDate) : undefined;
+        const endDate = ctx.data.endDate ? new Date(ctx.data.endDate) : undefined;
+        
+        set({ 
+          status: S.PENDING_ACCEPTANCE, 
+          offer: { 
+            sentAt: now, 
+            validUntil, 
+            title: ctx.data.title, 
+            notes: ctx.data.notes, 
+            letterKey: ctx.data.letterKey,
+            startDate,
+            endDate
+          } 
+        });
         ctx.params._notify = { type: 'offer_sent', toUserId: doc.userId, toRole: 'student' };
         ctx.params._email = { kind: 'status_email', to: 'student', template: 'offer' };
         return;
       }
-      // D126: Reject action should NOT be allowed for PENDING_ACCEPTANCE - use declineOffer instead
-      if (action === 'reject' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED].includes(doc.status)) {
+      // Reject action - allow for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, PENDING_ACCEPTANCE, and ACCEPTED_PENDING_REVIEW
+      if (action === 'reject' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE, S.ACCEPTED_PENDING_REVIEW].includes(doc.status)) {
         const reason = String(ctx.data.reason || '').trim();
         if (!reason) { throw new BadRequest('Rejection reason is required'); }
         set({ status: S.REJECTED, rejectedAt: now, rejection: { by: 'company', reason } });
@@ -311,6 +334,48 @@ export default (app) => {
         set({ status: S.REJECTED, rejectedAt: now, rejection: { by: 'company', reason } });
         ctx.params._notify = { type: 'offer_declined_by_company', toUserId: doc.userId, toRole: 'student' };
         ctx.params._email = { kind: 'status_email', to: 'student', template: 'rejected' };
+        return;
+      }
+      // Finalize hire after student has accepted and uploaded signed offer letter (status 8)
+      if (action === 'finalizeHire' && doc.status === S.ACCEPTED_PENDING_REVIEW && doc.offer?.signedLetterKey) {
+        // Company has reviewed the signed offer letter and is finalizing the hire
+        set({ status: S.ACCEPTED });
+        ctx.params._email = { kind: 'status_email', to: 'student', template: 'hired' };
+        ctx.params._notify = { type: 'hire_finalized', toUserId: doc.userId, toRole: 'student' };
+        
+        // Create EmploymentRecord
+        try {
+          const Employment = app.service('employment-records')?.Model;
+          
+          // Get dates from offer first, fallback to job listing
+          let startDate = doc.offer?.startDate ? new Date(doc.offer.startDate) : undefined;
+          let endDate = doc.offer?.endDate ? new Date(doc.offer.endDate) : undefined;
+          
+          // If no dates in offer, try job listing
+          if (!startDate || !endDate) {
+            const job = await JobModel.findById(doc.jobListingId).lean();
+            if (!startDate) startDate = job?.internshipStart ? new Date(job.internshipStart) : undefined;
+            if (!endDate) endDate = job?.internshipEnd ? new Date(job.internshipEnd) : undefined;
+          }
+          
+          const requiredDocs = ['contract','nda'];
+          if (Employment) {
+            const nowTs = now.getTime();
+            const startTs = startDate ? startDate.getTime() : null;
+            const employmentStatus = (startTs && startTs <= nowTs) ? ES.ONGOING : ES.UPCOMING;
+            await Employment.create({
+              userId: doc.userId,
+              companyId: doc.companyId,
+              jobListingId: doc.jobListingId,
+              applicationId: doc._id,
+              status: employmentStatus,
+              startDate,
+              endDate,
+              cadence: 'weekly',
+              requiredDocs
+            });
+          }
+        } catch (_) {}
         return;
       }
       throw Object.assign(new Error('Invalid action for current state'), { code: 400 });
@@ -354,33 +419,20 @@ export default (app) => {
         return;
       }
       if (action === 'acceptOffer' && doc.status === S.PENDING_ACCEPTANCE) {
-        set({ status: S.ACCEPTED, acceptedAt: now });
+        // Store signed offer letter key if provided
+        const signedOfferLetterKey = ctx.data.signedOfferLetterKey;
+        if (!signedOfferLetterKey) {
+          throw new BadRequest('Signed offer letter is required');
+        }
+        
+        // Change status to ACCEPTED_PENDING_REVIEW (8) - waiting for company to finalize
+        set({ 
+          status: S.ACCEPTED_PENDING_REVIEW,
+          acceptedAt: now,
+          'offer.signedLetterKey': signedOfferLetterKey
+        });
         ctx.params._notify = { type: 'offer_accepted', toUserId: doc.companyId, toRole: 'company' };
-        ctx.params._email = { kind: 'status_email', to: 'student', template: 'hired' };
-        // Create EmploymentRecord
-        try {
-          const Employment = app.service('employment-records')?.Model;
-          const job = await JobModel.findById(doc.jobListingId).lean();
-          const startDate = job?.internshipStart ? new Date(job.internshipStart) : undefined;
-          const endDate = job?.internshipEnd ? new Date(job.internshipEnd) : undefined;
-          const requiredDocs = ['contract','nda'];
-          if (Employment) {
-            const nowTs = now.getTime();
-            const startTs = startDate ? startDate.getTime() : null;
-            const employmentStatus = (startTs && startTs <= nowTs) ? ES.ONGOING : ES.UPCOMING;
-            await Employment.create({
-              userId: doc.userId,
-              companyId: doc.companyId,
-              jobListingId: doc.jobListingId,
-              applicationId: doc._id,
-              status: employmentStatus,
-              startDate,
-              endDate,
-              cadence: 'weekly',
-              requiredDocs
-            });
-          }
-        } catch (_) {}
+        // Don't create employment record yet - wait for company to finalize
         return;
       }
       if (action === 'declineOffer' && doc.status === S.PENDING_ACCEPTANCE) {

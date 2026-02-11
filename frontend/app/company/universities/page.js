@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
-import { Layout, Typography, Row, Col, Card, Input, List, Space, Select, DatePicker, InputNumber, Button, Table, message, Modal, Form, Tag } from 'antd';
+import { Layout, Typography, Row, Col, Card, Input, List, Space, Select, DatePicker, InputNumber, Button, Table, Modal, Form, Tag, App } from 'antd';
 import { API_BASE_URL } from '../../../config';
 
 const { Title, Text } = Typography;
 
-export default function CompanyUniversitiesPage(){
+function CompanyUniversitiesPage(){
+  const { message } = App.useApp();
   const [uniQ, setUniQ] = useState("");
   const [universities, setUniversities] = useState([]);
   const [loadingUnis, setLoadingUnis] = useState(false);
@@ -33,6 +34,8 @@ export default function CompanyUniversitiesPage(){
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteForm] = Form.useForm();
+  const [jobs, setJobs] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
 
   const tokenHeaders = useCallback(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('jf_token') : null;
@@ -90,6 +93,25 @@ export default function CompanyUniversitiesPage(){
   useEffect(() => { loadUnis(); }, []); // initial
   useEffect(() => { loadProgrammes(selectedUni); }, [selectedUni]);
 
+  async function loadJobs() {
+    try {
+      setLoadingJobs(true);
+      const token = localStorage.getItem('jf_token');
+      const res = await fetch(`${API_BASE_URL}/job-listings?status=2&$sort[createdAt]=-1`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      const json = await res.json();
+      const data = Array.isArray(json) ? json : (json?.data || []);
+      setJobs(data);
+    } catch (e) {
+      message.error(e.message || 'Failed to load jobs');
+    } finally {
+      setLoadingJobs(false);
+    }
+  }
+
+  useEffect(() => { loadJobs(); }, []); // Load jobs on mount
+
   const filteredProgrammes = useMemo(() => {
     let arr = programmes;
     if (progLevel) arr = arr.filter(p => (p.level||'').toLowerCase() === String(progLevel).toLowerCase());
@@ -121,13 +143,28 @@ export default function CompanyUniversitiesPage(){
       const res = await fetch(`${API_BASE_URL}/programme-candidates/null`, {
         method: 'PATCH',
         headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ userIds: selectedRowKeys, type: 'profile_access', message: v.message || undefined })
+        body: JSON.stringify({ 
+          userIds: selectedRowKeys, 
+          type: 'profile_access', 
+          jobListingId: v.jobListingId,
+          message: v.message || undefined 
+        })
       });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to send invites');
       }
-      message.success('Invitations sent');
+      const result = await res.json();
+      const created = result?.created || [];
+      
+      if (created.length === 0) {
+        message.info('All selected candidates already have pending invitations for this job');
+      } else if (created.length < selectedRowKeys.length) {
+        message.success(`${created.length} invitation(s) sent. ${selectedRowKeys.length - created.length} candidate(s) already have pending invitations for this job.`);
+      } else {
+        message.success('Invitations sent');
+      }
+      
       setInviteOpen(false); inviteForm.resetFields(); setSelectedRowKeys([]);
       // Reload candidates to reflect invitation status
       loadCandidates();
@@ -236,12 +273,34 @@ export default function CompanyUniversitiesPage(){
 
       <Modal title="Send invitation" open={inviteOpen} onCancel={()=>{ setInviteOpen(false); inviteForm.resetFields(); }} onOk={sendInvites} okText="Send">
         <Form form={inviteForm} layout="vertical">
+          <Form.Item label="Job Position" name="jobListingId" rules={[{ required: true, message: 'Please select a job position' }]}>
+            <Select placeholder="Select job position to invite for" loading={loadingJobs}>
+              {jobs.map(job => {
+                const locationStr = typeof job.location === 'object' 
+                  ? `${job.location.city || ''}${job.location.city && job.location.state ? ', ' : ''}${job.location.state || ''}`.trim() || 'Location not specified'
+                  : job.location || 'Location not specified';
+                return (
+                  <Select.Option key={job._id} value={job._id}>
+                    {job.title} - {locationStr}
+                  </Select.Option>
+                );
+              })}
+            </Select>
+          </Form.Item>
           <Form.Item label="Message (optional)" name="message">
             <Input.TextArea rows={3} placeholder="Add a personal message (optional)" />
           </Form.Item>
         </Form>
       </Modal>
     </Layout>
+  );
+}
+
+export default function CompanyUniversitiesPageWrapper() {
+  return (
+    <App>
+      <CompanyUniversitiesPage />
+    </App>
   );
 }
 
