@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Layout, Typography, Space, Card, Descriptions, Tag, Button, Modal, Form, Input, DatePicker, Upload, message } from 'antd';
+import { Layout, Typography, Space, Card, Descriptions, Tag, Button, Modal, Form, Input, DatePicker, Upload, App } from 'antd';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
+import UserAvatar from '../../../../components/UserAvatar';
 import { API_BASE_URL } from '../../../../config';
 import { UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -97,18 +98,21 @@ function CourseInfo({ data }) {
 }
 
 export default function ApplicationDetailPage({ params }) {
+  const { message, modal } = App.useApp();
   const [id, setId] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const [offerOpen, setOfferOpen] = useState(false);
   const [offerConfirmOpen, setOfferConfirmOpen] = useState(false);
   const [rejectOfferedOpen, setRejectOfferedOpen] = useState(false);
+  const [declineConfirmOpen, setDeclineConfirmOpen] = useState(false);
   const [rejectForm] = Form.useForm();
   const [offerForm] = Form.useForm();
   const [uploadMeta, setUploadMeta] = useState(null);
   const [letterUrl, setLetterUrl] = useState(null);
-  const [avatarSignedUrl, setAvatarSignedUrl] = useState(null);
 
   // Await params in useEffect
   useEffect(() => {
@@ -119,7 +123,17 @@ export default function ApplicationDetailPage({ params }) {
   }, [params]);
 
   const statusTag = (s) => {
-    const map = { 0:['New','blue'],1:['Shortlisted','cyan'],2:['Interview','purple'],3:['Pending Acceptance','gold'],4:['Hired','green'],5:['Rejected','red'],6:['Withdrawn','default'],7:['Not Attending','default'] };
+    const map = { 
+      0:['New','blue'],
+      1:['Shortlisted','cyan'],
+      2:['Interview','purple'],
+      3:['Pending Acceptance', 'gold'],
+      4:['Hired','green'],
+      5:['Rejected','red'],
+      6:['Withdrawn','default'],
+      7:['Not Attending','default'],
+      8:['Accepted - Pending Review', 'green']
+    };
     const m = map[s];
     return m ? <Tag color={m[1]}>{m[0]}</Tag> : <Tag>{String(s)}</Tag>;
   };
@@ -172,48 +186,15 @@ export default function ApplicationDetailPage({ params }) {
     })();
   }, [data, letterUrl]);
 
-  // Fetch signed URL for avatar
-  useEffect(() => {
-    (async () => {
-      try {
-        const avatarUrl = data?.candidate?.avatar || data?.form?.personalInfo?.avatar;
-        console.log('🖼️ Avatar URL from data:', avatarUrl);
-        console.log('🖼️ data.candidate:', data?.candidate);
-        console.log('🖼️ data.form?.personalInfo:', data?.form?.personalInfo);
-
-        if (!avatarUrl) {
-          console.log('⚠️ No avatar URL found');
-          setAvatarSignedUrl(null);
-          return;
-        }
-
-        console.log('🔄 Fetching signed URL for avatar:', avatarUrl);
-        const res = await fetch(`${API_BASE_URL}/signed-url?url=${encodeURIComponent(avatarUrl)}`);
-        console.log('📡 Signed URL response status:', res.status);
-
-        if (res.ok) {
-          const json = await res.json();
-          console.log('✅ Signed URL received:', json.signedUrl);
-          setAvatarSignedUrl(json.signedUrl);
-        } else {
-          const errorText = await res.text();
-          console.error('❌ Signed URL request failed:', res.status, errorText);
-          setAvatarSignedUrl(avatarUrl); // Fallback to original URL
-        }
-      } catch (e) {
-        console.error('❌ Failed to get avatar signed URL:', e);
-        setAvatarSignedUrl(data?.candidate?.avatar || data?.form?.personalInfo?.avatar); // Fallback
-      }
-    })();
-  }, [data?.candidate?.avatar, data?.form?.personalInfo?.avatar]);
-
   // D78, D107: Fix action button visibility based on status
   const canShortlist = data && data.status === 0; // NEW
-  // D126: Don't show Reject button when status is PENDING_ACCEPTANCE (3) - only show Decline Offer
-  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2); // Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED only
+  // Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, PENDING_ACCEPTANCE, and ACCEPTED_PENDING_REVIEW
+  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2 || data.status === 3 || data.status === 8);
   const canSendOffer = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
   const canRejectOffered = data && data.status === 3; // Pending Acceptance
+  const canFinalizeHire = data && data.status === 8 && data.offer?.signedLetterKey; // Status 8 with signed letter
   const isPendingAcceptance = data && data.status === 3;
+  const isAcceptedPendingReview = data && data.status === 8;
   const isAccepted = data && data.status === 4; // Accepted/Hired
 
   async function patchAction(body) {
@@ -245,21 +226,25 @@ export default function ApplicationDetailPage({ params }) {
   async function submitReject() {
     try {
       const v = await rejectForm.validateFields();
-      await new Promise((resolve, reject) => {
-        Modal.confirm({
-          title: 'Confirm rejection',
-          content: 'Are you sure you want to reject this application?',
-          okText: 'Reject', okButtonProps: { danger: true },
-          onOk: resolve, onCancel: () => reject(new Error('cancel'))
-        });
-      });
-      await patchAction({ action: 'reject', reason: v.reason });
-      message.success('Application rejected');
-      setRejectOpen(false); rejectForm.resetFields(); load();
+      setRejectReason(v.reason);
+      setRejectOpen(false);
+      setRejectConfirmOpen(true);
     } catch (e) {
-      // If user cancelled or validation failed, just return
-      if (e?.errorFields || e.message === 'cancel') return;
-      // Otherwise show the error
+      // If validation failed, just return
+      if (e?.errorFields) return;
+      console.error('Validation error:', e);
+    }
+  }
+
+  async function confirmReject() {
+    try {
+      await patchAction({ action: 'reject', reason: rejectReason });
+      message.success('Application rejected');
+      setRejectConfirmOpen(false);
+      rejectForm.resetFields();
+      setRejectReason('');
+      load();
+    } catch (e) {
       console.error('Reject error:', e);
       message.error(e.message || 'Failed to reject application');
     }
@@ -300,6 +285,18 @@ export default function ApplicationDetailPage({ params }) {
     }
   }
 
+  async function confirmDeclineOffer() {
+    try {
+      await patchAction({ action: 'declineOffer', reason: 'Rejected while pending acceptance' });
+      message.success('Offer declined');
+      setDeclineConfirmOpen(false);
+      setRejectOfferedOpen(false);
+      load();
+    } catch (e) {
+      message.error(e.message || 'Failed to decline offer');
+    }
+  }
+
   async function confirmSendOffer() {
     try {
       const v = offerForm.getFieldsValue();
@@ -308,6 +305,8 @@ export default function ApplicationDetailPage({ params }) {
         title: v.title,
         notes: v.notes || '',
         validUntil: v.validUntil?.toDate?.() || v.validUntil,
+        startDate: v.startDate?.toDate?.() || v.startDate,
+        endDate: v.endDate?.toDate?.() || v.endDate,
         letterKey: uploadMeta.key
       });
       message.success('Offer sent');
@@ -321,21 +320,51 @@ export default function ApplicationDetailPage({ params }) {
     }
   }
 
+  async function finalizeHire() {
+    try {
+      await patchAction({ action: 'finalizeHire' });
+      message.success('Hire finalized! Employment record created.');
+      load();
+    } catch (e) {
+      message.error(e.message || 'Failed to finalize hire');
+    }
+  }
+
   return (
-    <Layout>
-      <Navbar />
-      <Layout.Content style={{ padding: 24, minHeight: '80vh' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <Title level={3} style={{ margin: 0 }}>Application Details</Title>
-              <Space>
-                {canShortlist && <Button onClick={shortlist}>Shortlist</Button>}
-                {/* D107: Show reject button for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, and PENDING_ACCEPTANCE */}
-                {canReject && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
-                {canSendOffer && <Button type="primary" onClick={() => setOfferOpen(true)}>Send Offer</Button>}
+    <App>
+      <Layout>
+        <Navbar />
+        <Layout.Content style={{ padding: 24, minHeight: '80vh' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <Title level={3} style={{ margin: 0 }}>Application Details</Title>
+                <Space>
+                  {canShortlist && <Button onClick={shortlist}>Shortlist</Button>}
+                  {/* D107: Show reject button for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, and PENDING_ACCEPTANCE */}
+                  {canReject && <Button danger onClick={() => setRejectOpen(true)}>Reject</Button>}
+                {canSendOffer && <Button type="primary" onClick={() => {
+                  // Pre-fill form with job data
+                  const initialValues = {
+                    validUntil: dayjs().add(7,'day')
+                  };
+                  
+                  if (data?.job) {
+                    initialValues.title = data.job.title;
+                    if (data.job.internshipStart) {
+                      initialValues.startDate = dayjs(data.job.internshipStart);
+                    }
+                    if (data.job.internshipEnd) {
+                      initialValues.endDate = dayjs(data.job.internshipEnd);
+                    }
+                  }
+                  
+                  offerForm.setFieldsValue(initialValues);
+                  setOfferOpen(true);
+                }}>Send Offer</Button>}
                 {/* D126: Change button label from "Reject Offered Position" to "Decline Offer" */}
                 {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Decline Offer</Button>}
+                {canFinalizeHire && <Button type="primary" onClick={finalizeHire}>Finalize Hire</Button>}
                 {isAccepted && <Tag color="green">Offer Accepted - Hired</Tag>}
                 <Button onClick={load}>Refresh</Button>
               </Space>
@@ -349,6 +378,7 @@ export default function ApplicationDetailPage({ params }) {
                     <Descriptions.Item label="Submitted">{data.createdAt ? new Date(data.createdAt).toLocaleString() : '-'}</Descriptions.Item>
                     <Descriptions.Item label="Application Validity">{data.validityUntil ? new Date(data.validityUntil).toLocaleDateString() : '-'}</Descriptions.Item>
                     {data.offer?.validUntil && <Descriptions.Item label="Offer Valid Until">{new Date(data.offer.validUntil).toLocaleDateString()}</Descriptions.Item>}
+                    {data.acceptedAt && <Descriptions.Item label="Student Accepted At">{new Date(data.acceptedAt).toLocaleString()}</Descriptions.Item>}
                   </Descriptions>
 
                   <Descriptions title="Job Details" bordered column={1} size="small">
@@ -367,18 +397,44 @@ export default function ApplicationDetailPage({ params }) {
                     </Descriptions.Item>
                   </Descriptions>
 
-                  {(isPendingAcceptance || (data && data.status === 4)) && (
+                  {(isPendingAcceptance || isAcceptedPendingReview || (data && data.status === 4)) && (
                     <Descriptions title="Offer Details" bordered column={1} size="small">
                       <Descriptions.Item label="Title">{data.offer?.title || '-'}</Descriptions.Item>
                       <Descriptions.Item label="Notes">{data.offer?.notes || '-'}</Descriptions.Item>
+                      <Descriptions.Item label="Start Date">{data.offer?.startDate ? new Date(data.offer.startDate).toLocaleDateString() : '-'}</Descriptions.Item>
+                      <Descriptions.Item label="End Date">{data.offer?.endDate ? new Date(data.offer.endDate).toLocaleDateString() : '-'}</Descriptions.Item>
                       <Descriptions.Item label="Offer Validity">{data.offer?.validUntil ? new Date(data.offer.validUntil).toLocaleDateString() : '-'}</Descriptions.Item>
                       <Descriptions.Item label="Letter of Offer">
                         {letterUrl ? (
-                          <a href={letterUrl} target="_blank" rel="noreferrer">View Letter</a>
+                          <Typography.Link href={letterUrl} target="_blank" rel="noreferrer">
+                            View Offer Letter
+                          </Typography.Link>
                         ) : data.offer?.letterKey ? (
                           <span>{data.offer.letterKey}</span>
                         ) : '-'}
                       </Descriptions.Item>
+                      {data.offer?.signedLetterKey && (
+                        <Descriptions.Item label="Signed Offer Letter">
+                          <Typography.Link
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('jf_token');
+                                const res = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(data.offer.signedLetterKey)}`, {
+                                  headers: { Authorization: `Bearer ${token}` }
+                                });
+                                const json = await res.json();
+                                const url = json.signedUrl || json.publicUrl;
+                                if (url) window.open(url, '_blank');
+                                else message.error('Failed to get signed letter URL');
+                              } catch (e) {
+                                message.error('Failed to load signed letter');
+                              }
+                            }}
+                          >
+                            View Signed Offer Letter
+                          </Typography.Link>
+                        </Descriptions.Item>
+                      )}
                     </Descriptions>
                   )}
 
@@ -398,26 +454,14 @@ export default function ApplicationDetailPage({ params }) {
 
                   <Descriptions title="Intern Application Information" bordered column={1} size="small">
                     <Descriptions.Item label="Avatar">
-                      {avatarSignedUrl ? (
-                        <div>
-                          <img
-                            src={avatarSignedUrl}
-                            alt="Candidate avatar"
-                            style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }}
-                            onLoad={() => console.log('✅ Avatar image loaded successfully')}
-                            onError={(e) => {
-                              console.error('❌ Avatar image failed to load:', avatarSignedUrl);
-                              console.error('❌ Image error event:', e);
-                              e.target.style.display = 'none';
-                              e.target.insertAdjacentHTML('afterend', '<div style="color: red; font-size: 12px;">Failed to load avatar image</div>');
-                            }}
-                          />
-                        </div>
-                      ) : (data.candidate?.avatar || data.form?.personalInfo?.avatar) ? (
-                        <span style={{ fontSize: 12, color: '#999' }}>Loading avatar...</span>
-                      ) : (
-                        <span>-</span>
-                      )}
+                      <UserAvatar
+                        name={data?.candidate?.fullName || data?.candidate?.name || data?.candidateName || 
+                              (data?.user?.profile?.firstName && data?.user?.profile?.lastName 
+                                ? `${data.user.profile.firstName} ${data.user.profile.lastName}` 
+                                : data?.user?.email || 'User')}
+                        avatarUrl={data?.candidate?.avatar || data?.form?.personalInfo?.avatar || ''}
+                        size={60}
+                      />
                     </Descriptions.Item>
                     {/* D198: Ensure Candidate name is displayed with proper label */}
                     <Descriptions.Item label="Candidate">{data.candidate?.fullName || data.candidate?.name || data.candidateName || data.user?.profile?.firstName && data.user?.profile?.lastName ? `${data.user.profile.firstName} ${data.user.profile.lastName}` : data.user?.email || '-'}</Descriptions.Item>
@@ -490,16 +534,39 @@ export default function ApplicationDetailPage({ params }) {
         </Form>
       </Modal>
 
+      {/* Reject confirmation modal */}
+      <Modal 
+        title="Confirm Rejection" 
+        open={rejectConfirmOpen} 
+        onCancel={()=>{
+          setRejectConfirmOpen(false);
+          setRejectOpen(true);
+        }} 
+        onOk={confirmReject} 
+        okText="Confirm Reject" 
+        okButtonProps={{ danger: true }}
+      >
+        <Typography.Paragraph>
+          Are you sure you want to reject this application?
+        </Typography.Paragraph>
+      </Modal>
+
       <Modal title="Send Offer" open={offerOpen} onCancel={()=>setOfferOpen(false)} onOk={submitOffer} okText="Send Offer">
         <Form form={offerForm} layout="vertical" initialValues={{ validUntil: dayjs().add(7,'day') }}>
           <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Title is required' }]}>
-            <Input placeholder="Offer title" />
+            <Input placeholder="Offer title" disabled />
           </Form.Item>
           <Form.Item label="Notes" name="notes">
             <Input.TextArea rows={3} placeholder="Notes to the candidate (optional)" />
           </Form.Item>
+          <Form.Item label="Internship Start Date" name="startDate" rules={[{ required: true, message: 'Please set internship start date' }]}>
+            <DatePicker style={{ width: '100%' }} placeholder="When will the internship start?" />
+          </Form.Item>
+          <Form.Item label="Internship End Date" name="endDate" rules={[{ required: true, message: 'Please set internship end date' }]}>
+            <DatePicker style={{ width: '100%' }} placeholder="When will the internship end?" />
+          </Form.Item>
           <Form.Item label="Valid Until" name="validUntil" rules={[{ required: true, message: 'Please set offer validity date' }]}>
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} placeholder="Offer valid until" />
           </Form.Item>
           <Form.Item label="Offer Letter (PDF/DOC)" required>
             <Upload 
@@ -537,35 +604,40 @@ export default function ApplicationDetailPage({ params }) {
       </Modal>
 
       {/* D126: Change "Reject" to "Decline Offer" button */}
-      <Modal title="Decline Offer" open={rejectOfferedOpen} onCancel={()=>setRejectOfferedOpen(false)}
-        onOk={async ()=>{
-          try {
-            await new Promise((resolve, reject) => {
-              Modal.confirm({ 
-                title: 'Confirm declining this offer?', 
-                content: 'Are you sure you want to decline this offer? This action cannot be undone.',
-                okText: 'Decline Offer', 
-                okButtonProps:{ danger:true }, 
-                onOk: resolve, 
-                onCancel: () => reject(new Error('cancel')) 
-              });
-            });
-            // D165: Fix Reject button - use declineOffer action instead of reject
-            await patchAction({ action: 'declineOffer', reason: 'Rejected while pending acceptance' });
-            message.success('Offer declined');
-            setRejectOfferedOpen(false); 
-            load();
-          } catch (e) { 
-            if (e.message !== 'cancel') {
-              message.error(e.message || 'Failed to decline offer');
-            }
-          }
-        }} okText="Decline Offer" okButtonProps={{ danger: true }}>
+      <Modal 
+        title="Decline Offer" 
+        open={rejectOfferedOpen} 
+        onCancel={()=>setRejectOfferedOpen(false)}
+        onOk={()=>{
+          setRejectOfferedOpen(false);
+          setDeclineConfirmOpen(true);
+        }} 
+        okText="Decline Offer" 
+        okButtonProps={{ danger: true }}
+      >
         <Typography.Paragraph>
           This will decline the offer currently pending candidate acceptance.
         </Typography.Paragraph>
       </Modal>
+
+      {/* Decline offer confirmation modal */}
+      <Modal 
+        title="Confirm Declining Offer" 
+        open={declineConfirmOpen} 
+        onCancel={()=>{
+          setDeclineConfirmOpen(false);
+          setRejectOfferedOpen(true);
+        }} 
+        onOk={confirmDeclineOffer} 
+        okText="Confirm Decline" 
+        okButtonProps={{ danger: true }}
+      >
+        <Typography.Paragraph>
+          Are you sure you want to decline this offer? This action cannot be undone.
+        </Typography.Paragraph>
+      </Modal>
     </Layout>
+    </App>
   );
 }
 

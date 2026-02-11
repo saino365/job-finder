@@ -747,7 +747,7 @@ export default function HomeContent({ jobs = [], companies = [] }) {
               ) : (
                 <Empty
                   image={<Image src="/images/not_found.svg" alt="No interns found" width={200} height={150} priority />}
-                  imageStyle={{ height: 150 }}
+                  styles={{ image: { height: 150 } }}
                   description={
                     <div>
                       <Text style={{ fontSize: 16, display: 'block', marginBottom: 8 }}>No interns found</Text>

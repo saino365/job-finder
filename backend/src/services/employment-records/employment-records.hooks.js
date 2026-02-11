@@ -19,6 +19,20 @@ export default (app) => {
     return ctx;
   }
 
+  async function populateApplication(ctx) {
+    // Populate application data after find so frontend can filter by application status
+    const Employment = app.service('employment-records')?.Model;
+    if (ctx.result && ctx.result.data) {
+      // Paginated result
+      const populated = await Employment.populate(ctx.result.data, { path: 'applicationId' });
+      ctx.result.data = populated;
+    } else if (Array.isArray(ctx.result)) {
+      // Non-paginated result
+      ctx.result = await Employment.populate(ctx.result, { path: 'applicationId' });
+    }
+    return ctx;
+  }
+
   async function ensureAccessGet(ctx) {
     const user = ctx.params.user; if (!user) return ctx;
     const Employment = app.service('employment-records')?.Model;
@@ -125,6 +139,7 @@ export default (app) => {
       patch: [ applyAction ]
     },
     after: {
+      find: [ populateApplication ],
       patch: [ afterNotify ]
     },
     error: {}

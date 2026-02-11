@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useTheme } from './Providers';
 import { API_BASE_URL } from '../config';
+import UserAvatar from './UserAvatar';
 
 export default function Navbar() {
   const { theme, toggle } = useTheme();
@@ -14,12 +15,11 @@ export default function Navbar() {
   const [authed, setAuthed] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [avatarSignedUrl, setAvatarSignedUrl] = useState('');
   const [role, setRole] = useState('');
   const [notifs, setNotifs] = useState([]);
   const [notifTab, setNotifTab] = useState('direct');
   const [mounted, setMounted] = useState(false);
-  const unreadCount = Array.isArray(notifs) ? notifs.filter(n => !n.read).length : 0;
+  const unreadCount = Array.isArray(notifs) ? notifs.filter(n => !n.isRead).length : 0;
   
   // Fix hydration error: only render after mount to avoid SSR/client mismatch
   useEffect(() => {
@@ -33,7 +33,8 @@ export default function Navbar() {
     try {
       const token = localStorage.getItem('jf_token');
       if (!token) return;
-      const nr = await fetch(`${API_BASE_URL}/notifications?$limit=10&$sort[createdAt]=-1`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Fetch latest 50 notifications to ensure we have enough unread ones
+      const nr = await fetch(`${API_BASE_URL}/notifications?$limit=50&$sort[createdAt]=-1`, { headers: { 'Authorization': `Bearer ${token}` } });
       const njson = await nr.json();
       const items = Array.isArray(njson) ? njson : (njson?.data || []);
       setNotifs(items);
@@ -49,7 +50,7 @@ export default function Navbar() {
       if (!Array.isArray(notifs)) return;
       const targets = Array.isArray(ids) && ids.length
         ? notifs.filter(n => ids.includes(n._id))
-        : notifs.filter(n => !n.isRead && !n.read && n._id); // Check both isRead and read
+        : notifs.filter(n => !n.isRead && n._id); // Only check isRead field
       
       if (targets.length === 0) return;
       
@@ -59,7 +60,7 @@ export default function Navbar() {
           const res = await fetch(`${API_BASE_URL}/notifications/${n._id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ isRead: true, read: true }) // Set both fields
+            body: JSON.stringify({ isRead: true })
           });
           if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
@@ -86,80 +87,62 @@ export default function Navbar() {
     if (!token) return;
     (async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/student/internship/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-        if (res.ok) {
-          const data = await res.json();
-          const fn = data?.profile?.firstName || '';
-          const ln = data?.profile?.lastName || '';
-          const name = `${fn} ${ln}`.trim() || 'Student';
+        const res = await fetch(`${API_BASE_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) {
+          console.error('Failed to fetch user info');
+          return;
+        }
+        
+        const userData = await res.json();
+        
+        // Determine role based on user data
+        if (userData.role === 'admin') {
+          setRole('admin');
+          const name = userData?.fullName || userData?.name || userData?.email || 'Admin';
           setDisplayName(name);
-          setAvatarUrl(data?.profile?.avatar || '');
+        } else if (userData.role === 'student') {
           setRole('student');
-
-          // Generate signed URL for avatar
-          if (data?.profile?.avatar) {
-            try {
-              const signedRes = await fetch(`${API_BASE_URL}/signed-url?url=${encodeURIComponent(data.profile.avatar)}`);
-              if (signedRes.ok) {
-                const signedData = await signedRes.json();
-                setAvatarSignedUrl(signedData.signedUrl);
-              }
-            } catch (_) {}
+          // Fetch student profile
+          try {
+            const studentRes = await fetch(`${API_BASE_URL}/users/${userData._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (studentRes.ok) {
+              const studentData = await studentRes.json();
+              const fn = studentData?.profile?.firstName || '';
+              const ln = studentData?.profile?.lastName || '';
+              const name = `${fn} ${ln}`.trim() || 'Student';
+              setDisplayName(name);
+              setAvatarUrl(studentData?.profile?.avatar || '');
+            }
+          } catch (e) {
+            console.error('Failed to fetch student profile:', e);
           }
         } else {
-          // If not a student, detect admin; otherwise default to company
+          // Company user
+          setRole('company');
           try {
-            const ar = await fetch(`${API_BASE_URL}/admin-dashboard/overview`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (ar.ok) {
-              setRole('admin');
-              // Fetch admin user info
-              try {
-                const meRes = await fetch(`${API_BASE_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (meRes.ok) {
-                  const me = await meRes.json();
-                  const name = me?.fullName || me?.name || me?.email || 'Admin';
-                  setDisplayName(name);
-                }
-              } catch (_) {}
-            } else {
-              setRole('company');
-              // Fetch company info
-              try {
-                const meRes = await fetch(`${API_BASE_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (meRes.ok) {
-                  const me = await meRes.json();
-                  // Fetch company by owner
-                  const cRes = await fetch(`${API_BASE_URL}/companies?ownerUserId=${me._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                  if (cRes.ok) {
-                    const cJson = await cRes.json();
-                    const companies = Array.isArray(cJson?.data) ? cJson.data : [];
-                    if (companies.length > 0) {
-                      const company = companies[0];
-                      setDisplayName(company.name || 'Company');
-                      const logoUrl = company.logoKey || company.logo || '';
-                      setAvatarUrl(logoUrl);
-
-                      // Generate signed URL for company logo
-                      if (logoUrl) {
-                        try {
-                          const signedRes = await fetch(`${API_BASE_URL}/signed-url?url=${encodeURIComponent(logoUrl)}`);
-                          if (signedRes.ok) {
-                            const signedData = await signedRes.json();
-                            setAvatarSignedUrl(signedData.signedUrl);
-                          }
-                        } catch (_) {}
-                      }
-                    }
-                  }
-                }
-              } catch (_) {}
+            // Fetch company by owner
+            const cRes = await fetch(`${API_BASE_URL}/companies?ownerUserId=${userData._id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (cRes.ok) {
+              const cJson = await cRes.json();
+              const companies = Array.isArray(cJson?.data) ? cJson.data : [];
+              if (companies.length > 0) {
+                const company = companies[0];
+                setDisplayName(company.name || 'Company');
+                const logoUrl = company.logoKey || company.logo || '';
+                setAvatarUrl(logoUrl);
+              }
             }
-          } catch (_) { setRole('company'); }
+          } catch (e) {
+            console.error('Failed to fetch company info:', e);
+          }
         }
-      } catch (_) {}
-      // fetch notifications for dropdown (latest 10)
+      } catch (e) {
+        console.error('Failed to fetch user data:', e);
+      }
+      
+      // fetch notifications for dropdown (latest 50)
       try {
-        const nr = await fetch(`${API_BASE_URL}/notifications?$limit=10&$sort[createdAt]=-1`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const nr = await fetch(`${API_BASE_URL}/notifications?$limit=50&$sort[createdAt]=-1`, { headers: { 'Authorization': `Bearer ${token}` } });
         const njson = await nr.json();
         const items = Array.isArray(njson) ? njson : (njson?.data || []);
         setNotifs(items);
@@ -204,6 +187,7 @@ export default function Navbar() {
       { key: 'applications', label: <Link href="/company/applications" prefetch={false}>Applications</Link> },
       { key: 'employees', label: <Link href="/company/employees" prefetch={false}>Employees</Link> },
       { key: 'universities', label: <Link href="/company/universities" prefetch={false}>Universities & Programmes</Link> },
+      { key: 'invitations', label: <Link href="/company/invitations" prefetch={false}>Invitations</Link> },
       { key: 'create-job', label: <Link href="/company/jobs/new" prefetch={false}>Create Job</Link> },
       { type: 'divider' },
       { key: 'settings', label: <Link href="/settings" prefetch={false}>Settings</Link> },
@@ -281,9 +265,11 @@ export default function Navbar() {
           {authed ? (
             <Dropdown menu={userMenu} placement="bottomRight">
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <Avatar size={28} src={avatarSignedUrl || avatarUrl || undefined} style={{ backgroundColor: token.colorPrimary }}>
-                  {(displayName || 'U').charAt(0).toUpperCase()}
-                </Avatar>
+                <UserAvatar
+                  name={displayName || 'User'}
+                  avatarUrl={avatarUrl}
+                  size={28}
+                />
                 <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
                   <Typography.Text style={{ margin: 0 }}>
                     {displayName || 'Account'}

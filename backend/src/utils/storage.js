@@ -5,13 +5,6 @@ import multerS3 from 'multer-s3';
 import crypto from 'crypto';
 import path from 'path';
 
-// Debug environment variables
-console.log('S3 Environment Variables:');
-console.log('S3_ENDPOINT:', process.env.S3_ENDPOINT);
-console.log('S3_BUCKET:', process.env.S3_BUCKET);
-console.log('S3_ACCESS_KEY:', process.env.S3_ACCESS_KEY ? 'SET' : 'NOT SET');
-console.log('S3_SECRET_KEY:', process.env.S3_SECRET_KEY ? 'SET' : 'NOT SET');
-
 // Configure S3 client for IpOneServer
 const s3Client = new S3Client({
   endpoint: process.env.S3_ENDPOINT,

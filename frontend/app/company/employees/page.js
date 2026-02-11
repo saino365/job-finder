@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import { Layout, Typography, Card, Table, Tag, Space, Button, Drawer, message, Avatar, List, Modal, Form, Input } from 'antd';
+import { Layout, Typography, Card, Table, Tag, Space, Button, Drawer, message, Avatar, List, Modal, Form, Input, DatePicker } from 'antd';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
+import UserAvatar from '../../../components/UserAvatar';
 import { API_BASE_URL } from '../../../config';
 import dynamic from 'next/dynamic';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
 const EmployeeDetails = dynamic(() => import('../../../components/company/EmployeeDetails'), { ssr: false, loading: () => <div /> });
 
 const statusTag = (s) => {
-  const map = { 0: { c: 'gold', t: 'Upcoming' }, 1: { c: 'blue', t: 'Ongoing' }, 2: { c: 'purple', t: 'Closure' }, 3: { c: 'green', t: 'Completed' }, 4: { c: 'red', t: 'Terminated' } };
+  const map = { 0: { c: 'gold', t: 'Upcoming' }, 1: { c: 'green', t: 'Hired' }, 2: { c: 'purple', t: 'Closure' }, 3: { c: 'green', t: 'Completed' }, 4: { c: 'red', t: 'Terminated' } };
   const m = map[s] || { c: 'default', t: String(s) };
   return <Tag color={m.c}>{m.t}</Tag>;
 };
@@ -30,6 +32,19 @@ export default function CompanyEmployeesPage() {
   const [rejectTarget, setRejectTarget] = useState({ kind: null, id: null });
   const [pendingLabels, setPendingLabels] = useState({});
 
+  // Action modals for current employees
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [extendForm] = Form.useForm();
+  const [extendTarget, setExtendTarget] = useState(null);
+
+  const [ecInitiateOpen, setEcInitiateOpen] = useState(false);
+  const [ecInitiateForm] = Form.useForm();
+  const [ecInitiateTarget, setEcInitiateTarget] = useState(null);
+
+  const [terminateOpen, setTerminateOpen] = useState(false);
+  const [terminateForm] = Form.useForm();
+  const [terminateTarget, setTerminateTarget] = useState(null);
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -39,7 +54,16 @@ export default function CompanyEmployeesPage() {
       const res = await fetch(`${API_BASE_URL}/employment-records`, { headers });
       if (!res.ok) throw new Error('Failed to load employees');
       const j = await res.json();
-      const list = Array.isArray(j?.data) ? j.data : (Array.isArray(j) ? j : []);
+      const allRecords = Array.isArray(j?.data) ? j.data : (Array.isArray(j) ? j : []);
+      // Filter to only show employment records where application status is 4 (ACCEPTED/Hired)
+      const list = allRecords.filter(record => {
+        // If applicationId is populated and has status, check it's 4
+        if (record.applicationId && typeof record.applicationId === 'object') {
+          return record.applicationId.status === 4;
+        }
+        // If applicationId is not populated or missing, exclude it (shouldn't happen but safe fallback)
+        return false;
+      });
       setItems(list);
       // load pending reqs (company scoped by service find hook)
       const [ecR, tR] = await Promise.all([
@@ -52,7 +76,7 @@ export default function CompanyEmployeesPage() {
       const term = Array.isArray(termJson?.data) ? termJson.data : (Array.isArray(termJson) ? termJson : []);
       setPending({ ec, term });
 
-      // Pre-fetch labels (employee name + position) for pending requests
+      // Pre-fetch labels (employee name + position + avatar) for pending requests
       const ids = Array.from(new Set([
         ...ec.map(r => String(r.employmentId)),
         ...term.map(r => String(r.employmentId))
@@ -60,16 +84,41 @@ export default function CompanyEmployeesPage() {
       const labelEntries = await Promise.all(ids.map(async (id) => {
         try {
           const r = await fetch(`${API_BASE_URL}/employment-detail/${id}`, { headers });
-          if (!r.ok) return [id, `Employment: ${id}`];
+          if (!r.ok) return [id, { text: `Employment: ${id}`, name: `Employment: ${id}`, avatar: null }];
           const d = await r.json();
           const emp = d?.employment || {};
           const job = d?.job || {};
+          
+          // Try to get name from application form first, then user profile
+          const personalInfo = d?.application?.form?.personalInfo;
           const userProfile = d?.user?.profile || {};
-          const name = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() || d?.user?.email || String(emp.userId || '');
+          
+          let name = '';
+          let avatar = null;
+          
+          if (personalInfo) {
+            const parts = [
+              personalInfo.firstName || '',
+              personalInfo.middleName || '',
+              personalInfo.lastName || ''
+            ].filter(Boolean);
+            name = parts.join(' ').trim();
+            avatar = personalInfo.avatar || null;
+          }
+          
+          if (!name) {
+            name = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+            avatar = userProfile.avatar || null;
+          }
+          
+          if (!name) {
+            name = d?.user?.email || String(emp.userId || '');
+          }
+          
           const title = job.title || 'Intern';
-          return [id, `${name} – ${title}`];
+          return [id, { text: `${name} – ${title}`, name, avatar }];
         } catch {
-          return [id, `Employment: ${id}`];
+          return [id, { text: `Employment: ${id}`, name: `Employment: ${id}`, avatar: null }];
         }
       }));
       setPendingLabels(Object.fromEntries(labelEntries));
@@ -101,14 +150,42 @@ export default function CompanyEmployeesPage() {
         const labelEntries = await Promise.all(items.map(async (item) => {
           try {
             const r = await fetch(`${API_BASE_URL}/employment-detail/${item._id}`, { headers });
-            if (!r.ok) return [item._id, { name: String(item.userId), job: String(item.jobListingId) }];
+            if (!r.ok) return [item._id, { name: String(item.userId), job: String(item.jobListingId), avatar: null }];
             const d = await r.json();
+            
+            // Try to get name from application form first, then user profile
+            const personalInfo = d?.application?.form?.personalInfo;
             const userProfile = d?.user?.profile || {};
-            const name = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() || d?.user?.email || String(item.userId);
+            
+            let name = '';
+            let avatar = null;
+            
+            if (personalInfo) {
+              // Use firstName + middleName + lastName from application form
+              const parts = [
+                personalInfo.firstName || '',
+                personalInfo.middleName || '',
+                personalInfo.lastName || ''
+              ].filter(Boolean);
+              name = parts.join(' ').trim();
+              avatar = personalInfo.avatar || null;
+            }
+            
+            // Fallback to user profile if no name from application
+            if (!name) {
+              name = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+              avatar = userProfile.avatar || null;
+            }
+            
+            // Final fallback to email or userId
+            if (!name) {
+              name = d?.user?.email || String(item.userId);
+            }
+            
             const jobTitle = d?.job?.title || String(item.jobListingId);
-            return [item._id, { name, job: jobTitle }];
+            return [item._id, { name, job: jobTitle, avatar }];
           } catch {
-            return [item._id, { name: String(item.userId), job: String(item.jobListingId) }];
+            return [item._id, { name: String(item.userId), job: String(item.jobListingId), avatar: null }];
           }
         }));
         setEmployeeLabels(Object.fromEntries(labelEntries));
@@ -117,7 +194,23 @@ export default function CompanyEmployeesPage() {
   }, [items]);
 
   const columns = [
-    { title: 'Candidate', key: 'candidate', render: (_, r) => employeeLabels[r._id]?.name || String(r.userId) },
+    { 
+      title: 'Candidate', 
+      key: 'candidate', 
+      render: (_, r) => {
+        const label = employeeLabels[r._id];
+        return (
+          <Space>
+            <UserAvatar 
+              name={label?.name || String(r.userId)} 
+              avatarUrl={label?.avatar || ''} 
+              size={32} 
+            />
+            <span>{label?.name || String(r.userId)}</span>
+          </Space>
+        );
+      }
+    },
     { title: 'Job', key: 'job', render: (_, r) => employeeLabels[r._id]?.job || String(r.jobListingId) },
     { title: 'Start', dataIndex: 'startDate', key: 'startDate', render: (d) => d ? new Date(d).toLocaleDateString() : '-' },
     { title: 'End', dataIndex: 'endDate', key: 'endDate', render: (d) => d ? new Date(d).toLocaleDateString() : '-' },
@@ -140,6 +233,89 @@ export default function CompanyEmployeesPage() {
       setRejectOpen(false); rejectForm.resetFields(); setRejectTarget({ kind:null, id:null });
       load();
     } catch (e) { if (e?.errorFields) return; message.error(e.message || 'Failed'); }
+  };
+
+  // Handler for extending employment
+  const handleExtend = async () => {
+    try {
+      const values = await extendForm.validateFields();
+      const token = localStorage.getItem('jf_token');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_BASE_URL}/internship-extensions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          employmentId: extendTarget._id,
+          newEndDate: values.newEndDate.toDate(),
+          reason: values.reason
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create extension');
+      message.success('Extension created successfully');
+      setExtendOpen(false);
+      extendForm.resetFields();
+      setExtendTarget(null);
+      load();
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to extend employment');
+    }
+  };
+
+  // Handler for initiating early completion
+  const handleEarlyCompletion = async () => {
+    try {
+      const values = await ecInitiateForm.validateFields();
+      const token = localStorage.getItem('jf_token');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_BASE_URL}/early-completions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          employmentId: ecInitiateTarget._id,
+          reason: values.reason,
+          proposedCompletionDate: values.proposedCompletionDate ? values.proposedCompletionDate.toDate() : null
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create early completion request');
+      message.success('Early completion request created');
+      setEcInitiateOpen(false);
+      ecInitiateForm.resetFields();
+      setEcInitiateTarget(null);
+      load();
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to create early completion');
+    }
+  };
+
+  // Handler for initiating termination
+  const handleTerminate = async () => {
+    try {
+      const values = await terminateForm.validateFields();
+      const token = localStorage.getItem('jf_token');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_BASE_URL}/internship-terminations`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          employmentId: terminateTarget._id,
+          initiatedBy: 'company',
+          reason: values.reason,
+          remark: values.remark,
+          proposedLastDay: values.proposedLastDay ? values.proposedLastDay.toDate() : null
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create termination request');
+      message.success('Termination request created');
+      setTerminateOpen(false);
+      terminateForm.resetFields();
+      setTerminateTarget(null);
+      load();
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to create termination');
+    }
   };
 
   const drawerTitleNode = (
@@ -166,6 +342,73 @@ export default function CompanyEmployeesPage() {
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Title level={2} style={{ margin: 0 }}>Employees</Title>
 
+            {/* Current Employees - ONGOING and UPCOMING */}
+            <Card title="Current Employees" extra={<Button size="small" onClick={load}>Refresh</Button>}>
+              <Table
+                rowKey={r => r._id || r.id}
+                columns={[
+                  { 
+                    title: 'Candidate', 
+                    key: 'candidate', 
+                    render: (_, r) => {
+                      const label = employeeLabels[r._id];
+                      return (
+                        <Space>
+                          <UserAvatar 
+                            name={label?.name || String(r.userId)} 
+                            avatarUrl={label?.avatar || ''} 
+                            size={32} 
+                          />
+                          <span>{label?.name || String(r.userId)}</span>
+                        </Space>
+                      );
+                    }
+                  },
+                  { title: 'Job', key: 'job', render: (_, r) => employeeLabels[r._id]?.job || String(r.jobListingId) },
+                  { title: 'Start', dataIndex: 'startDate', key: 'startDate', render: (d) => d ? new Date(d).toLocaleDateString() : '-' },
+                  { title: 'End', dataIndex: 'endDate', key: 'endDate', render: (d) => d ? new Date(d).toLocaleDateString() : '-' },
+                  { title: 'Status', dataIndex: 'status', key: 'status', render: statusTag },
+                  { 
+                    title: 'Actions', 
+                    key: 'actions', 
+                    render: (_, r) => (
+                      <Space>
+                        <Button size="small" onClick={() => { setViewing(r); setOpen(true); }}>View</Button>
+                        {r.status === 0 && (
+                          <Button size="small" type="primary" onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('jf_token');
+                              const res = await fetch(`${API_BASE_URL}/employment-records/${r._id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                body: JSON.stringify({ action: 'startNow' })
+                              });
+                              if (!res.ok) throw new Error('Failed to start employment');
+                              message.success('Employment started');
+                              load();
+                            } catch (e) {
+                              message.error(e.message || 'Failed to start employment');
+                            }
+                          }}>Start Now</Button>
+                        )}
+                        {(r.status === 0 || r.status === 1) && (
+                          <>
+                            <Button size="small" type="primary" onClick={() => { setExtendTarget(r); setExtendOpen(true); }}>Extend</Button>
+                            <Button size="small" onClick={() => { setEcInitiateTarget(r); setEcInitiateOpen(true); }}>Early Completion</Button>
+                            <Button size="small" danger onClick={() => { setTerminateTarget(r); setTerminateOpen(true); }}>Terminate</Button>
+                          </>
+                        )}
+                      </Space>
+                    ) 
+                  }
+                ]}
+                dataSource={items.filter(item => item.status === 0 || item.status === 1)} // UPCOMING or ONGOING
+                loading={loading}
+                pagination={{ pageSize: 10 }}
+                locale={{ emptyText: 'No current employees' }}
+              />
+            </Card>
+
             {/* Pending requests panel */}
             <Card title="Pending requests" extra={<Button size="small" onClick={load}>Refresh</Button>}>
               <Space direction="vertical" style={{ width: '100%' }}>
@@ -174,45 +417,73 @@ export default function CompanyEmployeesPage() {
                   size="small"
                   dataSource={pending.ec}
                   locale={{ emptyText: 'No pending early completions' }}
-                  renderItem={(r)=>(
-                    <List.Item
-                      actions={[
-                        <Button key="a" size="small" type="primary" onClick={()=>takeAction('ec', r._id, true)}>Approve</Button>,
-                        <Button key="r" size="small" danger onClick={()=>{ setRejectTarget({ kind:'ec', id:r._id }); setRejectOpen(true); }}>Reject</Button>
-                      ]}
-                    >
-                      <Space>
-                        <Tag color="blue">EC</Tag>
-                        <span>{pendingLabels[String(r.employmentId)] || `Employment: ${String(r.employmentId)}`}</span>
-                        {r.reason ? <span>• {r.reason}</span> : null}
-                      </Space>
-                    </List.Item>
-                  )}
+                  renderItem={(r)=>{
+                    const label = pendingLabels[String(r.employmentId)];
+                    return (
+                      <List.Item
+                        actions={[
+                          <Button key="a" size="small" type="primary" onClick={()=>takeAction('ec', r._id, true)}>Approve</Button>,
+                          <Button key="r" size="small" danger onClick={()=>{ setRejectTarget({ kind:'ec', id:r._id }); setRejectOpen(true); }}>Reject</Button>
+                        ]}
+                      >
+                        <Space>
+                          <Tag color="blue">EC</Tag>
+                          {label ? (
+                            <Space>
+                              <UserAvatar 
+                                name={label.name} 
+                                avatarUrl={label.avatar || ''} 
+                                size={32} 
+                              />
+                              <span>{label.text}</span>
+                            </Space>
+                          ) : (
+                            <span>{`Employment: ${String(r.employmentId)}`}</span>
+                          )}
+                          {r.reason ? <span>• {r.reason}</span> : null}
+                        </Space>
+                      </List.Item>
+                    );
+                  }}
                 />
                 <List
                   header={<b>Terminations</b>}
                   size="small"
                   dataSource={pending.term}
                   locale={{ emptyText: 'No pending terminations' }}
-                  renderItem={(r)=>(
-                    <List.Item
-                      actions={[
-                        <Button key="a" size="small" type="primary" onClick={()=>takeAction('term', r._id, true)}>Approve</Button>,
-                        <Button key="r" size="small" danger onClick={()=>{ setRejectTarget({ kind:'term', id:r._id }); setRejectOpen(true); }}>Reject</Button>
-                      ]}
-                    >
-                      <Space>
-                        <Tag color="red">TERM</Tag>
-                        <span>{pendingLabels[String(r.employmentId)] || `Employment: ${String(r.employmentId)}`}</span>
-                        {r.reason ? <span>• {r.reason}</span> : null}
-                      </Space>
-                    </List.Item>
-                  )}
+                  renderItem={(r)=>{
+                    const label = pendingLabels[String(r.employmentId)];
+                    return (
+                      <List.Item
+                        actions={[
+                          <Button key="a" size="small" type="primary" onClick={()=>takeAction('term', r._id, true)}>Approve</Button>,
+                          <Button key="r" size="small" danger onClick={()=>{ setRejectTarget({ kind:'term', id:r._id }); setRejectOpen(true); }}>Reject</Button>
+                        ]}
+                      >
+                        <Space>
+                          <Tag color="red">TERM</Tag>
+                          {label ? (
+                            <Space>
+                              <UserAvatar 
+                                name={label.name} 
+                                avatarUrl={label.avatar || ''} 
+                                size={32} 
+                              />
+                              <span>{label.text}</span>
+                            </Space>
+                          ) : (
+                            <span>{`Employment: ${String(r.employmentId)}`}</span>
+                          )}
+                          {r.reason ? <span>• {r.reason}</span> : null}
+                        </Space>
+                      </List.Item>
+                    );
+                  }}
                 />
               </Space>
             </Card>
 
-            <Card>
+            <Card title="All Employees">
               <Table rowKey={r => r._id || r.id} columns={columns} dataSource={items} loading={loading} pagination={{ pageSize: 10 }} />
             </Card>
           </Space>
@@ -242,6 +513,105 @@ export default function CompanyEmployeesPage() {
       <Drawer title={drawerTitleNode} open={open} onClose={() => setOpen(false)} width={640}>
         {viewing ? <EmployeeDetails record={viewing} /> : null}
       </Drawer>
+
+      {/* Extend Employment Modal */}
+      <Modal
+        title="Extend Employment"
+        open={extendOpen}
+        onCancel={() => { setExtendOpen(false); extendForm.resetFields(); setExtendTarget(null); }}
+        onOk={handleExtend}
+        okText="Extend"
+      >
+        <Form form={extendForm} layout="vertical">
+          <Form.Item
+            label="New End Date"
+            name="newEndDate"
+            rules={[{ required: true, message: 'Please select new end date' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              disabledDate={(current) => {
+                if (!extendTarget?.endDate) return false;
+                return current && current <= dayjs(extendTarget.endDate);
+              }}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Reason for Extension"
+            name="reason"
+            rules={[{ required: true, message: 'Please provide a reason' }]}
+          >
+            <Input.TextArea rows={3} placeholder="Explain why the employment is being extended..." />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Early Completion Modal */}
+      <Modal
+        title="Initiate Early Completion"
+        open={ecInitiateOpen}
+        onCancel={() => { setEcInitiateOpen(false); ecInitiateForm.resetFields(); setEcInitiateTarget(null); }}
+        onOk={handleEarlyCompletion}
+        okText="Create Request"
+      >
+        <Form form={ecInitiateForm} layout="vertical">
+          <Form.Item
+            label="Reason for Early Completion"
+            name="reason"
+            rules={[{ required: true, message: 'Please provide a reason' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Explain why the employment should complete early..." />
+          </Form.Item>
+          <Form.Item
+            label="Proposed Completion Date"
+            name="proposedCompletionDate"
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              disabledDate={(current) => {
+                if (!ecInitiateTarget?.endDate) return current && current < dayjs().startOf('day');
+                return current && (current < dayjs().startOf('day') || current >= dayjs(ecInitiateTarget.endDate));
+              }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Terminate Employment Modal */}
+      <Modal
+        title="Terminate Employment"
+        open={terminateOpen}
+        onCancel={() => { setTerminateOpen(false); terminateForm.resetFields(); setTerminateTarget(null); }}
+        onOk={handleTerminate}
+        okText="Create Termination"
+        okButtonProps={{ danger: true }}
+      >
+        <Form form={terminateForm} layout="vertical">
+          <Form.Item
+            label="Reason for Termination"
+            name="reason"
+            rules={[{ required: true, message: 'Please provide a reason' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Explain why the employment is being terminated..." />
+          </Form.Item>
+          <Form.Item
+            label="Additional Remarks"
+            name="remark"
+          >
+            <Input.TextArea rows={3} placeholder="Any additional information..." />
+          </Form.Item>
+          <Form.Item
+            label="Proposed Last Day"
+            name="proposedLastDay"
+            rules={[{ required: true, message: 'Please select proposed last day' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              disabledDate={(current) => current && current < dayjs().startOf('day')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 }
