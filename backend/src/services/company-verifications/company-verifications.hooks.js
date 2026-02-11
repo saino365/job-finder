@@ -30,20 +30,45 @@ export default (app) => ({
     patch: [ async (ctx) => {
       // Admin-only approve/reject
       if (!ctx.params.user) {
-        throw new Error('Authentication required');
+        console.error('PATCH company-verifications: No user in context', { 
+          hasParams: !!ctx.params, 
+          hasAuthentication: !!ctx.params.authentication,
+          headers: ctx.params.headers 
+        });
+        throw new Error('Authentication required - user not found in context');
       }
-      if (ctx.params.user.role !== 'admin') throw new Error('Admin only');
+      if (ctx.params.user.role !== 'admin') {
+        console.error('PATCH company-verifications: Non-admin user attempted action', { 
+          userId: ctx.params.user._id, 
+          role: ctx.params.user.role 
+        });
+        throw new Error('Admin access required');
+      }
       const { action, rejectionReason } = ctx.data;
       if (!['approve','reject'].includes(action)) throw new Error('Invalid action');
-      const current = await app.service('company-verifications').get(ctx.id);
-      ctx.data = { status: action === 'approve' ? VERIFICATION_STATUS.APPROVED : VERIFICATION_STATUS.REJECTED,
-                   rejectionReason: action === 'reject' ? (rejectionReason || '') : undefined,
-                   reviewedAt: new Date(), reviewerId: ctx.params.user._id };
-      // Also patch company
+      
+      // Pass authentication context for internal service call
+      const current = await app.service('company-verifications').get(ctx.id, {
+        provider: undefined,
+        user: ctx.params.user
+      });
+      
+      ctx.data = { 
+        status: action === 'approve' ? VERIFICATION_STATUS.APPROVED : VERIFICATION_STATUS.REJECTED,
+        rejectionReason: action === 'reject' ? (rejectionReason || '') : undefined,
+        reviewedAt: new Date(), 
+        reviewerId: ctx.params.user._id 
+      };
+      
+      // Also patch company - pass authentication context
       await app.service('companies').patch(current.companyId, {
         verifiedStatus: action === 'approve' ? VERIFICATION_STATUS.APPROVED : VERIFICATION_STATUS.REJECTED,
         rejectionReason: action === 'reject' ? (rejectionReason || '') : undefined,
-        reviewedAt: new Date(), reviewerId: ctx.params.user._id
+        reviewedAt: new Date(), 
+        reviewerId: ctx.params.user._id
+      }, {
+        provider: undefined,
+        user: ctx.params.user
       });
     } ],
     remove: []
@@ -75,7 +100,10 @@ export default (app) => ({
     } ],
     patch: [ async (ctx) => {
       // notify owner based on updated status
-      const current = await app.service('company-verifications').get(ctx.id);
+      const current = await app.service('company-verifications').get(ctx.id, {
+        provider: undefined,
+        user: ctx.params.user
+      });
       const approved = ctx.result.status === VERIFICATION_STATUS.APPROVED;
       const type = approved ? 'kyc_approved' : 'kyc_rejected';
       await app.service('notifications').create({
