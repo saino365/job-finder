@@ -258,9 +258,9 @@ function MonitoringClient() {
       // Show buttons for pending items (status === 4)
       return (
         <Space>
-          <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approvePreApproval(record._id)}>Approve</Button>
-          <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, true)}>Reject</Button>
+          <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={(e) => { e.preventDefault(); e.stopPropagation(); approvePreApproval(record._id); }}>Approve</Button>
+          <Button danger size="small" icon={<CloseOutlined />} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRejectModal(record, true); }}>Reject</Button>
         </Space>
       );
     }}
@@ -314,9 +314,9 @@ function MonitoringClient() {
       // Show buttons for pending items
       return (
         <Space>
-          <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => approveFinalApproval(record._id)}>Approve</Button>
-          <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, false)}>Reject</Button>
+          <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={(e) => { e.preventDefault(); e.stopPropagation(); approveFinalApproval(record._id); }}>Approve</Button>
+          <Button danger size="small" icon={<CloseOutlined />} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRejectModal(record, false); }}>Reject</Button>
         </Space>
       );
     }}
@@ -348,9 +348,9 @@ function MonitoringClient() {
       const isPre = record.status === 4;
       return (
         <Space>
-          <Button size="small" icon={<EyeOutlined />} onClick={() => { setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
-          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={() => (isPre ? approvePreApproval(record._id) : approveFinalApproval(record._id))}>Approve</Button>
-          <Button danger size="small" icon={<CloseOutlined />} onClick={() => openRejectModal(record, isPre)}>Reject</Button>
+          <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setViewingJob(record); setViewDrawerOpen(true); }}>View</Button>
+          <Button type="primary" size="small" icon={<CheckOutlined />} loading={approvingJobs.has(record._id)} onClick={(e) => { e.preventDefault(); e.stopPropagation(); (isPre ? approvePreApproval(record._id) : approveFinalApproval(record._id)); }}>Approve</Button>
+          <Button danger size="small" icon={<CloseOutlined />} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRejectModal(record, isPre); }}>Reject</Button>
         </Space>
       );
     }}

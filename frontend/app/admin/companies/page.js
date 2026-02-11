@@ -263,7 +263,11 @@ export default function AdminCompaniesPage() {
               icon={<CheckOutlined />}
               size="small"
               loading={approvingCompanies.has(record._id)}
-              onClick={() => approveCompany(record._id)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                approveCompany(record._id);
+              }}
             >
               Approve
             </Button>
@@ -271,14 +275,20 @@ export default function AdminCompaniesPage() {
               danger
               icon={<CloseOutlined />}
               size="small"
-              onClick={() => openRejectModal(record)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openRejectModal(record);
+              }}
             >
               Reject
             </Button>
             <Button
               icon={<EyeOutlined />}
               size="small"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setSelectedCompany(record);
                 setDetailsVisible(true);
               }}
