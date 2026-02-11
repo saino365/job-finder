@@ -5,30 +5,33 @@ const { authenticate } = authHooks;
 
 export default (app) => ({
   before: {
-    all: [],
-    find: [ authenticate('jwt'), async (ctx) => {
+    all: [ authenticate('jwt') ],
+    find: [ async (ctx) => {
       if (ctx.params.user.role !== 'admin') {
         // company owner can only see their own submissions
         ctx.params.query = ctx.params.query || {};
         ctx.params.query.submittedBy = ctx.params.user._id;
       }
     } ],
-    get: [ authenticate('jwt'), async (ctx) => {
+    get: [ async (ctx) => {
       if (ctx.params.user.role === 'admin') return;
       const doc = await app.service('company-verifications').get(ctx.id, { paginate: false });
       if (doc.submittedBy.toString() !== ctx.params.user._id.toString()) {
         throw new Error('Not authorized');
       }
     } ],
-    create: [ authenticate('jwt'), async (ctx) => {
+    create: [ async (ctx) => {
       // Only company owners can create
       if (ctx.params.user.role !== 'company') throw new Error('Only company users can submit KYC');
       ctx.data.submittedBy = ctx.params.user._id;
       ctx.data.status = VERIFICATION_STATUS.PENDING;
       ctx.data.submittedAt = new Date();
     } ],
-    patch: [ authenticate('jwt'), async (ctx) => {
+    patch: [ async (ctx) => {
       // Admin-only approve/reject
+      if (!ctx.params.user) {
+        throw new Error('Authentication required');
+      }
       if (ctx.params.user.role !== 'admin') throw new Error('Admin only');
       const { action, rejectionReason } = ctx.data;
       if (!['approve','reject'].includes(action)) throw new Error('Invalid action');
@@ -43,7 +46,7 @@ export default (app) => ({
         reviewedAt: new Date(), reviewerId: ctx.params.user._id
       });
     } ],
-    remove: [ authenticate('jwt') ]
+    remove: []
   },
   after: {
     all: [], find: [], get: [],

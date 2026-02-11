@@ -88,6 +88,8 @@ export default function AdminCompaniesPage() {
         throw new Error('No verification record found for this company');
       }
 
+      console.log('Approving company verification:', { verificationId: verification._id, companyId });
+
       // Use the proper company-verifications endpoint
       const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
         method: 'PATCH',
@@ -101,9 +103,13 @@ export default function AdminCompaniesPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to approve company');
+        const errorText = await res.text();
+        console.error('Approve company failed:', { status: res.status, error: errorText });
+        throw new Error(`Failed to approve company: ${errorText || res.statusText}`);
       }
 
+      const result = await res.json();
+      console.log('Approve company success:', result);
       message.success('Company approved successfully');
       loadCompanies();
     } catch (error) {
@@ -134,6 +140,8 @@ export default function AdminCompaniesPage() {
         throw new Error('No verification record found for this company');
       }
 
+      console.log('Rejecting company verification:', { verificationId: verification._id, companyId: rejectingCompany._id, reason: values.rejectionReason });
+
       // Use the proper company-verifications endpoint
       const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
         method: 'PATCH',
@@ -148,9 +156,13 @@ export default function AdminCompaniesPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to reject company');
+        const errorText = await res.text();
+        console.error('Reject company failed:', { status: res.status, error: errorText });
+        throw new Error(`Failed to reject company: ${errorText || res.statusText}`);
       }
 
+      const result = await res.json();
+      console.log('Reject company success:', result);
       message.success('Company rejected successfully');
       setRejectModalOpen(false);
       rejectForm.resetFields();
