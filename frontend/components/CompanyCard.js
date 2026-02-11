@@ -36,26 +36,38 @@ export default function CompanyCard({ company }) {
 
   {/* D149: Ensure consistent company card height */}
   return (
-    <Link href={`/companies/${company._id}`} style={{ display: 'block', height: '100%' }}>
-      <Card hoverable title={company.name} style={{ height: '100%', display: 'flex', flexDirection: 'column' }} styles={{ body: { flex: 1 } }}>
-        <Space align="start" style={{ width: '100%' }}>
-          <Avatar
-            src={logoSignedUrl}
-            shape="square"
-            size={48}
-            style={{ backgroundColor: '#f0f0f0', flexShrink: 0 }}
-          >
-            {company.name?.charAt(0)?.toUpperCase()}
-          </Avatar>
-          <div style={{ flex: 1 }}>
-            <Typography.Text type="secondary">{company.industry || 'Industry'}</Typography.Text>
-            <Typography.Paragraph ellipsis={{ rows: 2 }} style={{ marginTop: 8 }}>
-              {company.description || '—'}
-            </Typography.Paragraph>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              {jobsCount != null && <Tag color="geekblue">{jobsCount} jobs</Tag>}
-              {company.location && <Tag>{company.location}</Tag>}
+    <Link href={`/companies/${company._id}`} style={{ display: 'block' }}>
+      <Card
+        hoverable
+        title={company.name}
+        style={{ height: '100%', minHeight: '200px', display: 'flex', flexDirection: 'column' }}
+        styles={{ body: { padding: '16px', display: 'flex', flexDirection: 'column' } }}
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <Space align="start" size={12} style={{ width: '100%' }}>
+            <Avatar
+              src={logoSignedUrl}
+              shape="square"
+              size={48}
+              style={{ backgroundColor: '#f0f0f0', flexShrink: 0 }}
+            >
+              {company.name?.charAt(0)?.toUpperCase()}
+            </Avatar>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Typography.Text type="secondary" style={{ fontSize: '14px' }}>
+                {company.industry || 'Industry'}
+              </Typography.Text>
             </div>
+          </Space>
+          <Typography.Paragraph
+            ellipsis={{ rows: 2 }}
+            style={{ marginBottom: 0 }}
+          >
+            {company.description || '—'}
+          </Typography.Paragraph>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {jobsCount != null && <Tag color="geekblue">{jobsCount} jobs</Tag>}
+            {company.location && <Tag>{company.location}</Tag>}
           </div>
         </Space>
       </Card>

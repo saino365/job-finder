@@ -34,7 +34,8 @@ class SearchProfilesService {
     if (!user) throw Object.assign(new Error('Not authenticated'), { code: 401 });
 
     const kind = data?.kind;
-    if (!kind || !['intern', 'company'].includes(kind)) {
+    const validKinds = ['intern', 'company', 'job-search', 'intern-search'];
+    if (!kind || !validKinds.includes(kind)) {
       throw Object.assign(new Error('Invalid kind'), { code: 400 });
     }
 

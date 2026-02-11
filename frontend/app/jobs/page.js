@@ -22,7 +22,7 @@ export default function JobsPage() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Navbar />
-      <Layout.Content style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
+      <Layout.Content style={{ padding: '24px', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Typography.Title level={3} style={{ margin: 0 }}>All Jobs</Typography.Title>
           {role === 'company' && (

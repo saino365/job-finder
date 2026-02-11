@@ -4,9 +4,9 @@ import { Forbidden } from '@feathersjs/errors';
 export default function (app) {
   const redis = app.get('redis');
 
-  // If Redis not configured or not ready, skip rate limiting to avoid blocking API
-  if (!redis || (redis.status && redis.status !== 'ready')) {
-    console.warn('Redis not ready, skipping rate limiting');
+  // If Redis not configured, skip rate limiting to avoid blocking API
+  if (!redis) {
+    console.warn('Redis not configured, skipping rate limiting');
     return;
   }
 

@@ -16,8 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: { default: "JobFinder", template: "%s | JobFinder" },
-  description: "Find internships and hire talent",
-  icons: { icon: "/favicon.svg" }
+  description: "Find internships and hire talent"
 };
 
 export default function RootLayout({ children }) {

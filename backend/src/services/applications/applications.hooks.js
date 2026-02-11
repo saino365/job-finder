@@ -166,8 +166,23 @@ export default (app) => {
 
     const ACTIVE_STATUSES = [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE];
     const existingApp = await Applications.findOne({ userId: user._id, jobListingId: jobId });
+
+    // D201: Debug logging for reapplication after withdrawal
+    if (existingApp) {
+      console.log(`🔍 DEBUG: Found existing application for user ${user._id} and job ${jobId}`);
+      console.log(`   Existing app ID: ${existingApp._id}`);
+      console.log(`   Existing app status: ${existingApp.status}`);
+      console.log(`   ACTIVE_STATUSES: ${JSON.stringify(ACTIVE_STATUSES)}`);
+      console.log(`   Is status in ACTIVE_STATUSES? ${ACTIVE_STATUSES.includes(existingApp.status)}`);
+    }
+
     if (existingApp && ACTIVE_STATUSES.includes(existingApp.status)) {
+      console.log(`❌ DEBUG: Blocking reapplication - existing app is ACTIVE`);
       throw Object.assign(new Error('You have already applied for this position'), { code: 409 });
+    }
+
+    if (existingApp) {
+      console.log(`✅ DEBUG: Allowing reapplication - existing app status ${existingApp.status} is NOT active`);
     }
 
     const now = new Date();
@@ -276,7 +291,8 @@ export default (app) => {
         ctx.params._email = { kind: 'status_email', to: 'student', template: 'offer' };
         return;
       }
-      if (action === 'reject' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE].includes(doc.status)) {
+      // D126: Reject action should NOT be allowed for PENDING_ACCEPTANCE - use declineOffer instead
+      if (action === 'reject' && [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED].includes(doc.status)) {
         const reason = String(ctx.data.reason || '').trim();
         if (!reason) { throw new BadRequest('Rejection reason is required'); }
         set({ status: S.REJECTED, rejectedAt: now, rejection: { by: 'company', reason } });
@@ -287,6 +303,14 @@ export default (app) => {
       if (action === 'markNoShow' && doc.status === S.INTERVIEW_SCHEDULED) {
         set({ status: S.NOT_ATTENDING });
         ctx.params._notify = { type: 'interview_noshow', toUserId: doc.userId, toRole: 'student' };
+        return;
+      }
+      // D126: Add declineOffer action for company to decline offers pending acceptance
+      if (action === 'declineOffer' && doc.status === S.PENDING_ACCEPTANCE) {
+        const reason = String(ctx.data.reason || 'Offer declined by company').trim();
+        set({ status: S.REJECTED, rejectedAt: now, rejection: { by: 'company', reason } });
+        ctx.params._notify = { type: 'offer_declined_by_company', toUserId: doc.userId, toRole: 'student' };
+        ctx.params._email = { kind: 'status_email', to: 'student', template: 'rejected' };
         return;
       }
       throw Object.assign(new Error('Invalid action for current state'), { code: 400 });
@@ -337,8 +361,8 @@ export default (app) => {
         try {
           const Employment = app.service('employment-records')?.Model;
           const job = await JobModel.findById(doc.jobListingId).lean();
-          const startDate = job?.project?.startDate ? new Date(job.project.startDate) : undefined;
-          const endDate = job?.project?.endDate ? new Date(job.project.endDate) : undefined;
+          const startDate = job?.internshipStart ? new Date(job.internshipStart) : undefined;
+          const endDate = job?.internshipEnd ? new Date(job.internshipEnd) : undefined;
           const requiredDocs = ['contract','nda'];
           if (Employment) {
             const nowTs = now.getTime();
@@ -468,6 +492,69 @@ export default (app) => {
     return ctx;
   }
 
+  // Populate user/candidate information for applications
+  async function populateUser(ctx) {
+    try {
+      const Users = app.service('users')?.Model;
+      if (!Users) return ctx;
+
+      const populateOne = async (appDoc) => {
+        if (!appDoc || !appDoc.userId) return appDoc;
+
+        // Convert to plain object if it's a Mongoose document
+        const app = appDoc.toObject ? appDoc.toObject() : { ...appDoc };
+
+        try {
+          const user = await Users.findById(app.userId).lean();
+          if (user) {
+            // Build candidate name from profile
+            const firstName = user.profile?.firstName || '';
+            const lastName = user.profile?.lastName || '';
+            const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+
+            // Populate candidate information
+            app.candidate = {
+              _id: user._id,
+              email: user.email,
+              fullName: fullName || user.email,
+              name: fullName || user.email,
+              avatar: user.profile?.avatar || null,
+              phone: user.profile?.phone || null
+            };
+
+            // Also set candidateName for backward compatibility
+            app.candidateName = fullName || user.email;
+
+            // Populate full user object for detailed views
+            app.user = {
+              _id: user._id,
+              email: user.email,
+              profile: user.profile || {},
+              internProfile: user.internProfile || {}
+            };
+          }
+        } catch (e) {
+          // User not found or error - return app without user data
+        }
+        return app;
+      };
+
+      // Handle both single result (get) and array result (find)
+      if (Array.isArray(ctx.result)) {
+        ctx.result = await Promise.all(ctx.result.map(populateOne));
+      } else if (ctx.result?.data && Array.isArray(ctx.result.data)) {
+        // Paginated result
+        ctx.result.data = await Promise.all(ctx.result.data.map(populateOne));
+      } else if (ctx.result) {
+        // Single result
+        ctx.result = await populateOne(ctx.result);
+      }
+    } catch (e) {
+      // Silent fail - don't break the request if population fails
+    }
+    return ctx;
+  }
+
   return {
     before: {
       all: [ authenticate('jwt') ],
@@ -477,7 +564,7 @@ export default (app) => {
       patch: [ applyTransition ]
     },
     after: {
-      all: [ populateCompany ],
+      all: [ populateCompany, populateUser ],
       create: [ async (ctx) => {
         // 1) Generate and upload nicer PDF
         try {

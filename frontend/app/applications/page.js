@@ -35,6 +35,8 @@ export default function MyApplicationsPage(){
   const [offerRecord, setOfferRecord] = useState(null);
   const [offerLetterUrl, setOfferLetterUrl] = useState(null);
   const [declineForm] = Form.useForm();
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declining, setDeclining] = useState(false);
 
 
   async function load(){
@@ -164,15 +166,38 @@ export default function MyApplicationsPage(){
     } catch (e) { message.error(e.message || 'Failed'); }
   }
 
-  async function declineOffer(id){
+  async function declineOffer(){
     try {
+      setDeclining(true);
       const v = await declineForm.validateFields();
       const token = localStorage.getItem('jf_token');
-      await fetch(`${API_BASE_URL}/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'declineOffer', reason: v.reason || '' }) });
+      const res = await fetch(`${API_BASE_URL}/applications/${offerRecord._id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'declineOffer', reason: v.reason || '' }) });
+
+      if (!res.ok) {
+        let errorMessage = 'Failed to decline offer';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          const errorText = await res.text();
+          if (errorText) errorMessage = errorText;
+        }
+        throw new Error(errorMessage);
+      }
+
       message.success('Offer declined');
-      setOfferOpen(false); setOfferRecord(null); setOfferLetterUrl(null); declineForm.resetFields();
+      setDeclineOpen(false);
+      setOfferOpen(false);
+      setOfferRecord(null);
+      setOfferLetterUrl(null);
+      declineForm.resetFields();
       load();
-    } catch (e) { if (e?.errorFields) return; message.error(e.message || 'Failed'); }
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to decline offer');
+    } finally {
+      setDeclining(false);
+    }
   }
 
   function handleRowClick(record) {
@@ -302,21 +327,32 @@ export default function MyApplicationsPage(){
             </Typography.Paragraph>
             <Space>
               <Button type="primary" onClick={()=>acceptOffer(offerRecord._id)}>Accept offer</Button>
-              <Button danger onClick={()=>{ declineForm.resetFields(); Modal.confirm({
-                title:'Decline offer?',
-                content: (
-                  <Form form={declineForm} layout="vertical">
-                    <Form.Item label="Reason (optional)" name="reason">
-                      <Input.TextArea rows={3} placeholder="Why are you declining?" />
-                    </Form.Item>
-                  </Form>
-                ),
-                okText:'Decline', okButtonProps:{ danger:true },
-                onOk: () => declineOffer(offerRecord._id)
-              }); }}>Decline</Button>
+              <Button danger onClick={()=>{
+                declineForm.resetFields();
+                setDeclineOpen(true);
+              }}>Decline</Button>
             </Space>
           </Space>
         ) : null}
+      </Modal>
+
+      <Modal
+        title="Decline offer"
+        open={declineOpen}
+        onCancel={()=>{ setDeclineOpen(false); declineForm.resetFields(); }}
+        onOk={declineOffer}
+        okText="Decline offer"
+        okButtonProps={{ danger: true, loading: declining }}
+        confirmLoading={declining}
+      >
+        <Typography.Paragraph>
+          Are you sure you want to decline this offer? This action cannot be undone.
+        </Typography.Paragraph>
+        <Form form={declineForm} layout="vertical">
+          <Form.Item label="Reason (optional)" name="reason">
+            <Input.TextArea rows={3} placeholder="Why are you declining this offer?" />
+          </Form.Item>
+        </Form>
       </Modal>
 
       </Layout>
