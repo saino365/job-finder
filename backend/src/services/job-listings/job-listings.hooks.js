@@ -226,6 +226,11 @@ export default (app) => ({
       authenticate('jwt'),
       async (ctx) => {
         const user = ctx.params?.user;
+        if (!user) {
+          const e = new Error('Authentication required');
+          e.code = 401;
+          throw e;
+        }
         const current = await app.service('job-listings').get(ctx.id, ctx.params);
         // capture snapshot for after hooks
         ctx.params._before = { status: current.status };
