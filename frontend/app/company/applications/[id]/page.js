@@ -108,6 +108,7 @@ export default function ApplicationDetailPage({ params }) {
   const [offerForm] = Form.useForm();
   const [uploadMeta, setUploadMeta] = useState(null);
   const [letterUrl, setLetterUrl] = useState(null);
+  const [avatarSignedUrl, setAvatarSignedUrl] = useState(null);
 
   // Await params in useEffect
   useEffect(() => {
@@ -171,9 +172,45 @@ export default function ApplicationDetailPage({ params }) {
     })();
   }, [data, letterUrl]);
 
+  // Fetch signed URL for avatar
+  useEffect(() => {
+    (async () => {
+      try {
+        const avatarUrl = data?.candidate?.avatar || data?.form?.personalInfo?.avatar;
+        console.log('🖼️ Avatar URL from data:', avatarUrl);
+        console.log('🖼️ data.candidate:', data?.candidate);
+        console.log('🖼️ data.form?.personalInfo:', data?.form?.personalInfo);
+
+        if (!avatarUrl) {
+          console.log('⚠️ No avatar URL found');
+          setAvatarSignedUrl(null);
+          return;
+        }
+
+        console.log('🔄 Fetching signed URL for avatar:', avatarUrl);
+        const res = await fetch(`${API_BASE_URL}/signed-url?url=${encodeURIComponent(avatarUrl)}`);
+        console.log('📡 Signed URL response status:', res.status);
+
+        if (res.ok) {
+          const json = await res.json();
+          console.log('✅ Signed URL received:', json.signedUrl);
+          setAvatarSignedUrl(json.signedUrl);
+        } else {
+          const errorText = await res.text();
+          console.error('❌ Signed URL request failed:', res.status, errorText);
+          setAvatarSignedUrl(avatarUrl); // Fallback to original URL
+        }
+      } catch (e) {
+        console.error('❌ Failed to get avatar signed URL:', e);
+        setAvatarSignedUrl(data?.candidate?.avatar || data?.form?.personalInfo?.avatar); // Fallback
+      }
+    })();
+  }, [data?.candidate?.avatar, data?.form?.personalInfo?.avatar]);
+
   // D78, D107: Fix action button visibility based on status
   const canShortlist = data && data.status === 0; // NEW
-  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2 || data.status === 3); // D107: Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED, PENDING_ACCEPTANCE
+  // D126: Don't show Reject button when status is PENDING_ACCEPTANCE (3) - only show Decline Offer
+  const canReject = data && (data.status === 0 || data.status === 1 || data.status === 2); // Allow reject for NEW, SHORTLISTED, INTERVIEW_SCHEDULED only
   const canSendOffer = data && (data.status === 1 || data.status === 2); // Shortlisted or Interview Scheduled
   const canRejectOffered = data && data.status === 3; // Pending Acceptance
   const isPendingAcceptance = data && data.status === 3;
@@ -186,7 +223,14 @@ export default function ApplicationDetailPage({ params }) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`Action failed (${res.status})`);
+    if (!res.ok) {
+      let errorMsg = `Action failed (${res.status})`;
+      try {
+        const errorData = await res.json();
+        if (errorData.message) errorMsg = errorData.message;
+      } catch {}
+      throw new Error(errorMsg);
+    }
     return res.json();
   }
 
@@ -204,7 +248,7 @@ export default function ApplicationDetailPage({ params }) {
       await new Promise((resolve, reject) => {
         Modal.confirm({
           title: 'Confirm rejection',
-          content: 'Are you sure you want to reject this shortlisted application?',
+          content: 'Are you sure you want to reject this application?',
           okText: 'Reject', okButtonProps: { danger: true },
           onOk: resolve, onCancel: () => reject(new Error('cancel'))
         });
@@ -212,7 +256,13 @@ export default function ApplicationDetailPage({ params }) {
       await patchAction({ action: 'reject', reason: v.reason });
       message.success('Application rejected');
       setRejectOpen(false); rejectForm.resetFields(); load();
-    } catch (e) { if (e?.errorFields || e.message === 'cancel') return; message.error(e.message); }
+    } catch (e) {
+      // If user cancelled or validation failed, just return
+      if (e?.errorFields || e.message === 'cancel') return;
+      // Otherwise show the error
+      console.error('Reject error:', e);
+      message.error(e.message || 'Failed to reject application');
+    }
   }
 
   async function handleUpload(file) {
@@ -348,13 +398,23 @@ export default function ApplicationDetailPage({ params }) {
 
                   <Descriptions title="Intern Application Information" bordered column={1} size="small">
                     <Descriptions.Item label="Avatar">
-                      {data.candidate?.avatar || data.form?.personalInfo?.avatar ? (
-                        <img 
-                          src={data.candidate?.avatar || data.form?.personalInfo?.avatar} 
-                          alt="Candidate avatar" 
-                          style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }}
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
+                      {avatarSignedUrl ? (
+                        <div>
+                          <img
+                            src={avatarSignedUrl}
+                            alt="Candidate avatar"
+                            style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 4 }}
+                            onLoad={() => console.log('✅ Avatar image loaded successfully')}
+                            onError={(e) => {
+                              console.error('❌ Avatar image failed to load:', avatarSignedUrl);
+                              console.error('❌ Image error event:', e);
+                              e.target.style.display = 'none';
+                              e.target.insertAdjacentHTML('afterend', '<div style="color: red; font-size: 12px;">Failed to load avatar image</div>');
+                            }}
+                          />
+                        </div>
+                      ) : (data.candidate?.avatar || data.form?.personalInfo?.avatar) ? (
+                        <span style={{ fontSize: 12, color: '#999' }}>Loading avatar...</span>
                       ) : (
                         <span>-</span>
                       )}

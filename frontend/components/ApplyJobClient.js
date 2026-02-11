@@ -40,12 +40,16 @@ export default function ApplyJobClient({ jobId }) {
         ]);
 
         // D118: Check if email is verified before allowing application
+        // Parse user data once and reuse it
+        let userData = null;
         if (userRes.ok) {
-          const userData = await userRes.json();
+          userData = await userRes.json();
           if (!userData.isEmailVerified) {
             setError('Please verify your email address before applying for jobs. Check your inbox for the verification email.');
             return;
           }
+          // Set email from user data
+          setUserEmail(userData.email || '');
         }
 
         if (!jobRes.ok) {
@@ -76,12 +80,6 @@ export default function ApplyJobClient({ jobId }) {
 
           setError(errorMsg);
           return;
-        }
-
-        // Get email from root user object
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          setUserEmail(userData.email || '');
         }
 
         // Default validity = +14 days
