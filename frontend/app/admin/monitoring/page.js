@@ -65,15 +65,23 @@ function MonitoringClient() {
     try {
       setApprovingJobs(prev => new Set([...prev, jobId]));
       const token = localStorage.getItem('jf_token');
+      console.log('Approving pre-approval for job:', jobId);
       const res = await fetch(`${API_BASE_URL}/job-listings/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ approve: true })
       });
-      if (!res.ok) throw new Error('Failed to approve job listing');
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Approve pre-approval failed:', { status: res.status, error: errorText });
+        throw new Error(`Failed to approve job listing: ${errorText || res.statusText}`);
+      }
+      const result = await res.json();
+      console.log('Approve pre-approval success:', result);
       message.success('Pre-approved. Waiting for final submission.');
       load();
     } catch (e) {
+      console.error('Error approving pre-approval:', e);
       message.error(e.message || 'Failed to approve');
     } finally {
       setApprovingJobs(prev => {
@@ -104,15 +112,23 @@ function MonitoringClient() {
     try {
       setApprovingJobs(prev => new Set([...prev, jobId]));
       const token = localStorage.getItem('jf_token');
+      console.log('Approving final approval for job:', jobId);
       const res = await fetch(`${API_BASE_URL}/job-listings/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ approve: true })
       });
-      if (!res.ok) throw new Error('Failed to approve');
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Approve final approval failed:', { status: res.status, error: errorText });
+        throw new Error(`Failed to approve: ${errorText || res.statusText}`);
+      }
+      const result = await res.json();
+      console.log('Approve final approval success:', result);
       message.success('Job listing approved and activated');
       load();
     } catch (e) {
+      console.error('Error approving final approval:', e);
       message.error(e.message || 'Failed to approve');
     } finally {
       setApprovingJobs(prev => {
