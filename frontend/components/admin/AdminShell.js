@@ -1,6 +1,6 @@
 "use client";
 
-import { Layout, Menu, theme as antdTheme } from "antd";
+import { Layout, Menu, theme as antdTheme, App } from "antd";
 import Link from "next/link";
 import AdminTopbar from "./AdminTopbar";
 import { useState, useMemo } from "react";
@@ -27,18 +27,20 @@ export default function AdminShell({ children }) {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Layout.Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} theme="light" style={{ borderRight: `1px solid ${token.colorBorder}` }}>
-        <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>Admin</div>
-        <Menu mode="inline" items={items} selectedKeys={[selectedKey]} />
-      </Layout.Sider>
-      <Layout>
-        <AdminTopbar />
-        <Layout.Content style={{ padding: 16 }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>{children}</div>
-        </Layout.Content>
+    <App>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Layout.Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} theme="light" style={{ borderRight: `1px solid ${token.colorBorder}` }}>
+          <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>Admin</div>
+          <Menu mode="inline" items={items} selectedKeys={[selectedKey]} />
+        </Layout.Sider>
+        <Layout>
+          <AdminTopbar />
+          <Layout.Content style={{ padding: 16 }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto' }}>{children}</div>
+          </Layout.Content>
+        </Layout>
       </Layout>
-    </Layout>
+    </App>
   );
 }
 
