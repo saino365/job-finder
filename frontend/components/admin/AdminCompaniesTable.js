@@ -51,9 +51,42 @@ export default function AdminCompaniesTable({ companies = [], loading, onApprove
         // Show buttons for pending companies
         return (
           <Space>
-            <Button type="primary" icon={<CheckOutlined />} size="small" loading={approvingCompanies.has(record._id)} onClick={() => onApprove(record._id)}>Approve</Button>
-            <Button danger icon={<CloseOutlined />} size="small" onClick={() => onReject(record)}>Reject</Button>
-            <Button icon={<EyeOutlined />} size="small" onClick={() => onView(record)}>View</Button>
+            <Button 
+              type="primary" 
+              icon={<CheckOutlined />} 
+              size="small" 
+              loading={approvingCompanies.has(record._id)} 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onApprove(record._id);
+              }}
+            >
+              Approve
+            </Button>
+            <Button 
+              danger 
+              icon={<CloseOutlined />} 
+              size="small" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onReject(record);
+              }}
+            >
+              Reject
+            </Button>
+            <Button 
+              icon={<EyeOutlined />} 
+              size="small" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onView(record);
+              }}
+            >
+              View
+            </Button>
           </Space>
         );
       }
