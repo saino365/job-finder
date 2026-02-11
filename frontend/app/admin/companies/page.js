@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Layout, Table, Button, Space, Tag, message, Modal, Typography, Card, Descriptions, Segmented, Form, Input } from 'antd';
+import { Layout, Table, Button, Space, Tag, App, Modal, Typography, Card, Descriptions, Segmented, Form, Input } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
 
 import { API_BASE_URL } from '../../../config';
@@ -11,6 +11,7 @@ const AdminCompaniesTable = dynamic(() => import('../../../components/admin/Admi
 const { Title } = Typography;
 
 export default function AdminCompaniesPage() {
+  const { message } = App.useApp();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -84,32 +85,55 @@ export default function AdminCompaniesPage() {
 
       // Find the verification record
       const verification = await findCompanyVerification(companyId);
-      if (!verification) {
-        throw new Error('No verification record found for this company');
+      
+      console.log('Approving company:', { verificationId: verification?._id, companyId });
+
+      if (verification) {
+        // Use the proper company-verifications endpoint
+        const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            action: 'approve'
+          })
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Approve company failed:', { status: res.status, error: errorText });
+          throw new Error(`Failed to approve company: ${errorText || res.statusText}`);
+        }
+
+        const result = await res.json();
+        console.log('Approve company success:', result);
+      } else {
+        // No verification record - directly update company
+        console.log('No verification record found, updating company directly');
+        const res = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            verifiedStatus: 1, // APPROVED
+            reviewedAt: new Date().toISOString()
+          })
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Approve company (direct) failed:', { status: res.status, error: errorText });
+          throw new Error(`Failed to approve company: ${errorText || res.statusText}`);
+        }
+
+        const result = await res.json();
+        console.log('Approve company (direct) success:', result);
       }
-
-      console.log('Approving company verification:', { verificationId: verification._id, companyId });
-
-      // Use the proper company-verifications endpoint
-      const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          action: 'approve'
-        })
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Approve company failed:', { status: res.status, error: errorText });
-        throw new Error(`Failed to approve company: ${errorText || res.statusText}`);
-      }
-
-      const result = await res.json();
-      console.log('Approve company success:', result);
+      
       message.success('Company approved successfully');
       loadCompanies();
     } catch (error) {
@@ -136,33 +160,57 @@ export default function AdminCompaniesPage() {
 
       // Find the verification record
       const verification = await findCompanyVerification(rejectingCompany._id);
-      if (!verification) {
-        throw new Error('No verification record found for this company');
+      
+      console.log('Rejecting company:', { verificationId: verification?._id, companyId: rejectingCompany._id, reason: values.rejectionReason });
+
+      if (verification) {
+        // Use the proper company-verifications endpoint
+        const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            action: 'reject',
+            rejectionReason: values.rejectionReason
+          })
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Reject company failed:', { status: res.status, error: errorText });
+          throw new Error(`Failed to reject company: ${errorText || res.statusText}`);
+        }
+
+        const result = await res.json();
+        console.log('Reject company success:', result);
+      } else {
+        // No verification record - directly update company
+        console.log('No verification record found, updating company directly');
+        const res = await fetch(`${API_BASE_URL}/companies/${rejectingCompany._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            verifiedStatus: 2, // REJECTED
+            rejectionReason: values.rejectionReason,
+            reviewedAt: new Date().toISOString()
+          })
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Reject company (direct) failed:', { status: res.status, error: errorText });
+          throw new Error(`Failed to reject company: ${errorText || res.statusText}`);
+        }
+
+        const result = await res.json();
+        console.log('Reject company (direct) success:', result);
       }
 
-      console.log('Rejecting company verification:', { verificationId: verification._id, companyId: rejectingCompany._id, reason: values.rejectionReason });
-
-      // Use the proper company-verifications endpoint
-      const res = await fetch(`${API_BASE_URL}/company-verifications/${verification._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          action: 'reject',
-          rejectionReason: values.rejectionReason
-        })
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Reject company failed:', { status: res.status, error: errorText });
-        throw new Error(`Failed to reject company: ${errorText || res.statusText}`);
-      }
-
-      const result = await res.json();
-      console.log('Reject company success:', result);
       message.success('Company rejected successfully');
       setRejectModalOpen(false);
       rejectForm.resetFields();
