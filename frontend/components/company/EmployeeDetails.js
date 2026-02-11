@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Descriptions, Space, Tag, List, Button, App, Modal, Form, Input, DatePicker, Divider, Typography, Popconfirm, Alert } from 'antd';
 import { API_BASE_URL } from '../../config';
+import dayjs from 'dayjs';
 
 const { Paragraph, Text } = Typography;
 const statusText = (s) => ({0:'Upcoming',1:'Ongoing',2:'Closure',3:'Completed',4:'Terminated'}[s] || String(s));
@@ -18,6 +19,12 @@ export default function EmployeeDetails({ record }) {
   const [names, setNames] = useState({});
   const [rejectModal, setRejectModal] = useState({ open: false, kind: null, id: null });
   const [rejectForm] = Form.useForm();
+  
+  // Extend and Early Completion modals
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [extendForm] = Form.useForm();
+  const [ecInitiateOpen, setEcInitiateOpen] = useState(false);
+  const [ecInitiateForm] = Form.useForm();
 
   // Load composite detail (employment + job + application + history + onboarding)
   useEffect(() => { (async () => {
@@ -130,6 +137,58 @@ export default function EmployeeDetails({ record }) {
     } catch (e) { message.error(e.message || 'Failed'); }
   }
 
+  // Handler for extending employment
+  async function handleExtend() {
+    try {
+      const values = await extendForm.validateFields();
+      const token = localStorage.getItem('jf_token');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_BASE_URL}/internship-extensions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          employmentId: record._id,
+          newEndDate: values.newEndDate.toDate(),
+          reason: values.reason
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create extension');
+      message.success('Extension created successfully');
+      setExtendOpen(false);
+      extendForm.resetFields();
+      if (typeof window !== 'undefined') window.location.reload();
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to extend employment');
+    }
+  }
+
+  // Handler for initiating early completion
+  async function handleEarlyCompletion() {
+    try {
+      const values = await ecInitiateForm.validateFields();
+      const token = localStorage.getItem('jf_token');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_BASE_URL}/early-completions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          employmentId: record._id,
+          reason: values.reason,
+          proposedCompletionDate: values.proposedCompletionDate ? values.proposedCompletionDate.toDate() : null
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create early completion request');
+      message.success('Early completion request created');
+      setEcInitiateOpen(false);
+      ecInitiateForm.resetFields();
+      if (typeof window !== 'undefined') window.location.reload();
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(e.message || 'Failed to create early completion');
+    }
+  }
+
   const emp = detail?.employment || record || {};
   const job = detail?.job || null;
   const app = detail?.application || null;
@@ -186,9 +245,15 @@ export default function EmployeeDetails({ record }) {
 
         {/* D127: Don't show Start Now/Terminate buttons if application is withdrawn (status 6) */}
         {app?.status !== 6 && (
-          <Space>
+          <Space wrap>
             {emp?.status === 0 && (
               <Button type="primary" onClick={() => patchEmployment('startNow')}>Start now</Button>
+            )}
+            {(emp?.status === 0 || emp?.status === 1) && (
+              <>
+                <Button type="primary" onClick={() => setExtendOpen(true)}>Extend</Button>
+                <Button onClick={() => setEcInitiateOpen(true)}>Early Completion</Button>
+              </>
             )}
             {emp?.status === 1 && (()=>{
               const req = detail?.onboarding?.requiredDocs || [];
@@ -329,7 +394,37 @@ export default function EmployeeDetails({ record }) {
                 <Tag>{['Applied','Shortlisted','Interview','Active offer','Hired','Rejected','Withdrawn','Not Attending'][app.status] || `Status ${app.status}`}</Tag>
               ) : app.status}
             </Descriptions.Item>
-            <Descriptions.Item label="Letter of offer">{offerUrl ? <a href={offerUrl} target="_blank" rel="noreferrer">View letter</a> : (app?.offer?.letterKey ? 'Resolving…' : '-')}</Descriptions.Item>
+            <Descriptions.Item label="Letter of offer">
+              {offerUrl ? (
+                <Button type="link" size="small" style={{ padding: 0, height: 'auto' }} onClick={() => window.open(offerUrl, '_blank')}>
+                  View letter
+                </Button>
+              ) : (app?.offer?.letterKey ? 'Resolving…' : '-')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Signed offer letter">
+              {app?.offer?.signedLetterKey ? (
+                <Button 
+                  type="link" 
+                  size="small"
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('jf_token');
+                      const res = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(app.offer.signedLetterKey)}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      const json = await res.json();
+                      const url = json.signedUrl || json.publicUrl;
+                      if (url) window.open(url, '_blank');
+                      else message.error('Failed to get signed letter URL');
+                    } catch (e) {
+                      message.error('Failed to load signed letter');
+                    }
+                  }}
+                >
+                  View signed letter
+                </Button>
+              ) : '-'}
+            </Descriptions.Item>
           </Descriptions>
           {/* D135: Add Terminated status to history if employment is terminated */}
           {Array.isArray(detail?.applicationHistory) && detail.applicationHistory.length > 0 && (
@@ -384,6 +479,69 @@ export default function EmployeeDetails({ record }) {
           </Descriptions>
         </div>
       )}
+
+      {/* Extend Employment Modal */}
+      <Modal
+        title="Extend Employment"
+        open={extendOpen}
+        onCancel={() => { setExtendOpen(false); extendForm.resetFields(); }}
+        onOk={handleExtend}
+        okText="Extend"
+      >
+        <Form form={extendForm} layout="vertical">
+          <Form.Item
+            label="New End Date"
+            name="newEndDate"
+            rules={[{ required: true, message: 'Please select new end date' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              disabledDate={(current) => {
+                if (!emp?.endDate) return false;
+                return current && current <= dayjs(emp.endDate);
+              }}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Reason for Extension"
+            name="reason"
+            rules={[{ required: true, message: 'Please provide a reason' }]}
+          >
+            <Input.TextArea rows={3} placeholder="Explain why the employment is being extended..." />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Early Completion Modal */}
+      <Modal
+        title="Initiate Early Completion"
+        open={ecInitiateOpen}
+        onCancel={() => { setEcInitiateOpen(false); ecInitiateForm.resetFields(); }}
+        onOk={handleEarlyCompletion}
+        okText="Create Request"
+      >
+        <Form form={ecInitiateForm} layout="vertical">
+          <Form.Item
+            label="Reason for Early Completion"
+            name="reason"
+            rules={[{ required: true, message: 'Please provide a reason' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Explain why the employment should complete early..." />
+          </Form.Item>
+          <Form.Item
+            label="Proposed Completion Date"
+            name="proposedCompletionDate"
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              disabledDate={(current) => {
+                if (!emp?.endDate) return current && current < dayjs().startOf('day');
+                return current && (current < dayjs().startOf('day') || current >= dayjs(emp.endDate));
+              }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Space>
   );
 }

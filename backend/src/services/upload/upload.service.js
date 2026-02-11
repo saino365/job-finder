@@ -27,7 +27,8 @@ class UploadService {
         { name: 'avatar', maxCount: 1 },
         { name: 'logo', maxCount: 1 },
         { name: 'portfolio', maxCount: 5 },
-        { name: 'document', maxCount: 10 }
+        { name: 'document', maxCount: 10 },
+        { name: 'signedOfferLetter', maxCount: 1 }
       ]);
 
       uploadMiddleware(params.req, params.res, async (err) => {

@@ -16,7 +16,7 @@ async function isCompanyVerified(app, userId) {
 }
 
 async function hasAcceptedInvite(app, companyId, userId) {
-  const invite = await Invites.findOne({ companyId, userId, status: { $in: [INVITE_STATUS.ACCEPTED, 'accepted'] } });
+  const invite = await Invites.findOne({ companyId, userId, status: INVITE_STATUS.ACCEPTED });
   return !!invite;
 }
 

@@ -985,7 +985,7 @@ function ProfilePageInner({ user, isOwner, fullName, onUploadAvatar, onUploadRes
   );
 }
 
-function ProfilePageContent() {
+function ProfilePageContent({ targetIdProp }) {
   const { message } = App.useApp();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -994,7 +994,7 @@ function ProfilePageContent() {
   const [editSection, setEditSection] = useState('personal');
 
   const searchParams = useSearchParams();
-  const idParam = searchParams?.get('id') ?? null;
+  const idParam = targetIdProp || searchParams?.get('id') || null;
 
   const fullName = useCallback((u) => {
     const p = u?.profile || {};

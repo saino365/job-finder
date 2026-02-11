@@ -1,20 +1,23 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
-import { Layout, Card, Table, Space, Typography, Button, Tag, Tabs, Modal, Form, InputNumber, Input, App } from 'antd';
+import { Layout, Card, Table, Space, Typography, Button, Tag, Tabs, Modal, Form, InputNumber, Input, App, Descriptions, Upload, message as antdMessage } from 'antd';
+import { UploadOutlined, FilePdfOutlined } from '@ant-design/icons';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { API_BASE_URL } from '../../config';
 
 const { Title, Text } = Typography;
 
-const statusText = (s) => ({0:'Applied',1:'Shortlisted',2:'Interview',3:'Active offer',4:'Hired',5:'Rejected',6:'Withdrawn',7:'Not Attending'}[s] || String(s));
-const employmentStatusText = (s) => ({0:'Upcoming',1:'Ongoing',2:'Closure',3:'Completed',4:'Terminated'}[s] || String(s));
+const statusText = (s) => {
+  return {0:'Applied',1:'Shortlisted',2:'Interview',3:'Active offer',4:'Hired',5:'Rejected',6:'Withdrawn',7:'Not Attending',8:'Accepted - Pending Review'}[s] || String(s);
+};
 
 const tabs = [
   { key: 'applied', label: 'Applied', statuses: [0] },
   { key: 'shortlisted', label: 'Short-listed', statuses: [1,2] },
-  { key: 'offer', label: 'Active offer', statuses: [3] },
-  { key: 'hired', label: 'Hired', statuses: [4] },
+  { key: 'offer', label: 'Active offer', statuses: [3, 8] },
+  { key: 'hired', label: 'Hired', statuses: [4], employmentStatuses: [0, 1, 2, 3] }, // Exclude terminated (4)
+  { key: 'terminated', label: 'Terminated', statuses: [4], employmentStatuses: [4] }, // Only terminated
   { key: 'withdrawn', label: 'Withdraw', statuses: [6] },
   { key: 'rejected', label: 'Rejected', statuses: [5] }
 ];
@@ -34,6 +37,8 @@ export default function MyApplicationsPage(){
   const [offerOpen, setOfferOpen] = useState(false);
   const [offerRecord, setOfferRecord] = useState(null);
   const [offerLetterUrl, setOfferLetterUrl] = useState(null);
+  const [signedOfferFile, setSignedOfferFile] = useState(null);
+  const [uploadingSignedOffer, setUploadingSignedOffer] = useState(false);
   const [declineForm] = Form.useForm();
   const [declineOpen, setDeclineOpen] = useState(false);
   const [declining, setDeclining] = useState(false);
@@ -75,8 +80,26 @@ export default function MyApplicationsPage(){
   useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
-    const def = tabs.find(t => t.key === activeKey)?.statuses || [];
-    return items.filter(i => def.includes(i.status));
+    const tab = tabs.find(t => t.key === activeKey);
+    if (!tab) return [];
+    
+    const statusFilter = tab.statuses || [];
+    const empStatusFilter = tab.employmentStatuses;
+    
+    return items.filter(i => {
+      // Check if application status matches
+      if (!statusFilter.includes(i.status)) return false;
+      
+      // If tab has employment status filter, apply it
+      if (empStatusFilter !== undefined && i.status === 4) {
+        // For hired applications, check employment status
+        // If employment status is not loaded, exclude from filtered results
+        if (i.employmentStatus === undefined) return false;
+        return empStatusFilter.includes(i.employmentStatus);
+      }
+      
+      return true;
+    });
   }, [items, activeKey]);
 
   async function doWithdraw(id, status){
@@ -157,13 +180,57 @@ export default function MyApplicationsPage(){
 
   async function acceptOffer(id){
     try {
+      if (!signedOfferFile) {
+        message.error('Please upload the signed offer letter before accepting');
+        return;
+      }
+
+      setUploadingSignedOffer(true);
       const token = localStorage.getItem('jf_token');
-      await fetch(`${API_BASE_URL}/applications/${id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ action: 'acceptOffer' }) });
-      message.success('Offer accepted');
-      setOfferOpen(false); setOfferRecord(null); setOfferLetterUrl(null);
-      // Redirect to employment page to proceed with onboarding/actions
-      window.location.href = '/employment';
-    } catch (e) { message.error(e.message || 'Failed'); }
+      
+      // Upload signed offer letter using the upload service
+      const formData = new FormData();
+      formData.append('signedOfferLetter', signedOfferFile);
+      
+      const uploadRes = await fetch(`${API_BASE_URL}/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload signed offer letter');
+      }
+      
+      const uploadData = await uploadRes.json();
+      const signedOfferKey = uploadData?.files?.signedOfferLetter?.[0]?.key;
+      
+      if (!signedOfferKey) {
+        throw new Error('Failed to get signed offer letter key');
+      }
+      
+      // Then accept the offer with the signed offer letter key
+      await fetch(`${API_BASE_URL}/applications/${id}`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, 
+        body: JSON.stringify({ 
+          action: 'acceptOffer',
+          signedOfferLetterKey: signedOfferKey
+        }) 
+      });
+      
+      message.success('Offer accepted! Waiting for company to finalize the hire.');
+      setOfferOpen(false); 
+      setOfferRecord(null); 
+      setOfferLetterUrl(null);
+      setSignedOfferFile(null);
+      // Reload the applications list instead of redirecting
+      load();
+    } catch (e) { 
+      message.error(e.message || 'Failed to accept offer'); 
+    } finally {
+      setUploadingSignedOffer(false);
+    }
   }
 
   async function declineOffer(){
@@ -214,27 +281,48 @@ export default function MyApplicationsPage(){
       render: (_, r) => r.company?.name || r.companyName || <Text type="secondary">Company unavailable</Text>
     },
     { title: 'Application date', dataIndex: 'createdAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
-    { title: 'Application status', dataIndex: 'status', render: (s, r) => {
-      // D39: Show application status with proper color, and employment status for hired apps
-      // D138: Fix Terminated status in Hired tab - show employment status even if terminated
-      const statusLabel = statusText(s);
-      const statusColorMap = { 0: 'blue', 1: 'cyan', 2: 'purple', 3: 'gold', 4: 'green', 5: 'red', 6: 'default', 7: 'default' };
-      const statusTag = <Tag color={statusColorMap[s]}>{statusLabel}</Tag>;
-      
-      // For hired applications (status 4), also show employment status if available
-      // D138: Even if employment is terminated (status 4), still show it in Hired tab with terminated status
-      if (s === 4 && r.employmentStatus !== undefined) {
-        const empStatusLabel = employmentStatusText(r.employmentStatus);
-        const empColorMap = { 0: 'blue', 1: 'green', 2: 'orange', 3: 'default', 4: 'red' };
-        return (
-          <Space direction="vertical" size="small">
-            {statusTag}
-            <Tag color={empColorMap[r.employmentStatus]}>{empStatusLabel}</Tag>
-          </Space>
-        );
-      }
-      return statusTag;
-    } },
+    { 
+      title: 'Application status', 
+      dataIndex: 'status', 
+      render: (s, r) => {
+        const statusLabel = statusText(s);
+        const statusColorMap = { 0: 'blue', 1: 'cyan', 2: 'purple', 3: 'gold', 4: 'green', 5: 'red', 6: 'default', 7: 'default', 8: 'green' };
+        
+        const color = statusColorMap[s];
+        const statusTag = <Tag color={color}>{statusLabel}</Tag>;
+        
+        // For hired applications (status 4), show employment status if available
+        // But DON'T show "Hired" tag if employment is terminated
+        if (s === 4 && r.employmentStatus !== undefined) {
+          const empColorMap = { 0: 'blue', 1: 'green', 2: 'orange', 3: 'default', 4: 'red' };
+          
+          // If terminated, only show Terminated tag, not Hired
+          if (r.employmentStatus === 4) {
+            return <Tag color={empColorMap[4]}>Terminated</Tag>;
+          }
+          
+          // For other employment statuses (Upcoming, Ongoing, Closure, Completed), just show "Hired"
+          return statusTag;
+        }
+        
+        // For withdrawn (6), show reason if available (student's own reason)
+        // For rejected (5), DON'T show reason to students (company's reason)
+        if (s === 6 && r.rejection?.reason) {
+          return (
+            <Space direction="vertical" size="small">
+              {statusTag}
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {r.rejection.reason.length > 50 
+                  ? r.rejection.reason.substring(0, 50) + '...' 
+                  : r.rejection.reason}
+              </Text>
+            </Space>
+          );
+        }
+        
+        return statusTag;
+      } 
+    },
     { title: 'Validity', key: 'validity', render: (_, r) => r.validityUntil ? new Date(r.validityUntil).toLocaleDateString() : '-' },
     { title: 'Last Update', key: 'last', render: (_, r) => r.updatedAt ? new Date(r.updatedAt).toLocaleString() : (r.history?.length ? new Date(r.history[r.history.length-1].at).toLocaleString() : '-') },
     { title: 'Submitted CV', key: 'cv', render: (_, r) => {
@@ -257,6 +345,7 @@ export default function MyApplicationsPage(){
       return (
         <Space onClick={(e) => e.stopPropagation()}>
           {r.status === 3 && <Button size="small" type="primary" onClick={()=>openOffer(r)}>View offer</Button>}
+          {r.status === 8 && <Tag color="green">Waiting for company review</Tag>}
           {r.status === 4 && <Button size="small" type="primary" onClick={()=>handleRowClick(r)}>View Employment</Button>}
           {canExtend && <Button size="small" onClick={()=>{ setCurrentId(r._id); setExtendOpen(true); }}>Extend validity</Button>}
           {canWithdraw && <Button danger size="small" style={{ }} onClick={()=>{ setCurrentId(r._id); setCurrentStatus(r.status); setWithdrawOpen(true); }}>Withdraw</Button>}
@@ -315,22 +404,139 @@ export default function MyApplicationsPage(){
         </Form>
       </Modal>
 
-      <Modal title="Offer details" open={offerOpen} onCancel={()=>{ setOfferOpen(false); setOfferRecord(null); setOfferLetterUrl(null); }} footer={null}>
+      <Modal 
+        title={<Typography.Title level={4} style={{ margin: 0 }}>Offer Details</Typography.Title>} 
+        open={offerOpen} 
+        onCancel={()=>{ 
+          setOfferOpen(false); 
+          setOfferRecord(null); 
+          setOfferLetterUrl(null); 
+          setSignedOfferFile(null);
+        }} 
+        footer={null}
+        width={600}
+      >
         {offerRecord ? (
-          <Space direction="vertical" style={{ width:'100%' }}>
-            <Typography.Paragraph><b>Company:</b> {offerRecord.company?.name || offerRecord.companyName || '-'}</Typography.Paragraph>
-            <Typography.Paragraph><b>Title:</b> {offerRecord.offer?.title || '-'}</Typography.Paragraph>
-            <Typography.Paragraph><b>Notes:</b> {offerRecord.offer?.notes || '-'}</Typography.Paragraph>
-            <Typography.Paragraph><b>Offer valid until:</b> {offerRecord.offer?.validUntil ? new Date(offerRecord.offer.validUntil).toLocaleDateString() : '-'}</Typography.Paragraph>
-            <Typography.Paragraph>
-              <b>Letter of offer:</b> {offerLetterUrl ? <a href={offerLetterUrl} target="_blank" rel="noreferrer">View letter</a> : (offerRecord.offer?.letterKey ? 'Resolving…' : '-')}
-            </Typography.Paragraph>
-            <Space>
-              <Button type="primary" onClick={()=>acceptOffer(offerRecord._id)}>Accept offer</Button>
-              <Button danger onClick={()=>{
-                declineForm.resetFields();
-                setDeclineOpen(true);
-              }}>Decline</Button>
+          <Space direction="vertical" size="large" style={{ width:'100%' }}>
+            <Card size="small" style={{ background: '#f5f5f5' }}>
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label={<Typography.Text strong>Company</Typography.Text>}>
+                  {offerRecord.company?.name || offerRecord.companyName || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label={<Typography.Text strong>Position</Typography.Text>}>
+                  {offerRecord.offer?.title || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label={<Typography.Text strong>Start Date</Typography.Text>}>
+                  {offerRecord.offer?.startDate ? new Date(offerRecord.offer.startDate).toLocaleDateString() : '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label={<Typography.Text strong>End Date</Typography.Text>}>
+                  {offerRecord.offer?.endDate ? new Date(offerRecord.offer.endDate).toLocaleDateString() : '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label={<Typography.Text strong>Offer Valid Until</Typography.Text>}>
+                  <Typography.Text type={offerRecord.offer?.validUntil && new Date(offerRecord.offer.validUntil) < new Date() ? 'danger' : undefined}>
+                    {offerRecord.offer?.validUntil ? new Date(offerRecord.offer.validUntil).toLocaleDateString() : '-'}
+                  </Typography.Text>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+
+            {offerRecord.offer?.notes && (
+              <Card size="small" title={<Typography.Text strong>Additional Notes</Typography.Text>}>
+                <Typography.Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {offerRecord.offer.notes}
+                </Typography.Paragraph>
+              </Card>
+            )}
+
+            <Card size="small" title={<Typography.Text strong>Offer Letter</Typography.Text>}>
+              {offerLetterUrl ? (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Typography.Link href={offerLetterUrl} target="_blank" rel="noreferrer" style={{ fontSize: 16 }}>
+                    📄 View Offer Letter
+                  </Typography.Link>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Please review the offer letter before accepting
+                  </Typography.Text>
+                </Space>
+              ) : offerRecord.offer?.letterKey ? (
+                <Typography.Text type="secondary">Loading offer letter...</Typography.Text>
+              ) : (
+                <Typography.Text type="danger">No offer letter available</Typography.Text>
+              )}
+            </Card>
+
+            <Card 
+              size="small" 
+              title={<Typography.Text strong>Upload Signed Offer Letter</Typography.Text>}
+              style={{ borderColor: !signedOfferFile ? '#ff4d4f' : '#52c41a' }}
+            >
+              <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  Please download the offer letter above, sign it, and upload the signed copy here before accepting.
+                </Typography.Text>
+                <Upload
+                  accept=".pdf,.doc,.docx"
+                  maxCount={1}
+                  beforeUpload={(file) => {
+                    const isValidType = file.type === 'application/pdf' || 
+                                       file.type === 'application/msword' || 
+                                       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                    if (!isValidType) {
+                      antdMessage.error('You can only upload PDF or Word documents');
+                      return Upload.LIST_IGNORE;
+                    }
+                    const isLt10M = file.size / 1024 / 1024 < 10;
+                    if (!isLt10M) {
+                      antdMessage.error('File must be smaller than 10MB');
+                      return Upload.LIST_IGNORE;
+                    }
+                    setSignedOfferFile(file);
+                    return false; // Prevent auto upload
+                  }}
+                  onRemove={() => {
+                    setSignedOfferFile(null);
+                  }}
+                  fileList={signedOfferFile ? [{
+                    uid: '-1',
+                    name: signedOfferFile.name,
+                    status: 'done',
+                  }] : []}
+                >
+                  <Button icon={<UploadOutlined />} disabled={!!signedOfferFile}>
+                    {signedOfferFile ? 'File Selected' : 'Select Signed Offer Letter'}
+                  </Button>
+                </Upload>
+                {signedOfferFile && (
+                  <Space>
+                    <FilePdfOutlined style={{ fontSize: 20, color: '#52c41a' }} />
+                    <Typography.Text type="success">
+                      Ready to submit: {signedOfferFile.name}
+                    </Typography.Text>
+                  </Space>
+                )}
+              </Space>
+            </Card>
+
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button 
+                size="large"
+                onClick={()=>{
+                  declineForm.resetFields();
+                  setDeclineOpen(true);
+                }}
+              >
+                Decline
+              </Button>
+              <Button 
+                type="primary" 
+                size="large"
+                disabled={!offerLetterUrl || !signedOfferFile}
+                loading={uploadingSignedOffer}
+                onClick={()=>acceptOffer(offerRecord._id)}
+                title={!offerLetterUrl ? 'Offer letter must be available' : !signedOfferFile ? 'Please upload signed offer letter' : ''}
+              >
+                Accept Offer
+              </Button>
             </Space>
           </Space>
         ) : null}

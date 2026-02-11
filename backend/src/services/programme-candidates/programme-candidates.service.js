@@ -190,9 +190,15 @@ class ProgrammeCandidatesService {
 
       const type = data?.type || 'profile_access';
       const message = data?.message;
+      const jobListingId = data?.jobListingId; // Include job listing ID
 
       // Delegate to invites.create (array) which performs dedupe and notifications
-      const payload = uniqueUserIds.map(uid => ({ userId: uid, type, message }));
+      const payload = uniqueUserIds.map(uid => ({ 
+        userId: uid, 
+        type, 
+        message,
+        jobListingId // Pass job listing ID to each invite
+      }));
       const created = await this.app.service('invites').create(payload, params);
       return { created: Array.isArray(created) ? created : [created] };
     }
@@ -208,9 +214,15 @@ class ProgrammeCandidatesService {
 
     const type = data?.type || 'profile_access';
     const message = data?.message;
+    const jobListingId = data?.jobListingId; // Include job listing ID
 
     // Delegate to invites.create (array) which performs dedupe and notifications
-    const payload = uniqueUserIds.map(uid => ({ userId: uid, type, message }));
+    const payload = uniqueUserIds.map(uid => ({ 
+      userId: uid, 
+      type, 
+      message,
+      jobListingId // Pass job listing ID to each invite
+    }));
     const created = await this.app.service('invites').create(payload, params);
     return { created: Array.isArray(created) ? created : [created] };
   }
@@ -236,9 +248,15 @@ export default function (app) {
     const uniqueUserIds = [...new Set(data.userIds.filter(Boolean))];
     const type = data?.type || 'profile_access';
     const message = data?.message;
+    const jobListingId = data?.jobListingId; // Include job listing ID
     
     // Delegate to invites.create (array) which performs dedupe and notifications
-    const payload = uniqueUserIds.map(uid => ({ userId: uid, type, message }));
+    const payload = uniqueUserIds.map(uid => ({ 
+      userId: uid, 
+      type, 
+      message,
+      jobListingId // Pass job listing ID to each invite
+    }));
     const created = await app.service('invites').create(payload, params);
     return { created: Array.isArray(created) ? created : [created] };
   });
