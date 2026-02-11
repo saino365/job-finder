@@ -691,34 +691,6 @@ export default function HomeContent({ jobs = [], companies = [] }) {
               }}
             />
 
-            {/* DEBUG: Test filter functionality */}
-            <div style={{ margin: '16px 0', padding: '16px', border: '1px solid #ccc', borderRadius: '4px' }}>
-              <Typography.Text strong>🔧 DEBUG: Test Filters</Typography.Text>
-              <br />
-              <Button
-                onClick={() => {
-                  console.log('🔧 TEST: Manual filter trigger');
-                  console.log('🔧 TEST: Current selectedFilters before:', selectedFilters);
-                  handleFilterChange('fieldOfStudy', ['Bachelor of Computer Science']);
-                  console.log('🔧 TEST: handleFilterChange called with:', 'fieldOfStudy', ['Bachelor of Computer Science']);
-                }}
-                style={{ margin: '8px 4px' }}
-              >
-                Test: Add Computer Science Filter
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log('🔧 TEST: Clear all filters');
-                  handleClearAllFilters();
-                }}
-                style={{ margin: '8px 4px' }}
-              >
-                Test: Clear All Filters
-              </Button>
-              <br />
-              <Typography.Text>Current filters: {JSON.stringify(selectedFilters)}</Typography.Text>
-            </div>
-
             {/* Save Profile Button */}
             <div style={{ marginBottom: 24, textAlign: 'right' }}>
               <Button type="primary" onClick={handleSaveCompanySearchProfile}>
