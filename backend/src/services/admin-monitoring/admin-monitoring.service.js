@@ -37,14 +37,14 @@ class AdminMonitoringService {
       countOrZero(() => JobModel.countDocuments({ status: 3 })),
       countOrZero(() => JobModel.countDocuments({})),
 
-      countOrZero(() => CompanyModel.countDocuments({ $or: [ { verifiedStatus: 0 }, { verifiedStatus: 'pending' }, { verifiedStatus: { $exists: false } } ] })), // pending (tolerate legacy strings/null)
-      countOrZero(() => CompanyModel.countDocuments({ $or: [ { verifiedStatus: 1 }, { verifiedStatus: 'approved' } ] })), // approved (tolerate legacy strings)
-      countOrZero(() => CompanyModel.countDocuments({ $or: [ { verifiedStatus: 2 }, { verifiedStatus: 'rejected' } ] })), // rejected (tolerate legacy strings)
+      countOrZero(() => CompanyModel.countDocuments({ $or: [ { verifiedStatus: 0 }, { verifiedStatus: { $exists: false } } ] })), // pending
+      countOrZero(() => CompanyModel.countDocuments({ verifiedStatus: 1 })), // approved
+      countOrZero(() => CompanyModel.countDocuments({ verifiedStatus: 2 })), // rejected
       countOrZero(() => CompanyModel.countDocuments({})),
 
       countOrZero(() => UserModel.countDocuments({ role: 'student' })),
       // D190: Count only approved companies, not all company users
-      countOrZero(() => CompanyModel.countDocuments({ $or: [ { verifiedStatus: 1 }, { verifiedStatus: 'approved' } ] })),
+      countOrZero(() => CompanyModel.countDocuments({ verifiedStatus: 1 })),
       countOrZero(() => UserModel.countDocuments({ role: 'admin' })),
 
       (async () => {
@@ -171,7 +171,6 @@ class AdminMonitoringService {
           {
             $or: [ 
               { verifiedStatus: 0 }, 
-              { verifiedStatus: 'pending' }, 
               { verifiedStatus: { $exists: false } },
               { verifiedStatus: null }
             ]
