@@ -24,20 +24,23 @@ const offerSchema = new mongoose.Schema({
   validUntil: Date,
   title: String,
   notes: String,
-  letterKey: String // object storage key for uploaded offer letter
+  letterKey: String, // object storage key for uploaded offer letter
+  signedLetterKey: String, // object storage key for student's signed offer letter
+  startDate: Date, // Internship start date
+  endDate: Date // Internship end date
 }, { _id: false });
 
 const applicationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true, index: true },
-  jobListingId: { type: mongoose.Schema.Types.ObjectId, ref: 'JobListing', required: true, index: true },
+  jobListingId: { type: mongoose.Schema.Types.ObjectId, ref: 'JobListing', index: true }, // Optional - not required for invitation-based applications
 
   candidateStatement: String,
   form: { type: Object },
   attachments: [{ type: String }], // keys in object storage
   pdfKey: { type: String },
 
-  status: { type: Number, enum: [0,1,2,3,4,5,6,7], default: 0, index: true },
+  status: { type: Number, enum: [0,1,2,3,4,5,6,7,8], default: 0, index: true },
   validityUntil: { type: Date },
 
   interview: interviewSchema,
@@ -54,6 +57,10 @@ const applicationSchema = new mongoose.Schema({
     reason: { type: String }
   },
 
+  // Source tracking
+  source: { type: String, enum: ['application', 'invitation'], default: 'application' },
+  inviteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Invite' },
+
   history: [historySchema]
 }, { timestamps: true });
 
@@ -61,7 +68,22 @@ applicationSchema.index(
   { userId: 1, jobListingId: 1 },
   {
     unique: true,
-    partialFilterExpression: { status: { $in: [0, 1, 2, 3] } }
+    partialFilterExpression: { 
+      status: { $in: [0, 1, 2, 3, 8] },
+      jobListingId: { $exists: true, $ne: null }
+    }
+  }
+);
+
+// Separate index for invitation-based applications (no jobListingId)
+applicationSchema.index(
+  { userId: 1, companyId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { 
+      status: { $in: [0, 1, 2, 3, 8] },
+      source: 'invitation'
+    }
   }
 );
 

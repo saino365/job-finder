@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Card, Tag, Typography, Button, Space, App, Modal, Divider, theme as antdTheme } from 'antd';
+import { Card, Tag, Typography, Button, Space, App, Modal, Divider, Tooltip, theme as antdTheme } from 'antd';
 import { HeartOutlined, HeartFilled, BookOutlined, BookFilled, EnvironmentOutlined, DollarOutlined, ClockCircleOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { apiAuth, getToken } from '../lib/api';
@@ -29,6 +29,7 @@ export default function JobCard({ job, companyView = false }) {
   const [authModalConfig, setAuthModalConfig] = useState({});
   const [logoSignedUrl, setLogoSignedUrl] = useState(null);
   const [logoError, setLogoError] = useState(false);
+  const [existingApplication, setExistingApplication] = useState(null);
   const router = useRouter();
   const companyName = job.company?.name || job.companyName || 'Company';
 
@@ -86,8 +87,24 @@ export default function JobCard({ job, companyView = false }) {
       router.push(`/login?next=/jobs/${job._id}/apply`);
       return;
     }
+    // Don't navigate if there's an existing active application
+    if (existingApplication) {
+      return;
+    }
     router.push(`/jobs/${job._id}/apply`);
   }
+
+  // Get status label for existing application
+  const getApplicationStatusLabel = (status) => {
+    const statusLabels = {
+      1: 'Shortlisted',
+      2: 'Interview Scheduled',
+      3: 'Pending Acceptance',
+      8: 'Accepted - Pending Review',
+      4: 'Hired'
+    };
+    return statusLabels[status] || 'Active';
+  };
 
   // Load company logo with signed URL
   useEffect(() => {
@@ -127,6 +144,18 @@ export default function JobCard({ job, companyView = false }) {
         const l = await apiAuth(`/liked-jobs?jobListingId=${job._id}`, { method: 'GET' });
         const likedList = Array.isArray(l?.data) ? l.data : (Array.isArray(l) ? l : []);
         if ((likedList || []).length > 0) { setLiked(true); setLikedId(likedList[0]._id); } else { setLiked(false); setLikedId(null); }
+      } catch (_) { /* ignore */ }
+      
+      // Check if student already has an active application for this job
+      try {
+        const apps = await apiAuth(`/applications?jobListingId=${job._id}`, { method: 'GET' });
+        const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
+        // Active statuses: SHORTLISTED (1), INTERVIEW_SCHEDULED (2), PENDING_ACCEPTANCE (3), ACCEPTED_PENDING_REVIEW (8), HIRED (4)
+        const ACTIVE_STATUSES = [1, 2, 3, 8, 4];
+        const activeApp = appList.find(app => ACTIVE_STATUSES.includes(app.status));
+        if (activeApp) {
+          setExistingApplication(activeApp);
+        }
       } catch (_) { /* ignore */ }
     })();
   }, [job._id]);
@@ -390,9 +419,17 @@ export default function JobCard({ job, companyView = false }) {
             <Button size="large" onClick={(e) => { e.stopPropagation(); handleCardClick(); }}>
               View Details
             </Button>
-            <Button type="primary" size="large" onClick={(e) => { e.stopPropagation(); handleApplyClick(); }}>
-              Apply Now
-            </Button>
+            {existingApplication ? (
+              <Tooltip title={`You already have an active application for this position (Status: ${getApplicationStatusLabel(existingApplication.status)}). You cannot apply again while your application is still active.`}>
+                <Button type="primary" size="large" disabled>
+                  Already Applied
+                </Button>
+              </Tooltip>
+            ) : (
+              <Button type="primary" size="large" onClick={(e) => { e.stopPropagation(); handleApplyClick(); }}>
+                Apply Now
+              </Button>
+            )}
           </Space>
         </div>
 

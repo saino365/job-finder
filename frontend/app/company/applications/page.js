@@ -1,11 +1,45 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
-import { Layout, Table, Typography, Space, Tag, Button, Input, DatePicker, message } from 'antd';
+import { Layout, Table, Typography, Space, Tag, Button, Input, Avatar, message } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { API_BASE_URL } from '../../../config';
 
 const { Title } = Typography;
+
+// Component to handle avatar with signed URL
+function UserAvatar({ avatarUrl, name }) {
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!avatarUrl) return;
+    
+    (async () => {
+      try {
+        const token = localStorage.getItem('jf_token');
+        const res = await fetch(`${API_BASE_URL}/signed-url?url=${encodeURIComponent(avatarUrl)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSignedUrl(data.signedUrl);
+        } else {
+          setError(true);
+        }
+      } catch (e) {
+        setError(true);
+      }
+    })();
+  }, [avatarUrl]);
+
+  if (!avatarUrl || error) {
+    return <Avatar icon={<UserOutlined />} size="default" />;
+  }
+
+  return <Avatar src={signedUrl} icon={<UserOutlined />} size="default" />;
+}
 
 export default function CompanyApplicationsPage() {
   const [items, setItems] = useState([]);
@@ -47,7 +81,8 @@ export default function CompanyApplicationsPage() {
       4: { text: 'Hired', color: 'green' },
       5: { text: 'Rejected', color: 'red' },
       6: { text: 'Withdrawn', color: 'default' },
-      7: { text: 'Not Attending', color: 'default' }
+      7: { text: 'Not Attending', color: 'default' },
+      8: { text: 'Accepted - Pending Review', color: 'green' }
     };
     const m = map[s];
     return m ? <Tag color={m.color}>{m.text}</Tag> : <Tag>{String(s)}</Tag>;
@@ -64,11 +99,57 @@ export default function CompanyApplicationsPage() {
   }, [items, q]);
 
   const columns = [
-    { title: 'Candidate', key: 'candidate', render: (_, r) => r.candidateName || r.candidate?.fullName || '-' },
+    { 
+      title: 'Candidate', 
+      key: 'candidate', 
+      render: (_, r) => {
+        const fullName = r.candidateName || r.candidate?.fullName || r.candidate?.name || '-';
+        const avatarUrl = r.candidate?.avatar || r.form?.personalInfo?.avatar || null;
+        
+        return (
+          <Space>
+            <UserAvatar avatarUrl={avatarUrl} name={fullName} />
+            <span>{fullName}</span>
+          </Space>
+        );
+      }
+    },
     { title: 'Job', key: 'job', render: (_, r) => r.jobTitle || r.job?.title || '-' },
     { title: 'Submitted', dataIndex: 'createdAt', render: (d) => d ? new Date(d).toLocaleString() : '-' },
     { title: 'Validity', key: 'validity', render: (_, r) => r.validityUntil ? new Date(r.validityUntil).toLocaleDateString() : '-' },
     { title: 'Status', dataIndex: 'status', render: (s) => statusTag(s) },
+    { 
+      title: 'Signed Offer', 
+      key: 'signedOffer', 
+      render: (_, r) => {
+        if (r.offer?.signedLetterKey) {
+          return (
+            <Button 
+              size="small" 
+              type="link"
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  const token = localStorage.getItem('jf_token');
+                  const res = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(r.offer.signedLetterKey)}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  const json = await res.json();
+                  const url = json.signedUrl || json.publicUrl;
+                  if (url) window.open(url, '_blank');
+                  else message.error('Failed to get signed letter URL');
+                } catch (e) {
+                  message.error('Failed to load signed letter');
+                }
+              }}
+            >
+              View
+            </Button>
+          );
+        }
+        return '-';
+      }
+    },
     { title: 'Action', key: 'action', render: (_, r) => (
         <Space>
           <Button type="link" onClick={() => { window.location.href = `/company/applications/${r._id}`; }}>Open</Button>

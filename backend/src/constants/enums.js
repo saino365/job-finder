@@ -58,7 +58,8 @@ const ApplicationStatus = Object.freeze({
   ACCEPTED: 4,
   REJECTED: 5,
   WITHDRAWN: 6,
-  NOT_ATTENDING: 7
+  NOT_ATTENDING: 7,
+  ACCEPTED_PENDING_REVIEW: 8
 });
 
 const ApplicationStatusLabel = Object.freeze({
@@ -69,7 +70,8 @@ const ApplicationStatusLabel = Object.freeze({
   [ApplicationStatus.ACCEPTED]: 'accepted',
   [ApplicationStatus.REJECTED]: 'rejected',
   [ApplicationStatus.WITHDRAWN]: 'withdrawn',
-  [ApplicationStatus.NOT_ATTENDING]: 'not_attending'
+  [ApplicationStatus.NOT_ATTENDING]: 'not_attending',
+  [ApplicationStatus.ACCEPTED_PENDING_REVIEW]: 'accepted_pending_review'
 });
 
 // Employment lifecycle

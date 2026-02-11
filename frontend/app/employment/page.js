@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
-import { Layout, Typography, Card, Row, Col, Tag, Space, Button, message, Divider, Modal, Form, Input, DatePicker, Alert, Spin, Popconfirm } from 'antd';
+import { Layout, Typography, Card, Row, Col, Tag, Space, Button, message, Divider, Modal, Form, Input, DatePicker, Alert, Spin, Popconfirm, App } from 'antd';
 import { ArrowLeftOutlined, CalendarOutlined, EnvironmentOutlined, DollarOutlined, DownloadOutlined } from '@ant-design/icons';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -13,6 +13,7 @@ import Link from 'next/link';
 const { Title, Text } = Typography;
 
 function EmploymentPageContent() {
+  const { message: messageApi } = App.useApp();
   const searchParams = useSearchParams();
   const router = useRouter();
   const applicationId = searchParams.get('applicationId');
@@ -29,7 +30,7 @@ function EmploymentPageContent() {
     try {
       setLoading(true);
       const token = localStorage.getItem('jf_token');
-      if (!token) { message.info('Please sign in'); window.location.href = '/login'; return; }
+      if (!token) { messageApi.info('Please sign in'); window.location.href = '/login'; return; }
 
       // If applicationId is provided, find employment by applicationId
       if (applicationId) {
@@ -45,16 +46,16 @@ function EmploymentPageContent() {
             setDetail(detailData);
           }
         } else {
-          message.error('Employment record not found');
+          messageApi.error('Employment record not found');
         }
       } else {
         // No applicationId, redirect to applications page
-        message.info('Please select an employment from your applications');
+        messageApi.info('Please select an employment from your applications');
         router.push('/applications');
       }
-    } catch (e) { message.error(e.message || 'Failed to load'); }
+    } catch (e) { messageApi.error(e.message || 'Failed to load'); }
     finally { setLoading(false); }
-  }, [applicationId, router]);
+  }, [applicationId, router, messageApi]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -65,8 +66,8 @@ function EmploymentPageContent() {
       const r = await fetch(`${API_BASE_URL}/upload/${encodeURIComponent(key)}`, { headers: { Authorization: `Bearer ${token}` } });
       const j = await r.json();
       const url = j.signedUrl || j.publicUrl;
-      if (url) window.open(url, '_blank'); else message.error('Failed to resolve file');
-    } catch (e) { message.error(e.message || 'Failed to open file'); }
+      if (url) window.open(url, '_blank'); else messageApi.error('Failed to resolve file');
+    } catch (e) { messageApi.error(e.message || 'Failed to open file'); }
   }
 
   async function submitEarlyCompletion() {
@@ -83,13 +84,13 @@ function EmploymentPageContent() {
           proposedCompletionDate: values.proposedCompletionDate ? values.proposedCompletionDate.toDate() : null
         })
       });
-      message.success('Early completion request submitted');
+      messageApi.success('Early completion request submitted');
       setEcOpen(false);
       ecForm.resetFields();
       await load();
     } catch (e) {
       if (e?.errorFields) return;
-      message.error(e.message || 'Failed to submit request');
+      messageApi.error(e.message || 'Failed to submit request');
     } finally {
       setSubmitting(false);
     }
@@ -111,13 +112,13 @@ function EmploymentPageContent() {
           proposedLastDay: values.proposedLastDay ? values.proposedLastDay.toDate() : null
         })
       });
-      message.success('Termination request submitted');
+      messageApi.success('Termination request submitted');
       setTerminationOpen(false);
       terminationForm.resetFields();
       await load();
     } catch (e) {
       if (e?.errorFields) return;
-      message.error(e.message || 'Failed to submit termination request');
+      messageApi.error(e.message || 'Failed to submit termination request');
     } finally {
       setSubmitting(false);
     }
@@ -142,10 +143,10 @@ function EmploymentPageContent() {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to cancel request');
       }
-      message.success('Request cancelled');
+      messageApi.success('Request cancelled');
       await load();
     } catch (e) {
-      message.error(e.message || 'Failed to cancel');
+      messageApi.error(e.message || 'Failed to cancel');
     }
   }
 
@@ -294,7 +295,7 @@ function EmploymentPageContent() {
                             const token = localStorage.getItem('jf_token');
                             const terminationId = detail?.latestRequests?.resignation?._id || detail?.termination?._id;
                             if (!terminationId) {
-                              message.error('Termination request ID not found');
+                              messageApi.error('Termination request ID not found');
                               return;
                             }
                             // D167: Fix cancel termination - use correct endpoint
@@ -303,10 +304,10 @@ function EmploymentPageContent() {
                               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                               body: JSON.stringify({ action: 'cancel' })
                             });
-                            message.success('Termination request cancelled');
+                            messageApi.success('Termination request cancelled');
                             await load();
                           } catch (e) {
-                            message.error(e.message || 'Failed to cancel termination request');
+                            messageApi.error(e.message || 'Failed to cancel termination request');
                           }
                         }}
                       >
@@ -326,23 +327,38 @@ function EmploymentPageContent() {
                 <Row gutter={[16, 16]}>
                   <Col xs={12} md={6}>
                     <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>Start Date</Text>
-                    <Text strong>{emp?.startDate ? new Date(emp.startDate).toLocaleDateString() : '-'}</Text>
+                    <Text strong>
+                      {emp?.startDate 
+                        ? new Date(emp.startDate).toLocaleDateString() 
+                        : (app?.offer?.startDate ? new Date(app.offer.startDate).toLocaleDateString() : '-')}
+                    </Text>
                   </Col>
                   <Col xs={12} md={6}>
                     <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>End Date</Text>
-                    <Text strong>{emp?.endDate ? new Date(emp.endDate).toLocaleDateString() : '-'}</Text>
+                    <Text strong>
+                      {emp?.endDate 
+                        ? new Date(emp.endDate).toLocaleDateString() 
+                        : (app?.offer?.endDate ? new Date(app.offer.endDate).toLocaleDateString() : '-')}
+                    </Text>
                   </Col>
                   <Col xs={12} md={6}>
                     <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>Duration</Text>
                     <Text strong>
-                      {emp?.startDate && emp?.endDate
-                        ? `${Math.ceil((new Date(emp.endDate) - new Date(emp.startDate)) / (1000 * 60 * 60 * 24))} days`
-                        : '-'}
+                      {(() => {
+                        const start = emp?.startDate || app?.offer?.startDate;
+                        const end = emp?.endDate || app?.offer?.endDate;
+                        if (start && end) {
+                          const days = Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
+                          const months = Math.floor(days / 30);
+                          return months > 0 ? `${months} month${months > 1 ? 's' : ''} (${days} days)` : `${days} days`;
+                        }
+                        return '-';
+                      })()}
                     </Text>
                   </Col>
                   <Col xs={12} md={6}>
                     <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>Timesheet Cadence</Text>
-                    <Text strong>{emp?.cadence || 'Weekly'}</Text>
+                    <Text strong>{emp?.cadence || 'weekly'}</Text>
                   </Col>
                 </Row>
               </div>
@@ -612,9 +628,11 @@ function EmploymentPageContent() {
 
 export default function MyEmploymentPage() {
   return (
-    <Suspense fallback={<Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: '20vh' }} />}>
-      <EmploymentPageContent />
-    </Suspense>
+    <App>
+      <Suspense fallback={<Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: '20vh' }} />}>
+        <EmploymentPageContent />
+      </Suspense>
+    </App>
   );
 }
 
