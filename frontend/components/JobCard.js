@@ -9,7 +9,7 @@ import { API_BASE_URL } from '../config';
 
 const { Text } = Typography;
 
-export default function JobCard({ job, companyView = false }) {
+export default function JobCard({ job, companyView = false, existingApplication: existingApplicationProp }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -29,7 +29,7 @@ export default function JobCard({ job, companyView = false }) {
   const [authModalConfig, setAuthModalConfig] = useState({});
   const [logoSignedUrl, setLogoSignedUrl] = useState(null);
   const [logoError, setLogoError] = useState(false);
-  const [existingApplication, setExistingApplication] = useState(null);
+  const [existingApplication, setExistingApplication] = useState(existingApplicationProp || null);
   const [hiredCount, setHiredCount] = useState(job.hiredCount || 0);
   const [loadingHiredCount, setLoadingHiredCount] = useState(false);
   const router = useRouter();
@@ -147,20 +147,15 @@ export default function JobCard({ job, companyView = false }) {
         const likedList = Array.isArray(l?.data) ? l.data : (Array.isArray(l) ? l : []);
         if ((likedList || []).length > 0) { setLiked(true); setLikedId(likedList[0]._id); } else { setLiked(false); setLikedId(null); }
       } catch (_) { /* ignore */ }
-      
-      // Check if student already has an active application for this job
-      try {
-        const apps = await apiAuth(`/applications?jobListingId=${job._id}`, { method: 'GET' });
-        const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
-        // Active statuses: SHORTLISTED (1), INTERVIEW_SCHEDULED (2), PENDING_ACCEPTANCE (3), ACCEPTED_PENDING_REVIEW (8), HIRED (4)
-        const ACTIVE_STATUSES = [1, 2, 3, 8, 4];
-        const activeApp = appList.find(app => ACTIVE_STATUSES.includes(app.status));
-        if (activeApp) {
-          setExistingApplication(activeApp);
-        }
-      } catch (_) { /* ignore */ }
     })();
   }, [job._id]);
+
+  // Update existingApplication when prop changes
+  useEffect(() => {
+    if (existingApplicationProp) {
+      setExistingApplication(existingApplicationProp);
+    }
+  }, [existingApplicationProp]);
 
   async function handleSave(e){
     e.preventDefault(); e.stopPropagation();
