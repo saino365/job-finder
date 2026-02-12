@@ -30,6 +30,7 @@ export default function JobCard({ job, companyView = false }) {
   const [logoSignedUrl, setLogoSignedUrl] = useState(null);
   const [logoError, setLogoError] = useState(false);
   const [existingApplication, setExistingApplication] = useState(null);
+  const [hiredCount, setHiredCount] = useState(0);
   const router = useRouter();
   const companyName = job.company?.name || job.companyName || 'Company';
 
@@ -156,6 +157,10 @@ export default function JobCard({ job, companyView = false }) {
         if (activeApp) {
           setExistingApplication(activeApp);
         }
+        
+        // Count hired applications (status 4)
+        const hired = appList.filter(app => app.status === 4).length;
+        setHiredCount(hired);
       } catch (_) { /* ignore */ }
     })();
   }, [job._id]);
@@ -419,7 +424,13 @@ export default function JobCard({ job, companyView = false }) {
             <Button size="large" onClick={(e) => { e.stopPropagation(); handleCardClick(); }}>
               View Details
             </Button>
-            {existingApplication ? (
+            {job.quantityAvailable && hiredCount >= job.quantityAvailable ? (
+              <Tooltip title={`This position is full. All ${job.quantityAvailable} available slot${job.quantityAvailable > 1 ? 's have' : ' has'} been filled.`}>
+                <Button type="primary" size="large" disabled style={{ background: '#ff4d4f', borderColor: '#ff4d4f', opacity: 0.6 }}>
+                  Position Closed
+                </Button>
+              </Tooltip>
+            ) : existingApplication ? (
               <Tooltip title={`You already have an active application for this position (Status: ${getApplicationStatusLabel(existingApplication.status)}). You cannot apply again while your application is still active.`}>
                 <Button type="primary" size="large" disabled>
                   Already Applied

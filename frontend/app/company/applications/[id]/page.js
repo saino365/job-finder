@@ -362,8 +362,6 @@ export default function ApplicationDetailPage({ params }) {
                   offerForm.setFieldsValue(initialValues);
                   setOfferOpen(true);
                 }}>Send Offer</Button>}
-                {/* D126: Change button label from "Reject Offered Position" to "Decline Offer" */}
-                {canRejectOffered && <Button danger onClick={() => setRejectOfferedOpen(true)}>Decline Offer</Button>}
                 {canFinalizeHire && <Button type="primary" onClick={finalizeHire}>Finalize Hire</Button>}
                 {isAccepted && <Tag color="green">Offer Accepted - Hired</Tag>}
                 <Button onClick={load}>Refresh</Button>

@@ -3,6 +3,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import JobDetailActions from "./JobDetailActions";
 import SimilarJobs from "./SimilarJobs";
+import { useEffect, useState } from 'react';
+import { apiAuth, getToken } from '../lib/api';
 import {
   Layout,
   Typography,
@@ -10,7 +12,8 @@ import {
   Card,
   Row,
   Col,
-  Space
+  Space,
+  Alert
 } from "antd";
 import {
   CalendarOutlined,
@@ -27,6 +30,27 @@ import { formatDate, formatSalary } from "../utils/formatters";
 const { Title, Text, Paragraph } = Typography;
 
 export default function JobDetailClient({ job }) {
+  const [hiredCount, setHiredCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch hired count for this job
+    (async () => {
+      try {
+        if (getToken()) {
+          const apps = await apiAuth(`/applications?jobListingId=${job._id}`, { method: 'GET' });
+          const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
+          
+          // Count hired applications (status 4)
+          const hired = appList.filter(app => app.status === 4).length;
+          setHiredCount(hired);
+        }
+      } catch (_) { /* ignore */ }
+      finally {
+        setLoading(false);
+      }
+    })();
+  }, [job._id]);
 
   if (!job) {
     return (
@@ -43,6 +67,8 @@ export default function JobDetailClient({ job }) {
     );
   }
 
+  const isPositionFull = job.quantityAvailable && hiredCount >= job.quantityAvailable;
+
 
 
 
@@ -51,6 +77,17 @@ export default function JobDetailClient({ job }) {
     <Layout style={{ minHeight: '100vh' }}>
       <Navbar />
       <Layout.Content style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
+        {/* Position Full Alert */}
+        {isPositionFull && (
+          <Alert
+            message="Position Closed"
+            description={`This position is now closed. All ${job.quantityAvailable} available slot${job.quantityAvailable > 1 ? 's have' : ' has'} been filled with hired candidates.`}
+            type="warning"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        )}
+        
         {/* Header Section with Similar Jobs */}
         <Row gutter={[24, 24]}>
           {/* Left: Job Header */}
@@ -101,7 +138,7 @@ export default function JobDetailClient({ job }) {
 
                 <Col xs={24} md={8}>
                   <div style={{ textAlign: 'right' }}>
-                    <JobDetailActions jobId={job._id} />
+                    <JobDetailActions jobId={job._id} quantityAvailable={job.quantityAvailable} />
                   </div>
                 </Col>
               </Row>
