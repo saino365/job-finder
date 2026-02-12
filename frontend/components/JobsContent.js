@@ -21,6 +21,8 @@ export default function JobsContent() {
   const [savedProfiles, setSavedProfiles] = useState([]);
   const [prefApplied, setPrefApplied] = useState(false);
   const [userApplications, setUserApplications] = useState([]);
+  const [userSavedJobs, setUserSavedJobs] = useState([]);
+  const [userLikedJobs, setUserLikedJobs] = useState([]);
 
   // Build query URL for jobs (using FeathersJS query syntax like JobsExplorer)
   const jobsUrl = useMemo(() => {
@@ -121,9 +123,20 @@ export default function JobsContent() {
     (async () => {
       if (!getToken()) return;
       try {
+        // Fetch applications
         const apps = await apiAuth('/applications?$limit=1000', { method: 'GET' });
         const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
         setUserApplications(appList);
+
+        // Fetch saved jobs
+        const saved = await apiAuth('/saved-jobs?$limit=1000', { method: 'GET' });
+        const savedList = Array.isArray(saved?.data) ? saved.data : (Array.isArray(saved) ? saved : []);
+        setUserSavedJobs(savedList);
+
+        // Fetch liked jobs
+        const liked = await apiAuth('/liked-jobs?$limit=1000', { method: 'GET' });
+        const likedList = Array.isArray(liked?.data) ? liked.data : (Array.isArray(liked) ? liked : []);
+        setUserLikedJobs(likedList);
       } catch (_) { /* ignore */ }
     })();
   }, []);
@@ -277,9 +290,19 @@ export default function JobsContent() {
                     String(app.jobListingId) === String(job._id) && 
                     ACTIVE_STATUSES.includes(app.status)
                   );
+                  
+                  // Find saved/liked status
+                  const savedJob = userSavedJobs.find(s => String(s.jobListingId) === String(job._id));
+                  const likedJob = userLikedJobs.find(l => String(l.jobListingId) === String(job._id));
+                  
                   return (
                     <Col xs={24} key={job._id}>
-                      <JobCard job={job} existingApplication={existingApp} />
+                      <JobCard 
+                        job={job} 
+                        existingApplication={existingApp}
+                        savedJob={savedJob}
+                        likedJob={likedJob}
+                      />
                     </Col>
                   );
                 })}

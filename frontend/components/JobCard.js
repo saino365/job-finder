@@ -9,7 +9,7 @@ import { API_BASE_URL } from '../config';
 
 const { Text } = Typography;
 
-export default function JobCard({ job, companyView = false, existingApplication: existingApplicationProp }) {
+export default function JobCard({ job, companyView = false, existingApplication: existingApplicationProp, savedJob: savedJobProp, likedJob: likedJobProp }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -22,10 +22,10 @@ export default function JobCard({ job, companyView = false, existingApplication:
   }, []);
   const { message } = App.useApp();
   const { token } = antdTheme.useToken();
-  const [saved, setSaved] = useState(false);
-  const [savedId, setSavedId] = useState(null);
-  const [liked, setLiked] = useState(false);
-  const [likedId, setLikedId] = useState(null);
+  const [saved, setSaved] = useState(!!savedJobProp);
+  const [savedId, setSavedId] = useState(savedJobProp?._id || null);
+  const [liked, setLiked] = useState(!!likedJobProp);
+  const [likedId, setLikedId] = useState(likedJobProp?._id || null);
   const [authModalConfig, setAuthModalConfig] = useState({});
   const [logoSignedUrl, setLogoSignedUrl] = useState(null);
   const [logoError, setLogoError] = useState(false);
@@ -134,28 +134,42 @@ export default function JobCard({ job, companyView = false, existingApplication:
   }, [job.company?.logo, job.company?.logoUrl, job.company?.logoKey, job.companyLogo]);
 
   useEffect(() => {
-    // Preload saved and liked state for this job
-    (async () => {
-      if (!getToken()) return;
-      try {
-        const s = await apiAuth(`/saved-jobs?jobListingId=${job._id}`, { method: 'GET' });
-        const savedList = Array.isArray(s?.data) ? s.data : (Array.isArray(s) ? s : []);
-        if ((savedList || []).length > 0) { setSaved(true); setSavedId(savedList[0]._id); } else { setSaved(false); setSavedId(null); }
-      } catch (_) { /* ignore */ }
-      try {
-        const l = await apiAuth(`/liked-jobs?jobListingId=${job._id}`, { method: 'GET' });
-        const likedList = Array.isArray(l?.data) ? l.data : (Array.isArray(l) ? l : []);
-        if ((likedList || []).length > 0) { setLiked(true); setLikedId(likedList[0]._id); } else { setLiked(false); setLikedId(null); }
-      } catch (_) { /* ignore */ }
-    })();
-  }, [job._id]);
+    // Only fetch saved/liked if not provided as props (for company view or other cases)
+    if (savedJobProp === undefined || likedJobProp === undefined) {
+      (async () => {
+        if (!getToken()) return;
+        try {
+          if (savedJobProp === undefined) {
+            const s = await apiAuth(`/saved-jobs?jobListingId=${job._id}`, { method: 'GET' });
+            const savedList = Array.isArray(s?.data) ? s.data : (Array.isArray(s) ? s : []);
+            if ((savedList || []).length > 0) { setSaved(true); setSavedId(savedList[0]._id); } else { setSaved(false); setSavedId(null); }
+          }
+        } catch (_) { /* ignore */ }
+        try {
+          if (likedJobProp === undefined) {
+            const l = await apiAuth(`/liked-jobs?jobListingId=${job._id}`, { method: 'GET' });
+            const likedList = Array.isArray(l?.data) ? l.data : (Array.isArray(l) ? l : []);
+            if ((likedList || []).length > 0) { setLiked(true); setLikedId(likedList[0]._id); } else { setLiked(false); setLikedId(null); }
+          }
+        } catch (_) { /* ignore */ }
+      })();
+    }
+  }, [job._id, savedJobProp, likedJobProp]);
 
-  // Update existingApplication when prop changes
+  // Update state when props change
   useEffect(() => {
     if (existingApplicationProp) {
       setExistingApplication(existingApplicationProp);
     }
-  }, [existingApplicationProp]);
+    if (savedJobProp !== undefined) {
+      setSaved(!!savedJobProp);
+      setSavedId(savedJobProp?._id || null);
+    }
+    if (likedJobProp !== undefined) {
+      setLiked(!!likedJobProp);
+      setLikedId(likedJobProp?._id || null);
+    }
+  }, [existingApplicationProp, savedJobProp, likedJobProp]);
 
   async function handleSave(e){
     e.preventDefault(); e.stopPropagation();
