@@ -20,6 +20,7 @@ export default function JobsContent() {
   const [page, setPage] = useState(1);
   const [savedProfiles, setSavedProfiles] = useState([]);
   const [prefApplied, setPrefApplied] = useState(false);
+  const [userApplications, setUserApplications] = useState([]);
 
   // Build query URL for jobs (using FeathersJS query syntax like JobsExplorer)
   const jobsUrl = useMemo(() => {
@@ -114,6 +115,18 @@ export default function JobsContent() {
     if (savedFilters.keyword) setKeyword(savedFilters.keyword);
     setPrefApplied(true);
   }, [prefApplied, jobSearchProfileQuery.data]);
+
+  // Fetch all user applications once to avoid N+1 queries
+  useEffect(() => {
+    (async () => {
+      if (!getToken()) return;
+      try {
+        const apps = await apiAuth('/applications?$limit=1000', { method: 'GET' });
+        const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
+        setUserApplications(appList);
+      } catch (_) { /* ignore */ }
+    })();
+  }, []);
 
   // D155: Fix job search loading - ensure proper error handling and response parsing
   const jobsQuery = useQuery({
@@ -257,11 +270,19 @@ export default function JobsContent() {
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "500px", width: "100%" }}>
             <div style={{ flex: 1, width: "100%" }}>
               <Row gutter={[16, 16]} style={{ width: "100%" }}>
-                {jobs.map((job) => (
-                  <Col xs={24} key={job._id}>
-                    <JobCard job={job} />
-                  </Col>
-                ))}
+                {jobs.map((job) => {
+                  // Find existing application for this job
+                  const ACTIVE_STATUSES = [1, 2, 3, 8, 4];
+                  const existingApp = userApplications.find(app => 
+                    String(app.jobListingId) === String(job._id) && 
+                    ACTIVE_STATUSES.includes(app.status)
+                  );
+                  return (
+                    <Col xs={24} key={job._id}>
+                      <JobCard job={job} existingApplication={existingApp} />
+                    </Col>
+                  );
+                })}
               </Row>
             </div>
 

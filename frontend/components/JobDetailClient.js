@@ -30,27 +30,28 @@ import { formatDate, formatSalary } from "../utils/formatters";
 const { Title, Text, Paragraph } = Typography;
 
 export default function JobDetailClient({ job }) {
-  const [hiredCount, setHiredCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [hiredCount, setHiredCount] = useState(job.hiredCount || 0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch hired count for this job
-    (async () => {
-      try {
-        if (getToken()) {
-          const apps = await apiAuth(`/applications?jobListingId=${job._id}`, { method: 'GET' });
-          const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
-          
-          // Count hired applications (status 4)
-          const hired = appList.filter(app => app.status === 4).length;
-          setHiredCount(hired);
+    // If hiredCount wasn't provided in job prop, fetch it
+    if (job.hiredCount === undefined) {
+      (async () => {
+        try {
+          setLoading(true);
+          const empRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3030'}/employment-records?jobListingId=${job._id}&status=1&$limit=0`);
+          if (empRes.ok) {
+            const empData = await empRes.json();
+            const count = empData.total || empData.length || 0;
+            setHiredCount(count);
+          }
+        } catch (_) { /* ignore */ }
+        finally {
+          setLoading(false);
         }
-      } catch (_) { /* ignore */ }
-      finally {
-        setLoading(false);
-      }
-    })();
-  }, [job._id]);
+      })();
+    }
+  }, [job._id, job.hiredCount]);
 
   if (!job) {
     return (
@@ -129,7 +130,9 @@ export default function JobDetailClient({ job }) {
                       {job.quantityAvailable && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <TeamOutlined style={{ color: '#666' }} />
-                          <Text>{job.quantityAvailable} position{job.quantityAvailable > 1 ? 's' : ''} available</Text>
+                          <Text>
+                            {Math.max(0, job.quantityAvailable - hiredCount)} of {job.quantityAvailable} position{job.quantityAvailable > 1 ? 's' : ''} remaining
+                          </Text>
                         </div>
                       )}
                     </div>

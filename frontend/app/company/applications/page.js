@@ -61,7 +61,7 @@ export default function CompanyApplicationsPage() {
       setLoading(true);
       const token = localStorage.getItem('jf_token');
       if (!token) { message.error('Please sign in'); window.location.href = '/login'; return; }
-      const res = await fetch(`${API_BASE_URL}/applications?$sort[createdAt]=-1`, {
+      const res = await fetch(`${API_BASE_URL}/applications?$sort[createdAt]=-1&$limit=1000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const json = await res.json();
