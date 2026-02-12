@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Table, Card, Space, Segmented, Typography, Tag, Button, message, DatePicker, Modal, Form, Input, Drawer } from 'antd';
+import { Table, Card, Space, Segmented, Typography, Tag, Button, DatePicker, Modal, Form, Input, Drawer, App } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
 import { API_BASE_URL } from '../../../config';
 
 const { Title, Text } = Typography;
 
 function MonitoringClient() {
+  const { message } = App.useApp();
   const search = useSearchParams();
   const router = useRouter();
   const type = search?.get('type') || 'pending_pre_approval';
@@ -567,9 +568,11 @@ function MonitoringClient() {
 
 export default function AdminMonitoringPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 24 }}>Loading...</div>}>
-      <MonitoringClient />
-    </Suspense>
+    <App>
+      <Suspense fallback={<div style={{ padding: 24 }}>Loading...</div>}>
+        <MonitoringClient />
+      </Suspense>
+    </App>
   );
 }
 

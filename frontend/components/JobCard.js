@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { Card, Tag, Typography, Button, Space, App, Modal, Divider, Tooltip, theme as antdTheme } from 'antd';
-import { HeartOutlined, HeartFilled, BookOutlined, BookFilled, EnvironmentOutlined, DollarOutlined, ClockCircleOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { HeartOutlined, HeartFilled, BookOutlined, BookFilled, EnvironmentOutlined, DollarOutlined, ClockCircleOutlined, AppstoreOutlined, TeamOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { apiAuth, getToken } from '../lib/api';
 import AuthPromptModal from './AuthPromptModal';
@@ -30,7 +30,8 @@ export default function JobCard({ job, companyView = false }) {
   const [logoSignedUrl, setLogoSignedUrl] = useState(null);
   const [logoError, setLogoError] = useState(false);
   const [existingApplication, setExistingApplication] = useState(null);
-  const [hiredCount, setHiredCount] = useState(0);
+  const [hiredCount, setHiredCount] = useState(job.hiredCount || 0);
+  const [loadingHiredCount, setLoadingHiredCount] = useState(false);
   const router = useRouter();
   const companyName = job.company?.name || job.companyName || 'Company';
 
@@ -157,10 +158,6 @@ export default function JobCard({ job, companyView = false }) {
         if (activeApp) {
           setExistingApplication(activeApp);
         }
-        
-        // Count hired applications (status 4)
-        const hired = appList.filter(app => app.status === 4).length;
-        setHiredCount(hired);
       } catch (_) { /* ignore */ }
     })();
   }, [job._id]);
@@ -263,6 +260,9 @@ export default function JobCard({ job, companyView = false }) {
     const diff = Math.floor((now.getTime() - postedDate.getTime()) / (24 * 60 * 60 * 1000));
     return diff;
   })();
+
+  // Check if position is full
+  const isPositionFull = job.quantityAvailable && hiredCount >= job.quantityAvailable;
 
   // Format salary
   const formatSalary = () => {
@@ -383,6 +383,12 @@ export default function JobCard({ job, companyView = false }) {
                   <AppstoreOutlined style={{ color: token.colorTextTertiary }} />
                   {job.company?.industry || 'Industry not specified'}
                 </span>
+                {job.quantityAvailable && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <TeamOutlined style={{ color: token.colorTextTertiary }} />
+                    {Math.max(0, job.quantityAvailable - hiredCount)}/{job.quantityAvailable} position{job.quantityAvailable > 1 ? 's' : ''}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -424,7 +430,7 @@ export default function JobCard({ job, companyView = false }) {
             <Button size="large" onClick={(e) => { e.stopPropagation(); handleCardClick(); }}>
               View Details
             </Button>
-            {job.quantityAvailable && hiredCount >= job.quantityAvailable ? (
+            {isPositionFull ? (
               <Tooltip title={`This position is full. All ${job.quantityAvailable} available slot${job.quantityAvailable > 1 ? 's have' : ' has'} been filled.`}>
                 <Button type="primary" size="large" disabled style={{ background: '#ff4d4f', borderColor: '#ff4d4f', opacity: 0.6 }}>
                   Position Closed

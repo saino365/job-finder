@@ -14,7 +14,7 @@ const { Title } = Typography;
 const EmployeeDetails = dynamic(() => import('../../../components/company/EmployeeDetails'), { ssr: false, loading: () => <div /> });
 
 const statusTag = (s) => {
-  const map = { 0: { c: 'gold', t: 'Upcoming' }, 1: { c: 'green', t: 'Hired' }, 2: { c: 'purple', t: 'Closure' }, 3: { c: 'green', t: 'Completed' }, 4: { c: 'red', t: 'Terminated' } };
+  const map = { 1: { c: 'green', t: 'Hired' }, 2: { c: 'purple', t: 'Closure' }, 3: { c: 'green', t: 'Completed' }, 4: { c: 'red', t: 'Terminated' } };
   const m = map[s] || { c: 'default', t: String(s) };
   return <Tag color={m.c}>{m.t}</Tag>;
 };
@@ -51,24 +51,18 @@ export default function CompanyEmployeesPage() {
       const token = localStorage.getItem('jf_token');
       if (!token) { message.info('Please sign in'); window.location.href = '/login'; return; }
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await fetch(`${API_BASE_URL}/employment-records`, { headers });
+      // Fetch all employment records with sorting by createdAt descending and no pagination limit
+      const res = await fetch(`${API_BASE_URL}/employment-records?$sort[createdAt]=-1&$limit=1000`, { headers });
       if (!res.ok) throw new Error('Failed to load employees');
       const j = await res.json();
       const allRecords = Array.isArray(j?.data) ? j.data : (Array.isArray(j) ? j : []);
-      // Filter to only show employment records where application status is 4 (ACCEPTED/Hired)
-      const list = allRecords.filter(record => {
-        // If applicationId is populated and has status, check it's 4
-        if (record.applicationId && typeof record.applicationId === 'object') {
-          return record.applicationId.status === 4;
-        }
-        // If applicationId is not populated or missing, exclude it (shouldn't happen but safe fallback)
-        return false;
-      });
-      setItems(list);
+      // Show all employment records - the backend already filters by company
+      // No need to filter by application status since employment records are only created for hired applications
+      setItems(allRecords);
       // load pending reqs (company scoped by service find hook)
       const [ecR, tR] = await Promise.all([
-        fetch(`${API_BASE_URL}/early-completions?status=0`, { headers }),
-        fetch(`${API_BASE_URL}/internship-terminations?status=0`, { headers })
+        fetch(`${API_BASE_URL}/early-completions?status=0&$sort[createdAt]=-1&$limit=1000`, { headers }),
+        fetch(`${API_BASE_URL}/internship-terminations?status=0&$sort[createdAt]=-1&$limit=1000`, { headers })
       ]);
       const ecJson = ecR.ok ? await ecR.json() : { data: [] };
       const termJson = tR.ok ? await tR.json() : { data: [] };
@@ -342,7 +336,7 @@ export default function CompanyEmployeesPage() {
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Title level={2} style={{ margin: 0 }}>Employees</Title>
 
-            {/* Current Employees - ONGOING and UPCOMING */}
+            {/* Current Employees - HIRED only */}
             <Card title="Current Employees" extra={<Button size="small" onClick={load}>Refresh</Button>}>
               <Table
                 rowKey={r => r._id || r.id}
@@ -374,24 +368,7 @@ export default function CompanyEmployeesPage() {
                     render: (_, r) => (
                       <Space>
                         <Button size="small" onClick={() => { setViewing(r); setOpen(true); }}>View</Button>
-                        {r.status === 0 && (
-                          <Button size="small" type="primary" onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('jf_token');
-                              const res = await fetch(`${API_BASE_URL}/employment-records/${r._id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                body: JSON.stringify({ action: 'startNow' })
-                              });
-                              if (!res.ok) throw new Error('Failed to start employment');
-                              message.success('Employment started');
-                              load();
-                            } catch (e) {
-                              message.error(e.message || 'Failed to start employment');
-                            }
-                          }}>Start Now</Button>
-                        )}
-                        {(r.status === 0 || r.status === 1) && (
+                        {r.status === 1 && (
                           <>
                             <Button size="small" type="primary" onClick={() => { setExtendTarget(r); setExtendOpen(true); }}>Extend</Button>
                             <Button size="small" onClick={() => { setEcInitiateTarget(r); setEcInitiateOpen(true); }}>Early Completion</Button>
@@ -402,7 +379,7 @@ export default function CompanyEmployeesPage() {
                     ) 
                   }
                 ]}
-                dataSource={items.filter(item => item.status === 0 || item.status === 1)} // UPCOMING or ONGOING
+                dataSource={items.filter(item => item.status === 1)} // HIRED only
                 loading={loading}
                 pagination={{ pageSize: 10 }}
                 locale={{ emptyText: 'No current employees' }}
@@ -483,8 +460,15 @@ export default function CompanyEmployeesPage() {
               </Space>
             </Card>
 
+            {/* All Employees - HIRED, CLOSURE, and TERMINATED */}
             <Card title="All Employees">
-              <Table rowKey={r => r._id || r.id} columns={columns} dataSource={items} loading={loading} pagination={{ pageSize: 10 }} />
+              <Table 
+                rowKey={r => r._id || r.id} 
+                columns={columns} 
+                dataSource={items} // All employment records
+                loading={loading} 
+                pagination={{ pageSize: 10 }} 
+              />
             </Card>
           </Space>
         </div>

@@ -164,6 +164,25 @@ export default (app) => {
     const job = await JobModel.findById(jobId).lean();
     if (!job) throw Object.assign(new Error('Job not found'), { code: 404 });
 
+    // Check if job has reached capacity
+    if (job.quantityAvailable && job.quantityAvailable > 0) {
+      const Employment = app.service('employment-records')?.Model;
+      if (Employment) {
+        // Count how many people are currently hired for this job (status 1 = ONGOING/Hired)
+        const hiredCount = await Employment.countDocuments({ 
+          jobListingId: jobId, 
+          status: 1 // ONGOING/Hired status
+        });
+        
+        if (hiredCount >= job.quantityAvailable) {
+          throw Object.assign(
+            new Error(`This position is no longer available. All ${job.quantityAvailable} position(s) have been filled.`), 
+            { code: 400 }
+          );
+        }
+      }
+    }
+
     const ACTIVE_STATUSES = [S.NEW, S.SHORTLISTED, S.INTERVIEW_SCHEDULED, S.PENDING_ACCEPTANCE, S.ACCEPTED_PENDING_REVIEW, S.ACCEPTED];
     const existingApp = await Applications.findOne({ userId: user._id, jobListingId: jobId });
 
@@ -360,15 +379,13 @@ export default (app) => {
           
           const requiredDocs = ['contract','nda'];
           if (Employment) {
-            const nowTs = now.getTime();
-            const startTs = startDate ? startDate.getTime() : null;
-            const employmentStatus = (startTs && startTs <= nowTs) ? ES.ONGOING : ES.UPCOMING;
+            // Always create employment records with ONGOING status (hired)
             await Employment.create({
               userId: doc.userId,
               companyId: doc.companyId,
               jobListingId: doc.jobListingId,
               applicationId: doc._id,
-              status: employmentStatus,
+              status: ES.ONGOING,
               startDate,
               endDate,
               cadence: 'weekly',
