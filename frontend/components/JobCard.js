@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { Card, Tag, Typography, Button, Space, App, Modal, Divider, Tooltip, theme as antdTheme } from 'antd';
-import { HeartOutlined, HeartFilled, BookOutlined, BookFilled, EnvironmentOutlined, DollarOutlined, ClockCircleOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { HeartOutlined, HeartFilled, BookOutlined, BookFilled, EnvironmentOutlined, DollarOutlined, ClockCircleOutlined, AppstoreOutlined, TeamOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { apiAuth, getToken } from '../lib/api';
 import AuthPromptModal from './AuthPromptModal';
@@ -9,7 +9,7 @@ import { API_BASE_URL } from '../config';
 
 const { Text } = Typography;
 
-export default function JobCard({ job, companyView = false }) {
+export default function JobCard({ job, companyView = false, existingApplication: existingApplicationProp }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -29,8 +29,9 @@ export default function JobCard({ job, companyView = false }) {
   const [authModalConfig, setAuthModalConfig] = useState({});
   const [logoSignedUrl, setLogoSignedUrl] = useState(null);
   const [logoError, setLogoError] = useState(false);
-  const [existingApplication, setExistingApplication] = useState(null);
-  const [hiredCount, setHiredCount] = useState(0);
+  const [existingApplication, setExistingApplication] = useState(existingApplicationProp || null);
+  const [hiredCount, setHiredCount] = useState(job.hiredCount || 0);
+  const [loadingHiredCount, setLoadingHiredCount] = useState(false);
   const router = useRouter();
   const companyName = job.company?.name || job.companyName || 'Company';
 
@@ -146,24 +147,15 @@ export default function JobCard({ job, companyView = false }) {
         const likedList = Array.isArray(l?.data) ? l.data : (Array.isArray(l) ? l : []);
         if ((likedList || []).length > 0) { setLiked(true); setLikedId(likedList[0]._id); } else { setLiked(false); setLikedId(null); }
       } catch (_) { /* ignore */ }
-      
-      // Check if student already has an active application for this job
-      try {
-        const apps = await apiAuth(`/applications?jobListingId=${job._id}`, { method: 'GET' });
-        const appList = Array.isArray(apps?.data) ? apps.data : (Array.isArray(apps) ? apps : []);
-        // Active statuses: SHORTLISTED (1), INTERVIEW_SCHEDULED (2), PENDING_ACCEPTANCE (3), ACCEPTED_PENDING_REVIEW (8), HIRED (4)
-        const ACTIVE_STATUSES = [1, 2, 3, 8, 4];
-        const activeApp = appList.find(app => ACTIVE_STATUSES.includes(app.status));
-        if (activeApp) {
-          setExistingApplication(activeApp);
-        }
-        
-        // Count hired applications (status 4)
-        const hired = appList.filter(app => app.status === 4).length;
-        setHiredCount(hired);
-      } catch (_) { /* ignore */ }
     })();
   }, [job._id]);
+
+  // Update existingApplication when prop changes
+  useEffect(() => {
+    if (existingApplicationProp) {
+      setExistingApplication(existingApplicationProp);
+    }
+  }, [existingApplicationProp]);
 
   async function handleSave(e){
     e.preventDefault(); e.stopPropagation();
@@ -263,6 +255,9 @@ export default function JobCard({ job, companyView = false }) {
     const diff = Math.floor((now.getTime() - postedDate.getTime()) / (24 * 60 * 60 * 1000));
     return diff;
   })();
+
+  // Check if position is full
+  const isPositionFull = job.quantityAvailable && hiredCount >= job.quantityAvailable;
 
   // Format salary
   const formatSalary = () => {
@@ -383,6 +378,12 @@ export default function JobCard({ job, companyView = false }) {
                   <AppstoreOutlined style={{ color: token.colorTextTertiary }} />
                   {job.company?.industry || 'Industry not specified'}
                 </span>
+                {job.quantityAvailable && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <TeamOutlined style={{ color: token.colorTextTertiary }} />
+                    {Math.max(0, job.quantityAvailable - hiredCount)}/{job.quantityAvailable} position{job.quantityAvailable > 1 ? 's' : ''}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -424,7 +425,7 @@ export default function JobCard({ job, companyView = false }) {
             <Button size="large" onClick={(e) => { e.stopPropagation(); handleCardClick(); }}>
               View Details
             </Button>
-            {job.quantityAvailable && hiredCount >= job.quantityAvailable ? (
+            {isPositionFull ? (
               <Tooltip title={`This position is full. All ${job.quantityAvailable} available slot${job.quantityAvailable > 1 ? 's have' : ' has'} been filled.`}>
                 <Button type="primary" size="large" disabled style={{ background: '#ff4d4f', borderColor: '#ff4d4f', opacity: 0.6 }}>
                   Position Closed
