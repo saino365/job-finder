@@ -381,6 +381,31 @@ export default (app) => ({
         // Populate companies for all jobs
         jobs = await Promise.all(jobs.map(populateCompany));
 
+        // Add hired count for each job (for capacity tracking)
+        const Employment = app.service('employment-records')?.Model;
+        if (Employment) {
+          const jobIds = jobs.map(j => j._id).filter(Boolean);
+          if (jobIds.length > 0) {
+            // Aggregate hired count by job listing ID
+            const hiredCounts = await Employment.aggregate([
+              { $match: { jobListingId: { $in: jobIds }, status: 1 } }, // status 1 = HIRED
+              { $group: { _id: '$jobListingId', count: { $sum: 1 } } }
+            ]);
+            
+            // Create a map for quick lookup
+            const hiredCountMap = {};
+            hiredCounts.forEach(item => {
+              hiredCountMap[String(item._id)] = item.count;
+            });
+            
+            // Add hiredCount to each job
+            jobs = jobs.map(job => ({
+              ...job,
+              hiredCount: hiredCountMap[String(job._id)] || 0
+            }));
+          }
+        }
+
         // Filter by industry if specified (D33: normalize "Technology" to "Information Technology")
         if (industryFilter && industryFilter.length > 0) {
           console.log('Job Backend: Applying industry filter after population:', { industryFilter });

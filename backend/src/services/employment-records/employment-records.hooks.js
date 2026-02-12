@@ -9,6 +9,10 @@ export default (app) => {
 
   async function ensureAccessFind(ctx) {
     const user = ctx.params.user; const q = ctx.params.query || {};
+    // Allow public counting for job capacity checks
+    if (!user && (q.$limit === 0 || q.$limit === '0')) {
+      return ctx; // Allow unauthenticated count queries
+    }
     if (!user) return ctx;
     if (user.role === 'student') ctx.params.query = { ...q, userId: user._id };
     else if (user.role === 'company') {
@@ -132,11 +136,21 @@ export default (app) => {
 
   return {
     before: {
-      all: [ authenticate('jwt') ],
+      all: [ 
+        // Allow unauthenticated access for counting only (when $limit=0)
+        async (ctx) => {
+          // If this is a count-only query (no data needed), skip authentication
+          if (ctx.params.query?.$limit === 0 || ctx.params.query?.$limit === '0') {
+            return ctx;
+          }
+          // Otherwise require authentication
+          return authenticate('jwt')(ctx);
+        }
+      ],
       find: [ ensureAccessFind ],
-      get: [ ensureAccessGet ],
+      get: [ authenticate('jwt'), ensureAccessGet ],
       create: [ onCreate ],
-      patch: [ applyAction ]
+      patch: [ authenticate('jwt'), applyAction ]
     },
     after: {
       find: [ populateApplication ],
