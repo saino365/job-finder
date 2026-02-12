@@ -607,6 +607,57 @@ export default (app) => {
     return ctx;
   }
 
+  // Populate job listing information for applications
+  async function populateJob(ctx) {
+    try {
+      if (!JobModel) return ctx;
+
+      const populateOne = async (appDoc) => {
+        if (!appDoc || !appDoc.jobListingId) return appDoc;
+
+        // Convert to plain object if it's a Mongoose document
+        const app = appDoc.toObject ? appDoc.toObject() : { ...appDoc };
+
+        try {
+          const job = await JobModel.findById(app.jobListingId).lean();
+          if (job) {
+            // Populate job information
+            app.job = {
+              _id: job._id,
+              title: job.title,
+              description: job.description,
+              position: job.position,
+              location: job.location,
+              salaryRange: job.salaryRange,
+              internshipStart: job.internshipStart,
+              internshipEnd: job.internshipEnd
+            };
+
+            // Also set jobTitle for backward compatibility
+            app.jobTitle = job.title;
+          }
+        } catch (e) {
+          // Job not found or error - return app without job data
+        }
+        return app;
+      };
+
+      // Handle both single result (get) and array result (find)
+      if (Array.isArray(ctx.result)) {
+        ctx.result = await Promise.all(ctx.result.map(populateOne));
+      } else if (ctx.result?.data && Array.isArray(ctx.result.data)) {
+        // Paginated result
+        ctx.result.data = await Promise.all(ctx.result.data.map(populateOne));
+      } else if (ctx.result) {
+        // Single result
+        ctx.result = await populateOne(ctx.result);
+      }
+    } catch (e) {
+      // Silent fail - don't break the request if population fails
+    }
+    return ctx;
+  }
+
   return {
     before: {
       all: [ authenticate('jwt') ],
@@ -616,7 +667,7 @@ export default (app) => {
       patch: [ applyTransition ]
     },
     after: {
-      all: [ populateCompany, populateUser ],
+      all: [ populateCompany, populateUser, populateJob ],
       create: [ async (ctx) => {
         // 1) Generate and upload nicer PDF
         try {
