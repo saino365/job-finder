@@ -93,8 +93,12 @@ export default function MyApplicationsPage(){
       // If tab has employment status filter, apply it
       if (empStatusFilter !== undefined && i.status === 4) {
         // For hired applications, check employment status
-        // If employment status is not loaded, exclude from filtered results
-        if (i.employmentStatus === undefined) return false;
+        // If employment status is not loaded, include in "Hired" tab (default to showing)
+        // Only exclude if employment status is loaded and doesn't match the filter
+        if (i.employmentStatus === undefined) {
+          // Show in "Hired" tab, hide in "Terminated" tab
+          return activeKey === 'hired';
+        }
         return empStatusFilter.includes(i.employmentStatus);
       }
       
